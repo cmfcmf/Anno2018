@@ -4,10 +4,8 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@types/jszip": "^3.1.4",
-    "@types/loglevel": "^1.5.3",
-    "@types/pngjs": "^3.3.1",
     "filer.js": "^0.4.5",
+    "iconv-lite": "^0.4.23",
     "idb.filesystem.js": "^0.0.8",
     "jszip": "^3.1.5",
     "loglevel": "^1.6.1",
@@ -15,7 +13,10 @@
     "upng-js": "^2.1.0"
   },
   "devDependencies": {
+    "@types/jszip": "^3.1.4",
+    "@types/loglevel": "^1.5.3",
     "@types/pixi.js": "^4.7.5",
+    "@types/pngjs": "^3.3.1",
     "ts-loader": "^4.4.1",
     "typescript": "^2.9.1",
     "webpack": "^4.12.0",
@@ -24,6 +25,7 @@
   },
   "scripts": {
     "start": "webpack-dev-server",
-    "start-chrome": "webpack-dev-server --open chrome"
+    "start-chrome": "webpack-dev-server --open chrome",
+    "start-chromium": "webpack-dev-server --open chromium-browser"
   }
 }

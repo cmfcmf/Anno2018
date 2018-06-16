@@ -2,7 +2,7 @@ import FileSystem from '../../filesystem';
 import * as log from 'loglevel';
 import Stream from '../stream';
 import * as JSZip from 'jszip';
-
+import {decode as iconv_decode} from 'iconv-lite';
 
 export default class CODParser {
     private fileSystem: FileSystem;
@@ -21,12 +21,15 @@ export default class CODParser {
         const codFile = this.zip.file(inName);
         const codStream = await Stream.fromZipObject(codFile);
 
-        const decodedBytes = new Uint8Array(codStream.length);
+        const decryptedBytes = new Uint8Array(codStream.length);
         for (let i = 0; i < codStream.length; i++) {
-            decodedBytes[i] = 256 - codStream.read8();
+            decryptedBytes[i] = 256 - codStream.read8();
         }
 
-        this.fileSystem.write(outName, decodedBytes);
+        // Decode the bytes using Windows 1252 "Western" encoding.
+        // The resulting string will then be written in UTF-8 format.
+        const utf8String = iconv_decode(decryptedBytes, 'win1252');
+        this.fileSystem.write(outName, utf8String);
 
         this.log.info(`Finished parsing "${inName}".`);
     }
