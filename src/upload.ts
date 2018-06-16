@@ -1,8 +1,8 @@
 import * as JSZip from "jszip";
+import {JSZipObject} from "jszip";
 import FileSystem from "./filesystem";
 import BSHParser from './parsers/BSH/bsh-parser';
 import CODParser from './parsers/COD/cod-parser';
-import {JSZipObject} from 'jszip';
 
 (async () => {
     const fs = new FileSystem();
@@ -11,17 +11,8 @@ import {JSZipObject} from 'jszip';
     const uploadBtn = document.createElement('input');
     uploadBtn.type = 'file';
     uploadBtn.multiple = false;
-    uploadBtn.pattern = '*\\.zip';
+    uploadBtn.accept = 'zip';
 
-    /*
-    const tmp = await fs.open('/animations.dat');
-    const reader2 = new FileReader();
-    reader2.onload = (event => {
-        const text:string = event.target.result;
-        console.log(text);
-    });
-    reader2.readAsText(tmp, 'CP1251');
-    */
     uploadBtn.onchange = async () => {
         const files = uploadBtn.files;
         if (files.length !== 1) {
@@ -41,9 +32,10 @@ import {JSZipObject} from 'jszip';
 
         const zip = await JSZip.loadAsync(zipFileEntry);
         const annoRoot = zip.folder('Anno 1602');
+
         await copyIslands(annoRoot);
         await copySaves(annoRoot);
-        await decodeCODs(annoRoot);
+        await decryptCODs(annoRoot);
         await parseBSHs(annoRoot);
     };
 
@@ -52,7 +44,7 @@ import {JSZipObject} from 'jszip';
     console.table(await fs.ls(fs.root()));
     console.log(await fs.df());
 
-    async function decodeCODs(annoRoot: JSZip) {
+    async function decryptCODs(annoRoot: JSZip) {
         const parser = new CODParser(annoRoot, fs);
 
         return Promise.all([
@@ -106,25 +98,28 @@ import {JSZipObject} from 'jszip';
         //await fs.rm(outPath);
         await fs.mkdir(outPath);
 
-        const f: {path: string, file: JSZipObject}[] = [];
+        const files: {path: string, file: JSZipObject}[] = [];
         zip.forEach((relativePath, file) => {
             if (relativePath.startsWith(inPath) && relativePath.endsWith(fileExtension)) {
-                f.push({
+                files.push({
                     path: relativePath,
                     file: file,
                 });
             }
         });
 
-        for (const obj of f) {
-            const relativePath = obj.path;
-            const file = obj.file;
+        const results = [];
+        for (const fileAndPath of files) {
+            const relativePath = fileAndPath.path;
+            const file = fileAndPath.file;
 
             const targetPath = `${outPath}/${relativePath.substring(inPath.length)}`;
             console.debug(`Copying '${relativePath}' to '${targetPath}'.`);
-            await fs.write(targetPath, await file.async('blob'));
+            results.push(fs.write(targetPath, await file.async('blob')));
         }
 
         //console.table(await fs.ls(outPath));
+
+        return Promise.all(results);
     }
 })();

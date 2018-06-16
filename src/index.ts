@@ -7,7 +7,7 @@ import FileSystem from "./filesystem";
 log.enableAll();
 
 //Create a Pixi Application
-let app = new PIXI.Application({ 
+const app = new PIXI.Application({
     width: 256,
     height: 256,
     antialias: true,
@@ -32,7 +32,7 @@ document.body.appendChild(app.view);
 
     const reader = new FileReader();
     reader.onload = (event => {
-        const tmpImage = new window.Image();
+        const tmpImage = new Image();
         tmpImage.src = 'data:image/png;base64,' + btoa(event.target.result);
 
         const tex = PIXI.Texture.from(tmpImage);
@@ -40,4 +40,14 @@ document.body.appendChild(app.view);
         app.stage.addChild(new PIXI.Sprite(tex));
     });
     reader.readAsBinaryString(spriteSheet);
+
+    /*
+    const tmp = await fs.open('/animations.dat');
+    const reader2 = new FileReader();
+    reader2.onload = (event => {
+        const text:string = event.target.result;
+        window.location.href = 'data:application/octet-stream;base64,' + btoa(text)
+    });
+    reader2.readAsBinaryString(tmp);
+    */
 })();
