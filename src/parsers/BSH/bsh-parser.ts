@@ -1,6 +1,6 @@
 import * as JSZip from "jszip";
-import FileSystem from "../filesystem";
-import Stream from "./stream";
+import FileSystem from "../../filesystem";
+import Stream from "../stream";
 import * as assert from "assert";
 import colorPalette from './bsh-color-palette';
 import BSHImage from './bsh-image';
@@ -162,10 +162,10 @@ export default class BSHParser {
     private async saveSpriteSheet(pixels: Uint8Array, spritesheetIndex: number, outName: string) {
         const png: ArrayBuffer = UPNG.encode([pixels.buffer], this.SIZE, this.SIZE, 0);
 
-        const imageNode = new Image();
-        imageNode.src = 'data:image/png;base64,'+ this.uInt8ToBase64(new Uint8Array(png));
-        document.body.appendChild(imageNode);
-        document.body.appendChild(document.createElement('br'));
+        //const imageNode = new Image();
+        //imageNode.src = 'data:image/png;base64,'+ this.uInt8ToBase64(new Uint8Array(png));
+        //document.body.appendChild(imageNode);
+        //document.body.appendChild(document.createElement('br'));
 
         this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.png`, png);
     }

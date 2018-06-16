@@ -19,28 +19,16 @@ let app = new PIXI.Application({
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
 
-//load an image and run the `setup` function when it's done
-PIXI.loader
-  .add("assets/1.png")
-  .load(setup);
-
-//This `setup` function will run when the image has loaded
-function setup() {
-
-  //Create the cat sprite
-  let cat = new PIXI.Sprite(PIXI.loader.resources["assets/1.png"].texture);
-  
-  //Add the cat to the stage
-  app.stage.addChild(cat);
-}
-
-
 (async () => {
     const fs = new FileSystem();
     await fs.init(1024 * 1024 * 200);
 
     /** @var FileEntry */
-    const spriteSheet = await fs.open('/gfx/STADTFLD/sprite-sheet-0.png');
+    try {
+        var spriteSheet = await fs.open('/gfx/STADTFLD/sprite-sheet-0.png');
+    } catch (e) {
+        return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event => {

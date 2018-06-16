@@ -23,6 +23,7 @@
     "webpack-dev-server": "^3.1.4"
   },
   "scripts": {
-    "start": "webpack-dev-server --open"
+    "start": "webpack-dev-server",
+    "start-chrome": "webpack-dev-server --open chrome"
   }
 }

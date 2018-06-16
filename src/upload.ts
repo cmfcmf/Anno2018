@@ -1,6 +1,8 @@
-import JSZip from "jszip";
+import * as JSZip from "jszip";
 import FileSystem from "./filesystem";
-import BSHParser from './parsers/bsh-parser';
+import BSHParser from './parsers/BSH/bsh-parser';
+import CODParser from './parsers/COD/cod-parser';
+import {JSZipObject} from 'jszip';
 
 (async () => {
     const fs = new FileSystem();
@@ -9,8 +11,17 @@ import BSHParser from './parsers/bsh-parser';
     const uploadBtn = document.createElement('input');
     uploadBtn.type = 'file';
     uploadBtn.multiple = false;
-    uploadBtn.pattern = /\*\.zip/;
+    uploadBtn.pattern = '*\\.zip';
 
+    /*
+    const tmp = await fs.open('/animations.dat');
+    const reader2 = new FileReader();
+    reader2.onload = (event => {
+        const text:string = event.target.result;
+        console.log(text);
+    });
+    reader2.readAsText(tmp, 'CP1251');
+    */
     uploadBtn.onchange = async () => {
         const files = uploadBtn.files;
         if (files.length !== 1) {
@@ -28,10 +39,11 @@ import BSHParser from './parsers/bsh-parser';
 
         const zipFileEntry = await fs.open('/original.zip');
 
-        const zip = await new JSZip().loadAsync(zipFileEntry);
+        const zip = await JSZip.loadAsync(zipFileEntry);
         const annoRoot = zip.folder('Anno 1602');
-        //copyIslands(annoRoot);
-        //copySaves(annoRoot);
+        await copyIslands(annoRoot);
+        await copySaves(annoRoot);
+        await decodeCODs(annoRoot);
         await parseBSHs(annoRoot);
     };
 
@@ -40,10 +52,21 @@ import BSHParser from './parsers/bsh-parser';
     console.table(await fs.ls(fs.root()));
     console.log(await fs.df());
 
-    async function parseBSHs(annoRoot) {
+    async function decodeCODs(annoRoot: JSZip) {
+        const parser = new CODParser(annoRoot, fs);
+
+        return Promise.all([
+            ['haeuser.cod', 'fields.dat'],
+            ['figuren.cod', 'animations.dat'],
+        ].map(r => {
+            return parser.parse(r[0], r[1]);
+        }));
+    }
+
+    async function parseBSHs(annoRoot: JSZip) {
         const parser = new BSHParser(annoRoot, fs);
 
-        const results = [
+        return Promise.all([
             ["NUMBERS",  "NUMBERS"],
             ["STADTFLD", "STADTFLD"],
             ["EFFEKTE",  "EFFEKT"],
@@ -56,32 +79,34 @@ import BSHParser from './parsers/bsh-parser';
             ["TIERE",    "RIND"],
             ["TRAEGER",  "TRAEGER"],
             ["TOOLS",    "TOOLS"],
-        ].map((r) => {
+        ].map(r => {
             return parser.parse(r[0], r[1]);
-        });
-
-        await Promise.all(results);
+        }));
     }
 
-    function copyIslands(annoRoot) {
-        copyFolderFromZip(annoRoot, "NOKLIMA", "/islands/noklima", ".scp");
-        copyFolderFromZip(annoRoot, "NORD",    "/islands/north", ".scp");
-        copyFolderFromZip(annoRoot, "NORDNAT", "/islands/northnat", ".scp");
-        copyFolderFromZip(annoRoot, "SUED",    "/islands/south", ".scp");
-        copyFolderFromZip(annoRoot, "SUEDNAT", "/islands/southnat", ".scp");
+    async function copyIslands(annoRoot: JSZip) {
+        return Promise.all([
+            ["NOKLIMA", "/islands/noklima"],
+            ["NORD",    "/islands/north"],
+            ["NORDNAT", "/islands/northnat"],
+            ["SUED",    "/islands/south"],
+            ["SUEDNAT", "/islands/southnat"],
+        ].map(r => {
+            return copyFolderFromZip(annoRoot, r[0], r[1], ".scp");
+        }));
     }
 
-    function copySaves(annoRoot) {
-        copyFolderFromZip(annoRoot, 'SAVEGAME', '/saves', '.gam')
+    async function copySaves(annoRoot: JSZip) {
+        return copyFolderFromZip(annoRoot, 'SAVEGAME', '/saves', '.gam')
     }
 
-    async function copyFolderFromZip(zip, inPath, outPath, fileExtension) {
+    async function copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtension: string) {
         inPath = `${inPath}/`;
         console.debug(`Copying '${fileExtension}' files from '${inPath}' to '${outPath}'.`);
         //await fs.rm(outPath);
         await fs.mkdir(outPath);
 
-        const f = [];
+        const f: {path: string, file: JSZipObject}[] = [];
         zip.forEach((relativePath, file) => {
             if (relativePath.startsWith(inPath) && relativePath.endsWith(fileExtension)) {
                 f.push({
@@ -97,7 +122,7 @@ import BSHParser from './parsers/bsh-parser';
 
             const targetPath = `${outPath}/${relativePath.substring(inPath.length)}`;
             console.debug(`Copying '${relativePath}' to '${targetPath}'.`);
-            fs.write(targetPath, await file.async('blob'));
+            await fs.write(targetPath, await file.async('blob'));
         }
 
         //console.table(await fs.ls(outPath));

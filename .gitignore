@@ -1,4 +1,4 @@
-/dist
+/dist/*
 !/dist/index.html
 
 # Created by https://www.gitignore.io/api/node,visualstudiocode,yarn
@@ -71,8 +71,4 @@ typings/
 !.vscode/extensions.json
 .history
 
-#!! ERROR: yarn is undefined. Use list command to see defined gitignore types !!#
-
-
-# End of https://www.gitignore.io/api/node,visualstudiocode,yarn
-
+# End of https://www.gitignore.io/api/node,visualstudiocode
