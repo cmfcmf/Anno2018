@@ -1,8 +1,10 @@
 import FileSystem from "./filesystem";
 import GAMParser from "./parsers/GAM/gam-parser";
+import GameRenderer from "./game/game-renderer";
 
 export default class Menu {
-    constructor(private fs: FileSystem, private gamParser: GAMParser) { }
+    constructor(private fs: FileSystem, private gamParser: GAMParser,
+                private gameRenderer: GameRenderer) { }
 
     async render() {
         const menu = document.body.appendChild(document.createElement('div'));
@@ -14,8 +16,8 @@ export default class Menu {
             title.innerText = saveGame.name;
             title.onclick = async () => {
                 const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
-                const data = await this.gamParser.parse(saveGameData);
-                console.log(data);
+                const map = await this.gamParser.parse(saveGameData);
+                await this.gameRenderer.render(map);
             };
             menu.appendChild(title);
         }

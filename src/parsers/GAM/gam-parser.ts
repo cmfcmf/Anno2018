@@ -46,7 +46,7 @@ type IslandOreLocation = {
     _1: number,
 }
 
-type IslandField = {
+export type IslandField = {
     building: number;
     x: number;
     y: number;
@@ -101,7 +101,7 @@ type Ship = {
 };
 
 export class AnnoMap {
-    constructor(private islands: Island[], private ships: Ship[]) { }
+    constructor(public islands: Island[], public ships: Ship[]) { }
 }
 
 export default class GAMParser {
