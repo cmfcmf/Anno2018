@@ -9,6 +9,8 @@ import * as log from 'loglevel';
 
 const UPNG = require('upng-js/UPNG.js');
 
+type AtlasData = {meta: {scale: number}, frames: {[key: string]: object}};
+
 export default class BSHParser {
     private zip: JSZip;
     private fileSystem: FileSystem;
@@ -130,15 +132,17 @@ export default class BSHParser {
         let spritesheetIndex = 0;
         let binPacker = new BinPacker(this.SIZE,  this.SIZE);
         let pixels = new Uint8Array(this.SIZE * this.SIZE * 4);
+        let atlasData: AtlasData = { meta: { scale: 1 }, frames: {} };
 
         for (let i = 0; i < images.length; i++) {
             const image = images[i];
             const result = binPacker.addBlock({w: image.width, h: image.height});
             if (result === false) {
-                await this.saveSpriteSheet(pixels, spritesheetIndex, outName);
+                await this.saveSpriteSheet(pixels, atlasData, spritesheetIndex, outName);
                 spritesheetIndex++;
                 binPacker = new BinPacker(this.SIZE,  this.SIZE);
                 pixels = new Uint8Array(this.SIZE * this.SIZE * 4);
+                atlasData = { meta: { scale: 1 }, frames: {} };
             } else {
                 const startX = result.x;
                 const startY = result.y;
@@ -154,13 +158,34 @@ export default class BSHParser {
                         j++;
                     }
                 }
+
+                atlasData.frames[i.toString(10)] = {
+                    frame: {
+                        x: startX,
+                        y: startY,
+                        w: image.width,
+                        h: image.height,
+                    },
+                    rotated: false,
+                    trimmed: false,
+                    spriteSourceSize: {
+                        x: 0,
+                        y: 0,
+                        w: image.width,
+                        h: image.height,
+                    },
+                    sourceSize: {
+                        w: image.width,
+                        h: image.height,
+                    },
+                };
             }
         }
 
-        await this.saveSpriteSheet(pixels, spritesheetIndex, outName);
+        await this.saveSpriteSheet(pixels, atlasData, spritesheetIndex, outName);
     }
 
-    private async saveSpriteSheet(pixels: Uint8Array, spritesheetIndex: number, outName: string) {
+    private async saveSpriteSheet(pixels: Uint8Array, atlasData: AtlasData, spritesheetIndex: number, outName: string) {
         const png: ArrayBuffer = UPNG.encode([pixels.buffer], this.SIZE, this.SIZE, 0);
 
         //const imageNode = new Image();
@@ -169,6 +194,7 @@ export default class BSHParser {
         //document.body.appendChild(document.createElement('br'));
 
         this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.png`, png);
+        this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(atlasData))
     }
 
     private uInt8ToBase64(arr: Uint8Array): string {
