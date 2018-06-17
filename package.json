@@ -27,9 +27,7 @@
     "webpack-dev-server": "^3.1.4"
   },
   "scripts": {
-    "start": "webpack-dev-server",
-    "start-chrome": "webpack-dev-server --open chrome",
-    "start-chromium": "webpack-dev-server --open chromium-browser",
+    "start": "webpack-dev-server --host 0.0.0.0",
     "test": "jest --notify --watchAll"
   },
   "jest": {
