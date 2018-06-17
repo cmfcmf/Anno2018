@@ -20,6 +20,10 @@ export default class Stream {
         return this.data.length;
     }
 
+    position(): number {
+        return this.pos;
+    }
+
     public seek(pos: number) {
         this.pos = pos;
     }
@@ -69,5 +73,13 @@ export default class Stream {
 
     public read8() {
         return this.data[this.pos++];
+    }
+
+    eof() {
+        return this.pos === this.length;
+    }
+
+    read8Bool(): boolean {
+        return this.read8() !== 0;
     }
 }
