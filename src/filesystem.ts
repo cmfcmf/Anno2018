@@ -49,7 +49,11 @@ export default class FileSystem {
     }
 
     async openAndGetContentAsStream(entryOrPath: string|WebKitEntry): Promise<Stream> {
-        return await this.getStreamContentFromFile(await this.open(entryOrPath));
+        return new Stream(await this.getUint8ContentFromFile(await this.open(entryOrPath)));
+    }
+
+    async openAndGetContentAsUint8Array(entryOrPath: string|WebKitEntry): Promise<Uint8Array> {
+        return await this.getUint8ContentFromFile(await this.open(entryOrPath));
     }
 
     async getTextContentFromFile(file: File): Promise<string> {
@@ -65,11 +69,11 @@ export default class FileSystem {
         });
     }
 
-    async getStreamContentFromFile(file: File): Promise<Stream> {
-        return new Promise<Stream>((resolve, reject) => {
+    async getUint8ContentFromFile(file: File): Promise<Uint8Array> {
+        return new Promise<Uint8Array>((resolve, reject) => {
             const fileReader = new FileReader();
             fileReader.onload = (event => {
-                resolve(new Stream(new Uint8Array(event.target.result)));
+                resolve(new Uint8Array(event.target.result));
             });
             fileReader.onerror = (event => {
                 reject();

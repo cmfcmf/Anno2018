@@ -189,24 +189,11 @@ export default class BSHParser {
         const png: ArrayBuffer = UPNG.encode([pixels.buffer], this.SIZE, this.SIZE, 0);
 
         //const imageNode = new Image();
-        //imageNode.src = 'data:image/png;base64,'+ this.uInt8ToBase64(new Uint8Array(png));
+        //imageNode.src = 'data:image/png;base64,'+ uInt8ToBase64(new Uint8Array(png));
         //document.body.appendChild(imageNode);
         //document.body.appendChild(document.createElement('br'));
 
         this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.png`, png);
         this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(atlasData))
-    }
-
-    private uInt8ToBase64(arr: Uint8Array): string {
-        const CHUNK_SIZE = 0x8000; //arbitrary number
-        let index = 0;
-        const length = arr.length;
-        let result = '';
-        while (index < length) {
-            const slice = arr.subarray(index, Math.min(index + CHUNK_SIZE, length));
-            result += String.fromCharCode.apply(null, slice);
-            index += CHUNK_SIZE;
-        }
-        return btoa(result);
     }
 }
