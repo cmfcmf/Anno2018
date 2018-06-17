@@ -58,7 +58,7 @@ import Stream from "./parsers/stream";
             log.info(`Started parsing "${inName}".`);
 
             const parser = new DATParser();
-            const data = parser.parse(await fs.openAndGetContent(inName));
+            const data = parser.parse(await fs.openAndGetContentAsText(inName));
             await fs.write(outName, JSON.stringify(data));
 
             log.info(`Finished parsing "${inName}".`);
@@ -122,7 +122,7 @@ import Stream from "./parsers/stream";
         return copyFolderFromZip(annoRoot, 'SAVEGAME', '/saves', '.gam')
     }
 
-    async function copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtension: string) {
+    async function copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtension: string, makeLowerCase: boolean = true) {
         inPath = `${inPath}/`;
         console.debug(`Copying '${fileExtension}' files from '${inPath}' to '${outPath}'.`);
         //await fs.rm(outPath);
@@ -130,7 +130,12 @@ import Stream from "./parsers/stream";
 
         const files: {path: string, file: JSZipObject}[] = [];
         zip.forEach((relativePath, file) => {
-            if (relativePath.startsWith(inPath) && relativePath.endsWith(fileExtension)) {
+            if (relativePath.startsWith(inPath) && relativePath.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+                relativePath = relativePath.substring(inPath.length);
+                relativePath = relativePath.substring(0, relativePath.length - fileExtension.length) + fileExtension;
+                if (makeLowerCase) {
+                    relativePath = relativePath.toLowerCase();
+                }
                 files.push({
                     path: relativePath,
                     file: file,
@@ -143,7 +148,7 @@ import Stream from "./parsers/stream";
             const relativePath = fileAndPath.path;
             const file = fileAndPath.file;
 
-            const targetPath = `${outPath}/${relativePath.substring(inPath.length)}`;
+            const targetPath = `${outPath}/${relativePath}`;
             console.debug(`Copying '${relativePath}' to '${targetPath}'.`);
             results.push(fs.write(targetPath, await file.async('blob')));
         }

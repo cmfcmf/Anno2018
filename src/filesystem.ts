@@ -1,3 +1,5 @@
+import Stream from "./parsers/stream";
+
 const Filer = require('filer.js');
 
 export default class FileSystem {
@@ -25,8 +27,8 @@ export default class FileSystem {
         return new Promise((resolve, reject) => this.filer.mkdir(foldername, false, resolve, reject));
     }
 
-    async ls(directory: string|WebKitEntry): Promise<WebKitFileEntry|WebKitDirectoryEntry> {
-        return <Promise<WebKitFileEntry|WebKitDirectoryEntry>>new Promise((resolve, reject) => this.filer.ls(directory, resolve, reject));
+    async ls(directory: string|WebKitEntry): Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]> {
+        return <Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]>>new Promise((resolve, reject) => this.filer.ls(directory, resolve, reject));
     }
 
     async exists(entryOrPath: string|WebKitEntry) {
@@ -42,11 +44,15 @@ export default class FileSystem {
         return <Promise<File>>new Promise((resolve, reject) => this.filer.open(entryOrPath, resolve, reject));
     }
 
-    async openAndGetContent(entryOrPath: string|WebKitEntry) {
-        return this.getContentFromFile(await this.open(entryOrPath));
+    async openAndGetContentAsText(entryOrPath: string|WebKitEntry) {
+        return await this.getTextContentFromFile(await this.open(entryOrPath));
     }
 
-    async getContentFromFile(file: File) {
+    async openAndGetContentAsStream(entryOrPath: string|WebKitEntry): Promise<Stream> {
+        return await this.getStreamContentFromFile(await this.open(entryOrPath));
+    }
+
+    async getTextContentFromFile(file: File): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             const fileReader = new FileReader();
             fileReader.onload = (event => {
@@ -56,6 +62,19 @@ export default class FileSystem {
                 reject();
             });
             fileReader.readAsText(file);
+        });
+    }
+
+    async getStreamContentFromFile(file: File): Promise<Stream> {
+        return new Promise<Stream>((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.onload = (event => {
+                resolve(new Stream(new Uint8Array(event.target.result)));
+            });
+            fileReader.onerror = (event => {
+                reject();
+            });
+            fileReader.readAsArrayBuffer(file);
         });
     }
 

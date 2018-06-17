@@ -1,7 +1,10 @@
 import './upload';
+import Menu from './menu';
 import * as PIXI from 'pixi.js';
 import * as log from 'loglevel';
 import FileSystem from "./filesystem";
+import GAMParser from "./parsers/GAM/gam-parser";
+import IslandLoader from "./parsers/GAM/island-loader";
 
 log.enableAll();
 
@@ -18,9 +21,16 @@ const app = new PIXI.Application({
 //Add the canvas that Pixi automatically created for you to the HTML document
 document.body.appendChild(app.view);
 
+
 (async () => {
     const fs = new FileSystem();
     await fs.init(1024 * 1024 * 200);
+
+    (<any>window).fs = fs;
+
+    const gamParser = new GAMParser(new IslandLoader(fs));
+    const menu = new Menu(fs, gamParser);
+    menu.render();
 
     /** @var FileEntry */
     try {
