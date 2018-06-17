@@ -1,4 +1,4 @@
-import * as Filer from 'filer.js';
+const Filer = require('filer.js');
 
 export default class FileSystem {
     private filer: any;
@@ -40,6 +40,23 @@ export default class FileSystem {
 
     async open(entryOrPath: string|WebKitEntry): Promise<File> {
         return <Promise<File>>new Promise((resolve, reject) => this.filer.open(entryOrPath, resolve, reject));
+    }
+
+    async openAndGetContent(entryOrPath: string|WebKitEntry) {
+        return this.getContentFromFile(await this.open(entryOrPath));
+    }
+
+    async getContentFromFile(file: File) {
+        return new Promise<string>((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.onload = (event => {
+                resolve(event.target.result);
+            });
+            fileReader.onerror = (event => {
+                reject();
+            });
+            fileReader.readAsText(file);
+        });
     }
 
     async df() {

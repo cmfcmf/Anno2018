@@ -5,8 +5,9 @@ import * as assert from "assert";
 import colorPalette from './bsh-color-palette';
 import BSHImage from './bsh-image';
 import BinPacker from "./bin-packer";
-import * as UPNG from 'upng-js/UPNG.js';
 import * as log from 'loglevel';
+
+const UPNG = require('upng-js/UPNG.js');
 
 export default class BSHParser {
     private zip: JSZip;

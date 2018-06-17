@@ -6,6 +6,11 @@
     "module": "es6",
     "target": "es2015",
     //"jsx": "react",
-    "allowJs": true
+    "allowJs": true,
+    "lib": [
+      "es2017",
+      "dom"
+    ],
+    "moduleResolution": "node"
   }
 }

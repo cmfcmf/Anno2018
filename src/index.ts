@@ -1,7 +1,6 @@
 import './upload';
-import 'pixi.js';
-import *  as log from 'loglevel';
-import './filesystem';
+import * as PIXI from 'pixi.js';
+import * as log from 'loglevel';
 import FileSystem from "./filesystem";
 
 log.enableAll();

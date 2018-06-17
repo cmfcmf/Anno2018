@@ -3,7 +3,7 @@ import {JSZipObject} from "jszip";
 
 export default class Stream {
     private pos: number;
-    private data: Uint8Array;
+    private readonly data: Uint8Array;
 
     public static async fromZipObject(zip: JSZipObject) {
         const data = await zip.async('uint8array');
@@ -11,7 +11,7 @@ export default class Stream {
         return new Stream(data);
     }
 
-    private constructor(data: Uint8Array) {
+    public constructor(data: Uint8Array) {
         this.pos = 0;
         this.data = data;
     }

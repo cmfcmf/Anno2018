@@ -3,6 +3,9 @@ import {JSZipObject} from "jszip";
 import FileSystem from "./filesystem";
 import BSHParser from './parsers/BSH/bsh-parser';
 import CODParser from './parsers/COD/cod-parser';
+import DATParser from "./parsers/DAT/dat-parser";
+import * as log from "loglevel";
+import Stream from "./parsers/stream";
 
 (async () => {
     const fs = new FileSystem();
@@ -36,6 +39,7 @@ import CODParser from './parsers/COD/cod-parser';
         await copyIslands(annoRoot);
         await copySaves(annoRoot);
         await decryptCODs(annoRoot);
+        await parseDATs(annoRoot);
         await parseBSHs(annoRoot);
     };
 
@@ -44,14 +48,40 @@ import CODParser from './parsers/COD/cod-parser';
     console.table(await fs.ls(fs.root()));
     console.log(await fs.df());
 
+    async function parseDATs(annoRoot: JSZip) {
+        return Promise.all([
+            ['fields.dat', 'fields.json'],
+            ['animations.dat', 'animations.json'],
+        ].map(async r => {
+            const inName = r[0];
+            const outName = r[1];
+            log.info(`Started parsing "${inName}".`);
+
+            const parser = new DATParser();
+            const data = parser.parse(await fs.openAndGetContent(inName));
+            await fs.write(outName, JSON.stringify(data));
+
+            log.info(`Finished parsing "${inName}".`);
+        }));
+    }
+
     async function decryptCODs(annoRoot: JSZip) {
-        const parser = new CODParser(annoRoot, fs);
+        const parser = new CODParser();
 
         return Promise.all([
             ['haeuser.cod', 'fields.dat'],
             ['figuren.cod', 'animations.dat'],
-        ].map(r => {
-            return parser.parse(r[0], r[1]);
+        ].map(async r => {
+            const inName = r[0];
+            const outName = r[1];
+
+            log.info(`Started parsing "${inName}".`);
+
+            const codFile = annoRoot.file(inName);
+            const codStream = await Stream.fromZipObject(codFile);
+            fs.write(outName, parser.parse(codStream));
+
+            log.info(`Finished parsing "${inName}".`);
         }));
     }
 
