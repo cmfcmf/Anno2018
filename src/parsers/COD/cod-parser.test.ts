@@ -1,7 +1,7 @@
-import CODParser from "./cod-parser";
 import Stream from "../stream";
+import CODParser from "./cod-parser";
 
-test('Correctly parses bytes', async () => {
+test("Correctly parses bytes", async () => {
     const codParser = new CODParser();
 
     const byteStream = new Stream(new Uint8Array([
@@ -13,5 +13,7 @@ test('Correctly parses bytes', async () => {
         0xdb, 0xe0, 0xad, 0x8c, 0x9b, 0x8b, 0x9b, 0x8e, 0xc6, 0xf3, 0xf6,
     ]));
 
-    expect(codParser.parse(byteStream)).toBe("------------------\r\n[GAME]\r\nLager:\r\nleerleerleer\r\n%d%% Steuer:\r\n")
+    expect(codParser.parse(byteStream)).toBe(
+        "------------------\r\n[GAME]\r\nLager:\r\nleerleerleer\r\n%d%% Steuer:\r\n",
+    );
 });

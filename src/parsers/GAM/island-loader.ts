@@ -3,18 +3,18 @@ import {Island} from "./gam-parser";
 
 export default class IslandLoader {
     private readonly islandSizes = new Map([
-        [ 35, 'lit'],
-        [ 45, 'mit'],
-        [ 55, 'med'],
-        [ 85, 'big'],
-        [100, 'lar'],
+        [ 35, "lit"],
+        [ 45, "mit"],
+        [ 55, "med"],
+        [ 85, "big"],
+        [100, "lar"],
     ]);
 
     constructor(private fs: FileSystem) {}
 
-    async load(island: Island) {
+    public async load(island: Island) {
         const climate = island.is_south ? "south" : "north";
-        const islandNumber = island['num_base_island'].toString().padStart(2, '0');
+        const islandNumber = island.num_base_island.toString().padStart(2, "0");
         for (const entry of this.islandSizes.entries()) {
             const size = entry[0];
             const sizeName = entry[1];
@@ -23,6 +23,6 @@ export default class IslandLoader {
             }
         }
 
-        throw new Error('Could not load island');
+        throw new Error("Could not load island");
     }
 }

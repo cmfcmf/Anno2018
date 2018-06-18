@@ -1,7 +1,7 @@
 export default class BSHImage {
     public width: number;
     public height: number;
-    pixels: Uint8Array;
+    public pixels: Uint8Array;
 
     constructor(width: number, height: number, pixels: Uint8Array) {
         this.width = width;

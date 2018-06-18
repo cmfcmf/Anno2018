@@ -1,0 +1,13 @@
+{
+  "extends": "tslint:recommended",
+  "rules": {
+    "no-bitwise": false,
+    "object-literal-sort-keys": false,
+    "object-literal-shorthand": false,
+    "no-console": false,
+    "interface-name": false,
+    "no-var-requires": false,
+    "no-conditional-assignment": false,
+    "no-floating-promises": true
+  }
+}

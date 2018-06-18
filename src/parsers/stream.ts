@@ -1,15 +1,14 @@
 import {JSZipObject} from "jszip";
 
-
 export default class Stream {
-    private pos: number;
-    private readonly data: Uint8Array;
-
     public static async fromZipObject(zip: JSZipObject) {
-        const data = await zip.async('uint8array');
+        const data = await zip.async("uint8array");
 
         return new Stream(data);
     }
+
+    private pos: number;
+    private readonly data: Uint8Array;
 
     public constructor(data: Uint8Array) {
         this.pos = 0;
@@ -20,7 +19,7 @@ export default class Stream {
         return this.data.length;
     }
 
-    position(): number {
+    public position(): number {
         return this.pos;
     }
 
@@ -44,7 +43,7 @@ export default class Stream {
     }
 
     public read(length: number) {
-        let result = [];
+        const result = [];
         while (length--) {
             result.push(this.read8());
         }
@@ -63,23 +62,23 @@ export default class Stream {
         return this.readNBytes(8);
     }
 
+    public read8() {
+        return this.data[this.pos++];
+    }
+
+    public eof() {
+        return this.pos === this.length;
+    }
+
+    public read8Bool(): boolean {
+        return this.read8() !== 0;
+    }
+
     private readNBytes(n: number) {
         let result = 0;
         for (let i = 0; i < n; i++) {
             result += this.read8() << (i * 8);
         }
         return result;
-    }
-
-    public read8() {
-        return this.data[this.pos++];
-    }
-
-    eof() {
-        return this.pos === this.length;
-    }
-
-    read8Bool(): boolean {
-        return this.read8() !== 0;
     }
 }

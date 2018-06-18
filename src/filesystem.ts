@@ -1,6 +1,6 @@
 import Stream from "./parsers/stream";
 
-const Filer = require('filer.js');
+const Filer = require("filer.js");
 
 export default class FileSystem {
     private filer: any;
@@ -8,30 +8,33 @@ export default class FileSystem {
         this.filer = new Filer();
     }
 
-    root() {
+    public root() {
         return this.filer.fs.root;
     }
 
-    async init(size: number) {
+    public async init(size: number) {
         return await new Promise((resolve, reject) => this.filer.init({
             persistent: true,
             size: size,
         }, resolve, reject));
     }
 
-    async create(filename: string|WebKitEntry) {
+    public async create(filename: string|WebKitEntry) {
         return new Promise((resolve, reject) => this.filer.create(filename, false, resolve, reject));
     }
 
-    async mkdir(foldername: string|WebKitEntry) {
+    public async mkdir(foldername: string|WebKitEntry) {
         return new Promise((resolve, reject) => this.filer.mkdir(foldername, false, resolve, reject));
     }
 
-    async ls(directory: string|WebKitEntry): Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]> {
-        return <Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]>>new Promise((resolve, reject) => this.filer.ls(directory, resolve, reject));
+    public async ls(directory: string|WebKitEntry): Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]> {
+        // noinspection TsLint
+        return new Promise((resolve, reject) => {
+            return this.filer.ls(directory, resolve, reject);
+        }) as Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]>;
     }
 
-    async exists(entryOrPath: string|WebKitEntry) {
+    public async exists(entryOrPath: string|WebKitEntry) {
         try {
             await this.open(entryOrPath);
             return true;
@@ -40,62 +43,62 @@ export default class FileSystem {
         }
     }
 
-    async open(entryOrPath: string|WebKitEntry): Promise<File> {
-        return <Promise<File>>new Promise((resolve, reject) => this.filer.open(entryOrPath, resolve, reject));
+    public async open(entryOrPath: string|WebKitEntry): Promise<File> {
+        return new Promise((resolve, reject) => this.filer.open(entryOrPath, resolve, reject)) as Promise<File>;
     }
 
-    async openAndGetContentAsText(entryOrPath: string|WebKitEntry) {
+    public async openAndGetContentAsText(entryOrPath: string|WebKitEntry) {
         return await this.getTextContentFromFile(await this.open(entryOrPath));
     }
 
-    async openAndGetContentAsStream(entryOrPath: string|WebKitEntry): Promise<Stream> {
+    public async openAndGetContentAsStream(entryOrPath: string|WebKitEntry): Promise<Stream> {
         return new Stream(await this.getUint8ContentFromFile(await this.open(entryOrPath)));
     }
 
-    async openAndGetContentAsUint8Array(entryOrPath: string|WebKitEntry): Promise<Uint8Array> {
+    public async openAndGetContentAsUint8Array(entryOrPath: string|WebKitEntry): Promise<Uint8Array> {
         return await this.getUint8ContentFromFile(await this.open(entryOrPath));
     }
 
-    async getTextContentFromFile(file: File): Promise<string> {
+    public async getTextContentFromFile(file: File): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             const fileReader = new FileReader();
-            fileReader.onload = (event => {
+            fileReader.onload = ((event) => {
                 resolve(event.target.result);
             });
-            fileReader.onerror = (event => {
+            fileReader.onerror = ((event) => {
                 reject();
             });
             fileReader.readAsText(file);
         });
     }
 
-    async getUint8ContentFromFile(file: File): Promise<Uint8Array> {
+    public async getUint8ContentFromFile(file: File): Promise<Uint8Array> {
         return new Promise<Uint8Array>((resolve, reject) => {
             const fileReader = new FileReader();
-            fileReader.onload = (event => {
+            fileReader.onload = ((event) => {
                 resolve(new Uint8Array(event.target.result));
             });
-            fileReader.onerror = (event => {
+            fileReader.onerror = ((event) => {
                 reject();
             });
             fileReader.readAsArrayBuffer(file);
         });
     }
 
-    async df() {
+    public async df() {
         return new Promise((resolve, reject) => {
             this.filer.df(
                 (used: number, free: number, cap: number) => resolve({used: used, free: free, cap: cap}),
-                reject
+                reject,
             );
         });
     }
 
-    async write(pathOrEntry: string|WebKitEntry, content: any) {
+    public async write(pathOrEntry: string|WebKitEntry, content: any) {
         return new Promise((resolve, reject) => this.filer.write(pathOrEntry, {data: content}, resolve, reject));
     }
 
-    async rm(pathOrEntry: string|WebKitEntry) {
-        return new Promise((resolve, reject) => this.filer.rm(pathOrEntry, resolve, reject))
+    public async rm(pathOrEntry: string|WebKitEntry) {
+        return new Promise((resolve, reject) => this.filer.rm(pathOrEntry, resolve, reject));
     }
 }

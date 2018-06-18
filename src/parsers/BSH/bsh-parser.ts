@@ -1,37 +1,36 @@
+import * as assert from "assert";
 import * as JSZip from "jszip";
+import * as log from "loglevel";
 import FileSystem from "../../filesystem";
 import Stream from "../stream";
-import * as assert from "assert";
-import colorPalette from './bsh-color-palette';
-import BSHImage from './bsh-image';
 import BinPacker from "./bin-packer";
-import * as log from 'loglevel';
+import colorPalette from "./bsh-color-palette";
+import BSHImage from "./bsh-image";
 
-const UPNG = require('upng-js/UPNG.js');
+const UPNG = require("upng-js/UPNG.js");
 
-type AtlasData = {meta: {scale: number}, frames: {[key: string]: object}};
+interface AtlasData {meta: {scale: number}; frames: {[key: string]: object}; }
 
 export default class BSHParser {
     private zip: JSZip;
     private fileSystem: FileSystem;
 
     private readonly SIZE = 2048;
-    private gfxFolder: any; // TODO
 
     private log: log.Logger;
 
     constructor(zip: JSZip, fileSystem: FileSystem) {
         this.zip = zip;
         this.fileSystem = fileSystem;
-        this.log = log.getLogger('bsh-parser');
+        this.log = log.getLogger("bsh-parser");
     }
 
     public async parse(inName: string, outName: string) {
         this.log.info(`Started parsing "${inName}".`);
 
-        let path = 'GFX';
-        if (inName === 'TOOLS') {
-            path = 'ToolGfx';
+        let path = "GFX";
+        if (inName === "TOOLS") {
+            path = "ToolGfx";
         }
 
         inName = `${path}/${inName}.BSH`;
@@ -49,13 +48,13 @@ export default class BSHParser {
      */
     private async doParse(data: Stream, outName: string) {
         await this.fileSystem.mkdir(`/gfx/${outName}`);
-        //this.log.table(await this.fileSystem.ls(`/gfx`));
-        //this.log.table(await this.fileSystem.ls(`/gfx/${outName}`));
+        // this.log.table(await this.fileSystem.ls(`/gfx`));
+        // this.log.table(await this.fileSystem.ls(`/gfx/${outName}`));
 
         const HEADER_SIZE = 20;
 
         const fileType = data.readString(16);
-        assert(fileType === 'BSH');
+        assert(fileType === "BSH");
 
         const fileLength = data.read32();
         assert(HEADER_SIZE + fileLength === data.length);
@@ -71,57 +70,10 @@ export default class BSHParser {
 
         for (let i = 0; i < numImages; i++) {
             data.seek(imageOffsets[i] + HEADER_SIZE);
-
-            const width = data.read32();
-            const height = data.read32();
-            const type = data.read32();
-            const length = data.read32();
-            const bsh_data = data.read(width * height * 3);
-
-            assert(width > 0);
-            assert(height > 0);
-            if (width <= 1 || height <= 1) {
-                continue;
+            const bshImage = this.parseImage(data);
+            if (bshImage !== null) {
+                images.push(bshImage);
             }
-
-            const BYTES_PER_PIXEL = 4;
-            const pixelsBREITE = width * BYTES_PER_PIXEL;
-
-            let pixels = new Uint8Array(width * height * BYTES_PER_PIXEL);
-
-            let ch = null;
-            let p_quelle = 0;
-            let p_ziel = 0;
-            let p_zielzeile = 0;
-
-            while (true) {
-                ch = bsh_data[p_quelle];
-                p_quelle += 1;
-                if (ch == 0xFF) {
-                    break;
-                }
-                if (ch == 0xFE) {
-                    p_zielzeile += pixelsBREITE;
-                    p_ziel = p_zielzeile
-                } else {
-                    p_ziel += ch * BYTES_PER_PIXEL;
-
-                    ch = bsh_data[p_quelle];
-                    p_quelle += 1;
-                    while (ch > 0) {
-                        const idx = bsh_data[p_quelle] * 3;
-                        p_quelle += 1;
-
-                        pixels[p_ziel++] = colorPalette[idx];
-                        pixels[p_ziel++] = colorPalette[idx + 1];
-                        pixels[p_ziel++] = colorPalette[idx + 2];
-                        pixels[p_ziel++] = 0xFF;
-
-                        ch -= 1
-                    }
-                }
-            }
-            images.push(new BSHImage(width, height, pixels));
         }
 
         images.sort((imageA: BSHImage, imageB: BSHImage) => {
@@ -186,15 +138,63 @@ export default class BSHParser {
         await this.saveSpriteSheet(pixels, atlasData, spritesheetIndex, outName);
     }
 
+    private parseImage(data: Stream): BSHImage|null {
+        const width = data.read32();
+        const height = data.read32();
+        const type = data.read32();
+        const length = data.read32();
+        const bshData = data.read(width * height * 3);
+
+        assert(width > 0);
+        assert(height > 0);
+        if (width <= 1 || height <= 1) {
+            return null;
+        }
+
+        const BYTES_PER_PIXEL = 4;
+        const pixels = new Uint8Array(width * height * BYTES_PER_PIXEL);
+
+        let sourceIdx = 0;
+        let targetIdx = 0;
+        let rowIdx = 0;
+
+        while (true) {
+            let ch = bshData[sourceIdx];
+            sourceIdx += 1;
+            if (ch === 0xFF) {
+                break;
+            }
+            if (ch === 0xFE) {
+                rowIdx += width * BYTES_PER_PIXEL;
+                targetIdx = rowIdx;
+            } else {
+                targetIdx += ch * BYTES_PER_PIXEL;
+
+                ch = bshData[sourceIdx];
+                sourceIdx += 1;
+                while (ch--) {
+                    const idx = bshData[sourceIdx] * 3;
+                    sourceIdx += 1;
+
+                    pixels[targetIdx++] = colorPalette[idx];
+                    pixels[targetIdx++] = colorPalette[idx + 1];
+                    pixels[targetIdx++] = colorPalette[idx + 2];
+                    pixels[targetIdx++] = 0xFF;
+                }
+            }
+        }
+        return new BSHImage(width, height, pixels);
+    }
+
     private async saveSpriteSheet(pixels: Uint8Array, atlasData: AtlasData, spritesheetIndex: number, outName: string) {
         const png: ArrayBuffer = UPNG.encode([pixels.buffer], this.SIZE, this.SIZE, 0);
 
-        //const imageNode = new Image();
-        //imageNode.src = 'data:image/png;base64,'+ uInt8ToBase64(new Uint8Array(png));
-        //document.body.appendChild(imageNode);
-        //document.body.appendChild(document.createElement('br'));
+        // const imageNode = new Image();
+        // imageNode.src = 'data:image/png;base64,'+ uInt8ToBase64(new Uint8Array(png));
+        // document.body.appendChild(imageNode);
+        // document.body.appendChild(document.createElement('br'));
 
-        this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.png`, png);
-        this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(atlasData))
+        await this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.png`, png);
+        await this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(atlasData));
     }
 }

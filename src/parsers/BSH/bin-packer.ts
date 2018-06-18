@@ -40,13 +40,13 @@
   }
  ******************************************************************************/
 
-type Rect = {
+interface Rect {
     w: number;
     h: number;
     fit?: Node;
 }
 
-type Node = {
+interface Node {
     x: number;
     y: number;
     w: number;
@@ -54,7 +54,7 @@ type Node = {
     used?: boolean;
     down?: Node;
     right?: Node;
-};
+}
 
 export default class BinPacker {
     private readonly root: Node;
@@ -73,12 +73,13 @@ export default class BinPacker {
     }
 
     private findNode(root: Node, w: number, h: number): Node|null {
-        if (root.used)
+        if (root.used) {
             return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
-        else if ((w <= root.w) && (h <= root.h))
+        } else if ((w <= root.w) && (h <= root.h)) {
             return root;
-        else
+             } else {
             return null;
+             }
     }
 
     private splitNode(node: Node, w: number, h: number) {
@@ -88,4 +89,4 @@ export default class BinPacker {
         return node;
     }
 
-};
+}

@@ -1,23 +1,23 @@
 import FileSystem from "./filesystem";
-import GAMParser from "./parsers/GAM/gam-parser";
 import GameRenderer from "./game/game-renderer";
+import GAMParser from "./parsers/GAM/gam-parser";
 
 export default class Menu {
     constructor(private fs: FileSystem, private gamParser: GAMParser,
                 private gameRenderer: GameRenderer) { }
 
-    async render() {
-        const menu = document.body.appendChild(document.createElement('div'));
+    public async render() {
+        const menu = document.body.appendChild(document.createElement("div"));
 
         let saves;
         try {
-            saves = await this.fs.ls('/saves');
+            saves = await this.fs.ls("/saves");
         } catch (e) {
             return;
         }
         console.table(saves);
         for (const saveGame of saves) {
-            const title = document.createElement('p');
+            const title = document.createElement("p");
             title.innerText = saveGame.name;
             title.onclick = async () => {
                 const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);

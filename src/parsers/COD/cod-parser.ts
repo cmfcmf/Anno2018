@@ -1,5 +1,5 @@
-import Stream from '../stream';
 import {decode as iconv_decode} from "iconv-lite";
+import Stream from "../stream";
 
 export default class CODParser {
     public parse(codStream: Stream) {
@@ -10,6 +10,6 @@ export default class CODParser {
 
         // Decode the bytes using Windows 1252 "Western" encoding.
         // The resulting string will then be written in UTF-8 format.
-        return iconv_decode(decryptedBytes, 'win1252');
+        return iconv_decode(decryptedBytes, "win1252");
     }
 }

@@ -1,88 +1,95 @@
 import * as JSZip from "jszip";
 import {JSZipObject} from "jszip";
-import FileSystem from "./filesystem";
-import BSHParser from './parsers/BSH/bsh-parser';
-import CODParser from './parsers/COD/cod-parser';
-import DATParser from "./parsers/DAT/dat-parser";
 import * as log from "loglevel";
+import FileSystem from "./filesystem";
+import BSHParser from "./parsers/BSH/bsh-parser";
+import CODParser from "./parsers/COD/cod-parser";
+import DATParser from "./parsers/DAT/dat-parser";
 import Stream from "./parsers/stream";
 
-(async () => {
-    const fs = new FileSystem();
-    await fs.init(1024 * 1024 * 200);
+export default class UploadHandler {
+    constructor(private fs: FileSystem) { }
 
-    const uploadBtn = document.createElement('input');
-    uploadBtn.type = 'file';
-    uploadBtn.multiple = false;
-    uploadBtn.accept = 'zip';
+    public async init() {
+        await this.fs.init(1024 * 1024 * 200);
 
-    uploadBtn.onchange = async () => {
-        const files = uploadBtn.files;
-        if (files.length !== 1) {
-            alert('Please select the zipped Anno1602 folder to upload.');
-            return;
-        }
-        const file = files[0];
-        if (!file.name.endsWith('.zip')) {
-            alert('You need to upload a .zip file!');
-            return;
-        }
-        uploadBtn.disabled = true;
+        console.table(await this.fs.ls("/"));
+        console.log(await this.fs.df());
+    }
 
-        await fs.write('/original.zip', file);
+    public render() {
+        const uploadBtn = document.createElement("input");
+        uploadBtn.type = "file";
+        uploadBtn.multiple = false;
+        uploadBtn.accept = "zip";
 
-        const zipFileEntry = await fs.open('/original.zip');
+        uploadBtn.onchange = async () => {
+            const files = uploadBtn.files;
+            if (files.length !== 1) {
+                alert("Please select the zipped Anno1602 folder to upload.");
+                return;
+            }
+            const file = files[0];
+            if (!file.name.endsWith(".zip")) {
+                alert("You need to upload a .zip file!");
+                return;
+            }
+            uploadBtn.disabled = true;
 
-        const zip = await JSZip.loadAsync(zipFileEntry);
-        const annoRoot = zip.folder('Anno 1602');
+            await this.fs.write("/original.zip", file);
 
-        await copyIslands(annoRoot);
-        await copySaves(annoRoot);
-        await decryptCODs(annoRoot);
-        await parseDATs(annoRoot);
-        await parseBSHs(annoRoot);
-    };
-    document.body.appendChild(uploadBtn);
+            const zipFileEntry = await this.fs.open("/original.zip");
 
-    const resetBtn = document.createElement('button');
-    resetBtn.innerText = 'Reset All Files';
-    resetBtn.onclick = async () => {
-        const entries = await fs.ls('/');
-        for (const entry of entries) {
-            await fs.rm(entry);
-        }
-        alert('All files deleted');
-        window.location.reload(true);
-    };
-    document.body.appendChild(resetBtn);
+            const zip = await JSZip.loadAsync(zipFileEntry);
+            const annoRoot = zip.folder("Anno 1602");
 
-    console.table(await fs.ls(fs.root()));
-    console.log(await fs.df());
+            await this.copyIslands(annoRoot);
+            await this.copySaves(annoRoot);
+            await this.decryptCODs(annoRoot);
+            await this.parseDATs(annoRoot);
+            await this.parseBSHs(annoRoot);
 
-    async function parseDATs(annoRoot: JSZip) {
+            console.info("Upload finished.");
+        };
+        document.body.appendChild(uploadBtn);
+
+        const resetBtn = document.createElement("button");
+        resetBtn.innerText = "Reset All Files";
+        resetBtn.onclick = async () => {
+            const entries = await this.fs.ls("/");
+            for (const entry of entries) {
+                await this.fs.rm(entry);
+            }
+            alert("All files deleted");
+            window.location.reload(true);
+        };
+        document.body.appendChild(resetBtn);
+    }
+
+    private async parseDATs(annoRoot: JSZip) {
         return Promise.all([
-            ['fields.dat', 'fields.json'],
-            ['animations.dat', 'animations.json'],
-        ].map(async r => {
+            ["fields.dat", "fields.json"],
+            ["animations.dat", "animations.json"],
+        ].map(async (r) => {
             const inName = r[0];
             const outName = r[1];
             log.info(`Started parsing "${inName}".`);
 
             const parser = new DATParser();
-            const data = parser.parse(await fs.openAndGetContentAsText(inName));
-            await fs.write(outName, JSON.stringify(data));
+            const data = parser.parse(await this.fs.openAndGetContentAsText(inName));
+            await this.fs.write(outName, JSON.stringify(data));
 
             log.info(`Finished parsing "${inName}".`);
         }));
     }
 
-    async function decryptCODs(annoRoot: JSZip) {
+    private async decryptCODs(annoRoot: JSZip) {
         const parser = new CODParser();
 
         return Promise.all([
-            ['haeuser.cod', 'fields.dat'],
-            ['figuren.cod', 'animations.dat'],
-        ].map(async r => {
+            ["haeuser.cod", "fields.dat"],
+            ["figuren.cod", "animations.dat"],
+        ].map(async (r) => {
             const inName = r[0];
             const outName = r[1];
 
@@ -90,14 +97,14 @@ import Stream from "./parsers/stream";
 
             const codFile = annoRoot.file(inName);
             const codStream = await Stream.fromZipObject(codFile);
-            fs.write(outName, parser.parse(codStream));
+            await this.fs.write(outName, parser.parse(codStream));
 
             log.info(`Finished parsing "${inName}".`);
         }));
     }
 
-    async function parseBSHs(annoRoot: JSZip) {
-        const parser = new BSHParser(annoRoot, fs);
+    private async parseBSHs(annoRoot: JSZip) {
+        const parser = new BSHParser(annoRoot, this.fs);
 
         return Promise.all([
             ["NUMBERS",  "NUMBERS"],
@@ -112,34 +119,35 @@ import Stream from "./parsers/stream";
             ["TIERE",    "RIND"],
             ["TRAEGER",  "TRAEGER"],
             ["TOOLS",    "TOOLS"],
-        ].map(r => {
+        ].map((r) => {
             return parser.parse(r[0], r[1]);
         }));
     }
 
-    async function copyIslands(annoRoot: JSZip) {
+    private async copyIslands(annoRoot: JSZip) {
         return Promise.all([
             ["NOKLIMA", "/islands/noklima"],
             ["NORD",    "/islands/north"],
             ["NORDNAT", "/islands/northnat"],
             ["SUED",    "/islands/south"],
             ["SUEDNAT", "/islands/southnat"],
-        ].map(r => {
-            return copyFolderFromZip(annoRoot, r[0], r[1], ".scp");
+        ].map((r) => {
+            return this.copyFolderFromZip(annoRoot, r[0], r[1], ".scp");
         }));
     }
 
-    async function copySaves(annoRoot: JSZip) {
-        return copyFolderFromZip(annoRoot, 'SAVEGAME', '/saves', '.gam')
+    private async copySaves(annoRoot: JSZip) {
+        return this.copyFolderFromZip(annoRoot, "SAVEGAME", "/saves", ".gam");
     }
 
-    async function copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtension: string, makeLowerCase: boolean = true) {
+    private async copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtension: string,
+                                    makeLowerCase: boolean = true) {
         inPath = `${inPath}/`;
         console.debug(`Copying '${fileExtension}' files from '${inPath}' to '${outPath}'.`);
-        //await fs.rm(outPath);
-        await fs.mkdir(outPath);
+        // await fs.rm(outPath);
+        await this.fs.mkdir(outPath);
 
-        const files: {path: string, file: JSZipObject}[] = [];
+        const files: Array<{path: string, file: JSZipObject}> = [];
         zip.forEach((relativePath, file) => {
             if (relativePath.startsWith(inPath) && relativePath.toLowerCase().endsWith(fileExtension.toLowerCase())) {
                 relativePath = relativePath.substring(inPath.length);
@@ -161,11 +169,11 @@ import Stream from "./parsers/stream";
 
             const targetPath = `${outPath}/${relativePath}`;
             console.debug(`Copying '${relativePath}' to '${targetPath}'.`);
-            results.push(fs.write(targetPath, await file.async('blob')));
+            results.push(this.fs.write(targetPath, await file.async("blob")));
         }
 
-        //console.table(await fs.ls(outPath));
+        // console.table(await fs.ls(outPath));
 
         return Promise.all(results);
     }
-})();
+}

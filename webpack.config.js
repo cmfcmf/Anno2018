@@ -1,15 +1,16 @@
-const path = require('path');
-const webpack = require('webpack');
+const path = require("path");
+const webpack = require("webpack");
 
+/* tslint:disable */
 module.exports = {
   entry: {
-    app: './src/index.ts',
+    app: "./src/index.ts",
   },
-  mode: 'development',
-  devtool: 'inline-source-map',
+  mode: "development",
+  devtool: "inline-source-map",
   devServer: {
-    contentBase: './dist',
-    hot: true
+    contentBase: "./dist",
+    hot: true,
   },
   plugins: [
     new webpack.NamedModulesPlugin(),
@@ -19,16 +20,16 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
+    ],
   },
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js' ]
+    extensions: [ ".tsx", ".ts", ".js" ],
   },
   output: {
-    filename: 'main.js',
-    path: path.resolve(__dirname, 'dist')
-  }
+    filename: "main.js",
+    path: path.resolve(__dirname, "dist"),
+  },
 };

@@ -4,49 +4,50 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import Stream from "../stream";
 import * as assert from "assert";
+import Stream from "../stream";
+import {AnnoMap} from "./anno-map";
 import IslandLoader from "./island-loader";
 
-type Block = { type: string; length: number };
+interface Block { type: string; length: number; }
 
-export type Island = {
+export interface Island {
     width: number;
     height: number;
-    default_fields: IslandField[][],
-    current_fields: IslandField[][],
+    default_fields: IslandField[][];
+    current_fields: IslandField[][];
 
-    num: number,
-    x: number,
-    y: number,
-    num_ore_locations: number,
-    fertility_discovered: number,
-    ore_locations: [IslandOreLocation, IslandOreLocation],
-    fertility: number,
-    num_base_island: number,
-    is_south: boolean,
-    diff: number,
+    num: number;
+    x: number;
+    y: number;
+    num_ore_locations: number;
+    fertility_discovered: number;
+    ore_locations: [IslandOreLocation, IslandOreLocation];
+    fertility: number;
+    num_base_island: number;
+    is_south: boolean;
+    diff: number;
 
-    _1: number,
-    _2: number,
-    _3: number,
-    _4: number[],
-    _5: number[],
-    _6: number,
-    _7: number,
-    _8: number,
-    _9: number[],
+    _1: number;
+    _2: number;
+    _3: number;
+    _4: number[];
+    _5: number[];
+    _6: number;
+    _7: number;
+    _8: number;
+    _9: number[];
 }
 
-type IslandOreLocation = {
-    type: number,
-    x: number,    
-    y: number,
-    discovered: number,
-    _1: number,
+interface IslandOreLocation {
+    type: number;
+    x: number;
+    y: number;
+    discovered: number;
+    _1: number;
 }
 
-export type IslandField = {
+export interface IslandField {
     building: number;
     x: number;
     y: number;
@@ -57,57 +58,53 @@ export type IslandField = {
     random: number;
     player: number;
     _2: number;
-};
-
-type ShipGood = {
-    good_id: number,
-    amount: number,
-    action: number,
 }
 
-type ShipTradeStop = {
-    id: number,
-    kontor_id: number,
-    _1: number,
-    goods: ShipGood[],
-    _2: number[],
+interface ShipGood {
+    good_id: number;
+    amount: number;
+    action: number;
 }
 
-type Ship = {
-    name: string,
+interface ShipTradeStop {
+    id: number;
+    kontor_id: number;
+    _1: number;
+    goods: ShipGood[];
+    _2: number[];
+}
+
+export interface Ship {
+    name: string;
     position: {
         x: number,
         y: number,
-    },
-    _1: number[],
-    course_from: number,
-    course_to: number,
-    course_current: number,
-    _2: number,
-    hp: number,
-    _3: number,
-    canons: number,
-    flags: number,
-    sell_price: number,
-    id: number,
-    type: number,
-    _4: number,
-    player: number,
-    _5: number,
-    rotation: number,
-    trade_stops: ShipTradeStop[],
-    _6: number,
-    cargo: ShipGood[],
-};
-
-export class AnnoMap {
-    constructor(public islands: Island[], public ships: Ship[]) { }
+    };
+    _1: number[];
+    course_from: number;
+    course_to: number;
+    course_current: number;
+    _2: number;
+    hp: number;
+    _3: number;
+    canons: number;
+    flags: number;
+    sell_price: number;
+    id: number;
+    type: number;
+    _4: number;
+    player: number;
+    _5: number;
+    rotation: number;
+    trade_stops: ShipTradeStop[];
+    _6: number;
+    cargo: ShipGood[];
 }
 
 export default class GAMParser {
     constructor(private islandLoader: IslandLoader) { }
 
-    async parse(data: Stream) {
+    public async parse(data: Stream) {
         const islands: Island[] = [];
         let ships: Ship[] = [];
         const debugTypes: Set<string> = new Set<string>();
@@ -116,28 +113,26 @@ export default class GAMParser {
             const block = this.readBlock(data);
             const oldPosition = data.position();
 
-            switch(block.type) {
-                case 'INSEL5':
+            switch (block.type) {
+                case "INSEL5": {
                     const island = this.parseIsland(data);
                     // TODO: What does diff stand for?
                     if (island.diff === 0) {
-                        const island_file = await this.islandLoader.load(island);
-                        const island_basis_block = this.readBlock(island_file);
-                        this.discardBlock(island_basis_block, island_file);
+                        const islandFile = await this.islandLoader.load(island);
+                        const islandBasisBlock = this.readBlock(islandFile);
+                        this.discardBlock(islandBasisBlock, islandFile);
 
-                        const island_buildings_block = this.readBlock(island_file);
-                        island['default_fields'] = this.parseIslandBuildings(island, island_buildings_block, island_file);
+                        const islandBuildingsBlock = this.readBlock(islandFile);
+                        island.default_fields = this.parseIslandBuildings(island, islandBuildingsBlock, islandFile);
                     }
                     islands.push(island);
                     break;
-                case 'INSELHAUS':
-                    {
-                        const island = islands.pop();
-                        island['current_fields'] = this.parseIslandBuildings(island, block, data);
-                        islands.push(island);
-                        break;
-                    }
-                case 'SHIP4':
+                } case "INSELHAUS": {
+                    const island = islands.pop();
+                    island.current_fields = this.parseIslandBuildings(island, block, data);
+                    islands.push(island);
+                    break;
+                } case "SHIP4":
                     assert.strictEqual(ships.length, 0);
                     ships = this.parseShips(block, data);
                     break;
@@ -158,8 +153,8 @@ export default class GAMParser {
 
     private parseShips(block: Block, data: Stream) {
         const ships = [];
-        const start_pos = data.position();
-        while (data.position() < start_pos + block.length) {
+        const startPos = data.position();
+        while (data.position() < startPos + block.length) {
             ships.push(this.parseShip(data));
         }
         return ships;
@@ -191,20 +186,20 @@ export default class GAMParser {
             trade_stops: this.parseShipTradeStops(data, 8),
             _6: data.read16(),
             cargo: this.parseShipGoods(data, 8),
-            //type_name: SHIP_TYPES[ship['type']],
-        }
+            // type_name: SHIP_TYPES[ship['type']],
+        };
     }
-    
+
     private parseShipTradeStops(data: Stream, n: number): ShipTradeStop[] {
         const tradeStops = [];
         for (let i = 0; i < n; i++) {
             tradeStops.push({
-                'id': data.read8(),
-                'kontor_id': data.read8(),
-                '_1': data.read16(),
-                'goods': this.parseShipGoods(data, 2),
-                '_2': data.read(16),
-            })
+                id: data.read8(),
+                kontor_id: data.read8(),
+                _1: data.read16(),
+                goods: this.parseShipGoods(data, 2),
+                _2: data.read(16),
+            });
         }
         return tradeStops;
     }
@@ -213,9 +208,9 @@ export default class GAMParser {
         const cargo = [];
         for (let i = 0; i < n; i++) {
             cargo.push({
-                'good_id': data.read16(),
-                'amount': data.read16(),
-                'action': data.read32(), // 0 == 'load', 1 == 'unload'
+                good_id: data.read16(),
+                amount: data.read16(),
+                action: data.read32(), // 0 == 'load', 1 == 'unload'
             });
         }
         return cargo;
@@ -266,11 +261,11 @@ export default class GAMParser {
         for (let x = 0; x < island.width; x++) {
             fields.push([]);
             for (let y = 0; y < island.height; y++) {
-                fields[x].push(<IslandField>{
+                fields[x].push({
                     building: 0xFFFF,
                     x: 0, // x relative to the building's origin
                     y: 0, // y relative to the building's origin
-                });
+                } as IslandField);
             }
         }
 
@@ -282,15 +277,15 @@ export default class GAMParser {
             const buildingId = field.building;
             if (buildingId !== 0xFFFF) {
                 // TODO: Take building size and rotation into account.
-                fields[(field['x'])][(field['y'])] = field;
+                fields[(field.x)][(field.y)] = field;
                 // x and y are actually relative to the current building.
-                fields[(field['x'])][(field['y'])]['x'] = 0;
-                fields[(field['x'])][(field['y'])]['y'] = 0;
+                fields[(field.x)][(field.y)].x = 0;
+                fields[(field.x)][(field.y)].y = 0;
             } else {
-                fields[(field['x'])][(field['y'])] = field;
+                fields[(field.x)][(field.y)] = field;
                 // x and y are actually relative to the current building.
-                fields[(field['x'])][(field['y'])]['x'] = 0;
-                fields[(field['x'])][(field['y'])]['y'] = 0;
+                fields[(field.x)][(field.y)].x = 0;
+                fields[(field.x)][(field.y)].y = 0;
             }
         }
 

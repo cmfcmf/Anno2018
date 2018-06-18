@@ -1,4 +1,4 @@
-import DATParser from './dat-parser';
+import DATParser from "./dat-parser";
 
 function doTest(input: string, objects: object, variables: object, gfxMap: object) {
     const parser = new DATParser();
@@ -7,10 +7,10 @@ function doTest(input: string, objects: object, variables: object, gfxMap: objec
         objects: objects,
         variables: variables,
         gfx_category_map: gfxMap,
-    })
+    });
 }
 
-test('comments and constants', () => {
+test("comments and constants", () => {
     doTest(`
         ; This is a comment
         ;======;
@@ -23,24 +23,24 @@ test('comments and constants', () => {
           ; Another comment`,
         {},
         {
-            'IDSTRAND': 100,
-            'GFXBODEN': 300,
-            'GFXHANG': 800,
+            IDSTRAND: 100,
+            GFXBODEN: 300,
+            GFXHANG: 800,
             // TODO: Nahrung
-            'KOST_BEDARF_3_SLP': 38,
+            KOST_BEDARF_3_SLP: 38,
         },
-        {}
+        {},
     );
 });
 
-test('json objects', () => {
-    doTest(` 
+test("json objects", () => {
+    doTest(`
         Objekt: BGRUPPE
-        
+
             Nummer:     0
             Maxwohn:    2              ; A comment
             Steuer:     1.4            ; Another comment
-            
+
             Nummer:     1
             Maxwohn:    6
             Steuer:     1.6
@@ -50,24 +50,24 @@ test('json objects', () => {
               Ware:       ALKOHOL, 0.5      ; ORG/SUN  0.8 / 0.4
             EndObj;`,
         {
-            'BGRUPPE': {
-                'items': {
-                    '0': {
-                        "Maxwohn": 2,
-                        "Steuer": 1.4,
-                        "nested_objects": {},
+            BGRUPPE: {
+                items: {
+                    0: {
+                        Maxwohn: 2,
+                        Steuer: 1.4,
+                        nested_objects: {},
                     },
-                    '1': {
-                        "Maxwohn": 6,
-                        "Steuer": 1.6,
-                        "nested_objects": {
-                            'BGRUPPE_WARE': {
+                    1: {
+                        Maxwohn: 6,
+                        Steuer: 1.6,
+                        nested_objects: {
+                            BGRUPPE_WARE: {
                                 0: {
-                                    'Foo': 'bar',
-                                    'Ware': {
-                                        'STOFFE': 0.6,
-                                        'ALKOHOL': 0.5,
-                                    }
+                                    Foo: "bar",
+                                    Ware: {
+                                        STOFFE: 0.6,
+                                        ALKOHOL: 0.5,
+                                    },
                                 },
                             },
                         },
@@ -79,12 +79,12 @@ test('json objects', () => {
             Maxwohn: 6,
             Nummer: 1,
             Steuer: 1.6,
-            Ware: {ALKOHOL: 0.5}
+            Ware: {ALKOHOL: 0.5},
         },
-        {})
+        {});
 });
 
-test('handles @ sign', () => {
+test("handles @ sign", () => {
     doTest(`
         Objekt: HELLO
             IDSTART = 42
@@ -97,24 +97,24 @@ test('handles @ sign', () => {
             @Id:        +1
         EndObj;`,
         {
-            'HELLO': {
-                'items': {
-                    '0': {"Id": 42, "nested_objects": {}},
-                    '1': {"Id": 43, "nested_objects": {}},
-                    '2': {"Id": 44, "nested_objects": {}},
+            HELLO: {
+                items: {
+                    0: {Id: 42, nested_objects: {}},
+                    1: {Id: 43, nested_objects: {}},
+                    2: {Id: 44, nested_objects: {}},
                 },
             },
         },
         {
-            "IDSTART": 42,
-            "VARIABLE": 2,
-            "Id": 44,
-            "Nummer": 2,
+            IDSTART: 42,
+            VARIABLE: 2,
+            Id: 44,
+            Nummer: 2,
         },
-        {})
+        {});
 });
 
-test('handles size property', () => {
+test("handles size property", () => {
     doTest(`
         Objekt: HELLO
             Nummer:    1
@@ -122,21 +122,21 @@ test('handles size property', () => {
             Size:      2, 3
         EndObj;`,
         {
-            'HELLO': {
-                'items': {
-                    '1': {"Id": 1, "Size": {"x": 2, "y": 3}, "nested_objects": {}},
+            HELLO: {
+                items: {
+                    1: {Id: 1, Size: {x: 2, y: 3}, nested_objects: {}},
                 },
             },
         },
         {
-            "Nummer": 1,
-            "Id": 1,
-            "Size": {"x": 2, "y": 3}
+            Nummer: 1,
+            Id: 1,
+            Size: {x: 2, y: 3},
         },
-        {})
+        {});
 });
 
-test('handles ObjFill', () => {
+test("handles ObjFill", () => {
     doTest(`
         Objekt: HELLO
             @Nummer:    0
@@ -154,30 +154,30 @@ test('handles ObjFill', () => {
             @Nummer:    +1
             ObjFill:    NUMMERBASE
             @Id:        +1
-            
+
         EndObj;
     `,
         {
-            'HELLO': {
-                'items': {
-                    '0': {"Id": 10, "A": 5, "B": 6, "nested_objects": {}},
-                    '1': {"Id": 11, "A": 5, "B": 6, "nested_objects": {}},
-                    '2': {"Id": 12, "A": 7, "B": 6, "nested_objects": {}},
-                    '3': {"Id": 13, "A": 5, "B": 6, "nested_objects": {}},
+            HELLO: {
+                items: {
+                    0: {Id: 10, A: 5, B: 6, nested_objects: {}},
+                    1: {Id: 11, A: 5, B: 6, nested_objects: {}},
+                    2: {Id: 12, A: 7, B: 6, nested_objects: {}},
+                    3: {Id: 13, A: 5, B: 6, nested_objects: {}},
                 },
             },
         },
         {
-            "NUMMERBASE": 0,
-            "Id": 13,
-            "Nummer": 3,
-            "A": 7,
-            "B": 6,
+            NUMMERBASE: 0,
+            Id: 13,
+            Nummer: 3,
+            A: 7,
+            B: 6,
         },
-        {})
+        {});
 });
 
-test('handles ObjFill max', () => {
+test("handles ObjFill max", () => {
     doTest(`
         Objekt: HELLO
             @Nummer:    0
@@ -197,25 +197,25 @@ test('handles ObjFill max', () => {
             @Nummer:    +1
             ObjFill:    NUMMERBASE
             @Id:        +1
-            
+
         EndObj;`,
         {
-			'HELLO': {
-				'items': {
-					'0': {"Id": 10, "A": 5,         "Size": {"x": 1, "y": 1}, "nested_objects": {}},
-					'1': {"Id": 11, "A": 5, "B": 6, "Size": {"x": 1, "y": 1}, "nested_objects": {}},
-					'2': {"Id": 12, "A": 7, "B": 6, "Size": {"x": 2, "y": 3}, "nested_objects": {}},
-					'3': {"Id": 13, "A": 5, "B": 6, "Size": {"x": 1, "y": 1}, "nested_objects": {}},
-				},
-			},
-		},
+            HELLO: {
+                items: {
+                    0: {Id: 10, A: 5,         Size: {x: 1, y: 1}, nested_objects: {}},
+                    1: {Id: 11, A: 5, B: 6, Size: {x: 1, y: 1}, nested_objects: {}},
+                    2: {Id: 12, A: 7, B: 6, Size: {x: 2, y: 3}, nested_objects: {}},
+                    3: {Id: 13, A: 5, B: 6, Size: {x: 1, y: 1}, nested_objects: {}},
+                },
+            },
+        },
         {
-            "NUMMERBASE": 1,
-            "Id": 13,
-            "Nummer": 3,
-            "A": 7,
-            "B": 6,
-            "Size": {"x": 2, "y": 3},
+            NUMMERBASE: 1,
+            Id: 13,
+            Nummer: 3,
+            A: 7,
+            B: 6,
+            Size: {x: 2, y: 3},
         },
         {});
 });
