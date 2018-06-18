@@ -29,7 +29,7 @@ import Stream from "./parsers/stream";
         }
         uploadBtn.disabled = true;
 
-        fs.write('/original.zip', file);
+        await fs.write('/original.zip', file);
 
         const zipFileEntry = await fs.open('/original.zip');
 
@@ -42,8 +42,19 @@ import Stream from "./parsers/stream";
         await parseDATs(annoRoot);
         await parseBSHs(annoRoot);
     };
-
     document.body.appendChild(uploadBtn);
+
+    const resetBtn = document.createElement('button');
+    resetBtn.innerText = 'Reset All Files';
+    resetBtn.onclick = async () => {
+        const entries = await fs.ls('/');
+        for (const entry of entries) {
+            await fs.rm(entry);
+        }
+        alert('All files deleted');
+        window.location.reload(true);
+    };
+    document.body.appendChild(resetBtn);
 
     console.table(await fs.ls(fs.root()));
     console.log(await fs.df());

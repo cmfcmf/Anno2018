@@ -9,9 +9,14 @@ export default class Menu {
     async render() {
         const menu = document.body.appendChild(document.createElement('div'));
 
-        console.table(await this.fs.ls('/saves'));
-
-        for (const saveGame of await this.fs.ls('/saves')) {
+        let saves;
+        try {
+            saves = await this.fs.ls('/saves');
+        } catch (e) {
+            return;
+        }
+        console.table(saves);
+        for (const saveGame of saves) {
             const title = document.createElement('p');
             title.innerText = saveGame.name;
             title.onclick = async () => {

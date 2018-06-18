@@ -27,6 +27,8 @@ export default class BSHParser {
     }
 
     public async parse(inName: string, outName: string) {
+        this.log.info(`Started parsing "${inName}".`);
+
         let path = 'GFX';
         if (inName === 'TOOLS') {
             path = 'ToolGfx';
@@ -56,7 +58,6 @@ export default class BSHParser {
         assert(fileType === 'BSH');
 
         const fileLength = data.read32();
-        this.log.debug(fileLength);
         assert(HEADER_SIZE + fileLength === data.length);
 
         const imageOffsets: number[] = [];
