@@ -1,10 +1,11 @@
+import * as Viewport from "pixi-viewport";
 import FileSystem from "./filesystem";
 import GameRenderer from "./game/game-renderer";
 import GAMParser from "./parsers/GAM/gam-parser";
 
 export default class Menu {
     constructor(private fs: FileSystem, private gamParser: GAMParser,
-                private gameRenderer: GameRenderer) { }
+                private gameRenderer: GameRenderer, private viewport: Viewport) { }
 
     public async render() {
         const menu = document.body.appendChild(document.createElement("div"));
@@ -23,6 +24,7 @@ export default class Menu {
                 const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
                 const map = await this.gamParser.parse(saveGameData);
                 await this.gameRenderer.render(map);
+                this.viewport.fit();
             };
             menu.appendChild(title);
         }

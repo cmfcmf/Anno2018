@@ -1,0 +1,110 @@
+import * as PIXI from "pixi.js";
+import {TILE_HEIGHT, TILE_WIDTH} from "./game-renderer";
+
+export type LandFieldType =
+    "BODEN"
+    | "FLUSS"
+    | "FLUSSECK"
+    | "HANG"
+    | "HANGQUELL"
+    | "HANGECK"
+    | "STRAND"
+    | "STRANDMUND"
+    | "STRANDRUINE"
+    | "STRANDECKI"
+    | "STRANDECKA"
+    | "STRANDVARI"
+    | "BRANDUNG"
+    | "BRANDECK"
+    | "PIER"
+    | "MEER"
+    | "WALD"
+    | "RUINE"
+    | "STRANDHAUS"
+    | "HAFEN"
+    | "FELS"
+    | "MUENDUNG";
+
+export type BuildingFieldType =
+    "GEBAEUDE"
+    | "HQ"
+    | "STRASSE"
+    | "BRUECKE"
+    | "PLATZ"
+    | "WMUEHLE"
+    | "MINE"
+    | "MAUER"
+    | "MAUERSTRAND"
+    | "TOR"
+    | "TURM"
+    | "TURMSTRAND";
+
+export type FieldType = LandFieldType | BuildingFieldType;
+export type Rotation = 0 | 1 | 2 | 3;
+
+export default class Field {
+    private readonly id: number;
+    private readonly gfxId: number;
+    private readonly kind: FieldType;
+    private readonly size: PIXI.Point;
+    private readonly rotate: number;
+    private readonly animAdd: number;
+    private readonly yOffset: number;
+
+    constructor(config: any) {
+        this.id = config.Id;
+        this.gfxId = config.Gfx;
+        this.kind = config.Kind;
+        this.size = new PIXI.Point(config.Size.x, config.Size.y);
+        this.rotate = config.Rotate;
+        this.animAdd = config.AnimAdd;
+        this.yOffset = -config.Posoffs;
+    }
+
+    public getSprites(worldPos: PIXI.Point, rotation: Rotation, animationStep: number,
+                      textures: Map<number, PIXI.Texture>): PIXI.Sprite[] {
+        const sprites: PIXI.Sprite[] = [];
+        const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
+        const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
+        for (let y = 0; y < sy; y++) {
+            for (let x = 0; x < sx; x++) {
+                const tileId = this.getTileId(x, y, rotation, animationStep);
+                const xx = worldPos.x + x;
+                const yy = worldPos.y + y;
+
+                const worldX = (xx - yy) * (TILE_WIDTH / 2);
+                const worldY = (xx + yy) * Math.floor(TILE_HEIGHT / 2);
+
+                const sprite = new PIXI.Sprite(textures.get(tileId));
+                sprite.x = worldX;
+                sprite.y = worldY + this.yOffset - sprite.height;
+
+                sprites.push(sprite);
+            }
+        }
+
+        return sprites;
+    }
+
+    private getTileId(x: number, y: number, rotation: Rotation, animationStep: number) {
+        let tileId = this.gfxId;
+        if (this.rotate > 0) {
+            tileId += rotation * this.size.x * this.size.y;
+        }
+        tileId += animationStep * this.animAdd;
+
+        if (rotation === 0) {
+            tileId += y * this.size.x + x;
+        } else if (rotation === 1) {
+            tileId += this.size.x * this.size.y - 1 - (x * this.size.x + (this.size.x - 1 - y));
+        } else if (rotation === 2) {
+            tileId += (this.size.y - 1 - y) * this.size.x + (this.size.x - 1 - x);
+        } else if (rotation === 3) {
+            tileId += x * this.size.x + (this.size.x - 1 - y);
+        } else {
+            throw new Error(`Invalid building rotation: ${rotation}.`);
+        }
+
+        return tileId;
+    }
+}

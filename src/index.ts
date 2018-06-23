@@ -7,19 +7,40 @@ import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
 import UploadHandler from "./upload";
 
+const Viewport = require("pixi-viewport");
+
 // tslint:disable-next-line:no-floating-promises
 (async () => {
     log.enableAll();
 
     // PIXI.utils.skipHello();
     const app = new PIXI.Application({
-        width: 64 * 500,
-        height: 31 * 500,
-        antialias: true,
+        width: window.innerWidth,
+        height: window.innerHeight - 50,
+        antialias: false,
         transparent: false,
-        resolution: 0.2,
+        // resolution: window.devicePixelRatio,
     });
     document.body.appendChild(app.view);
+
+    const viewport = new Viewport({
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+        worldWidth: 20000,
+        worldHeight: 20000,
+    });
+
+    app.stage.addChild(viewport);
+
+    viewport
+        .drag({direction: "all", wheel: false})
+        .wheel()
+    //    .mouseEdges({distance: 1000})
+    //    .clamp({direction: "all"})
+    ;
+
+    // Set (0, 0) to center of the screen.
+    // viewport.position.set(app.renderer.width / 2, 0);
 
     const fs = new FileSystem();
     await fs.init(1024 * 1024 * 200);
@@ -32,7 +53,10 @@ import UploadHandler from "./upload";
     uploadHandler.render();
 
     const gamParser = new GAMParser(new IslandLoader(fs));
-    const gameRenderer = new GameRenderer(app, fs);
-    const menu = new Menu(fs, gamParser, gameRenderer);
+    const gameRenderer = new GameRenderer(viewport, fs);
+    const menu = new Menu(fs, gamParser, gameRenderer, viewport);
     await menu.render();
+
+    // (document.querySelector('body > div > p:nth-child(1)') as HTMLParagraphElement).click();
+    // document.body.style.zoom = "10%";
 })();

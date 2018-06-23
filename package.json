@@ -9,6 +9,7 @@
     "idb.filesystem.js": "^0.0.8",
     "jszip": "^3.1.5",
     "loglevel": "^1.6.1",
+    "pixi-viewport": "^2.7.0",
     "pixi.js": "^4.8.1",
     "upng-js": "^2.1.0"
   },
