@@ -62,7 +62,7 @@ export default class Field {
         this.rotate = config.Rotate;
         this.animAdd = config.AnimAdd;
         this.animAnz = config.AnimAnz;
-        this.animTime = config.AnimTime === 'TIMENEVER' ? -1 : config.AnimTime;
+        this.animTime = config.AnimTime === "TIMENEVER" ? -1 : config.AnimTime;
         this.yOffset = -config.Posoffs;
     }
 

@@ -7,6 +7,9 @@
 import * as assert from "assert";
 import Stream from "../stream";
 import {AnnoMap} from "./anno-map";
+import Good from "./entities/good";
+import Player from "./entities/player";
+import Task from "./entities/task";
 import IslandLoader from "./island-loader";
 
 interface Block { type: string; length: number; }
@@ -101,13 +104,24 @@ export interface Ship {
     cargo: ShipGood[];
 }
 
+export interface Kontor {
+    island: number;
+    position: PIXI.Point;
+    player: number;
+    goods: Good[];
+}
+
 export default class GAMParser {
     constructor(private islandLoader: IslandLoader) { }
 
     public async parse(data: Stream) {
         const islands: Island[] = [];
+        let kontors: Kontor[] = [];
         let ships: Ship[] = [];
+        let players: Player[] = [];
         const debugTypes: Set<string> = new Set<string>();
+        let task: Task;
+        let gameName: string;
 
         while (!data.eof()) {
             const block = this.readBlock(data);
@@ -136,19 +150,37 @@ export default class GAMParser {
                     assert.strictEqual(ships.length, 0);
                     ships = this.parseShips(block, data);
                     break;
+                case "KONTOR2":
+                    assert.strictEqual(kontors.length, 0);
+                    kontors = this.parseKontors(block, data);
+                    console.table(kontors);
+                    break;
+                case "PLAYER4":
+                    assert.strictEqual(players.length, 0);
+                    players = this.parsePlayers(block, data);
+                    console.table(players);
+                    break;
+                case "AUFTRAG4":
+                    assert.strictEqual(task, undefined);
+                    task = new Task(data);
+                    console.log(task);
+                    break;
+                case "NAME":
+                    assert.strictEqual(gameName, undefined);
+                    gameName = data.readString(block.length);
+                    break;
                 default:
                     this.discardBlock(block, data);
+                    debugTypes.add(block.type);
                     break;
             }
 
             assert.strictEqual(data.position(), oldPosition + block.length);
-
-            debugTypes.add(block.type);
         }
 
         console.log(debugTypes);
 
-        return new AnnoMap(islands, ships);
+        return new AnnoMap(islands, ships, kontors, players, task, gameName);
     }
 
     private parseShips(block: Block, data: Stream) {
@@ -304,6 +336,37 @@ export default class GAMParser {
             player: (bits >> 22) & 7,
             _2: (bits >> 25) & 0x7F,
         };
+    }
+
+    private parseKontors(block: Block, data: Stream): Kontor[] {
+        const kontors: Kontor[] = [];
+        const startPos = data.position();
+        while (data.position() < startPos + block.length) {
+            kontors.push({
+                island: data.read8(),
+                position: new PIXI.Point(data.read8(), data.read8()),
+                player: data.read8(),
+                goods: this.parseGoods(data),
+            });
+        }
+        return kontors;
+    }
+
+    private parsePlayers(block: Block, data: Stream) {
+        const players: Player[] = [];
+        const startPos = data.position();
+        while (data.position() < startPos + block.length) {
+            players.push(new Player(data));
+        }
+        return players;
+    }
+
+    private parseGoods(data: Stream): Good[] {
+        const goods: Good[] = [];
+        for (let i = 0; i < 50; i++) {
+            goods.push(new Good(data));
+        }
+        return goods;
     }
 
     private readBlock(data: Stream): Block {

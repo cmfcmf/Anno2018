@@ -42,6 +42,15 @@ export default class Stream {
         return result;
     }
 
+    public readStringUnterminated(length: number) {
+        let result = "";
+        while (length--) {
+            result += String.fromCharCode(this.read8());
+        }
+
+        return result;
+    }
+
     public read(length: number) {
         const result = [];
         while (length--) {
@@ -56,6 +65,10 @@ export default class Stream {
 
     public read32() {
         return this.readNBytes(4);
+    }
+
+    public read32S(): number {
+        return this.readNBytes(4) >> 0;
     }
 
     public read64() {
