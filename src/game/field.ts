@@ -78,7 +78,7 @@ export default class Field {
                 const worldX = (xx - yy) * (TILE_WIDTH / 2);
                 const worldY = (xx + yy) * Math.floor(TILE_HEIGHT / 2);
 
-                let sprite;
+                let sprite: PIXI.Sprite|PIXI.extras.AnimatedSprite;
                 if (this.animAdd === 0 || this.animTime === -1) {
                     const texture = this.getTexture(x, y, rotation, animationStep, textures);
                     sprite = new PIXI.Sprite(texture);
@@ -87,9 +87,14 @@ export default class Field {
                     for (let i = 0; i < this.animAnz; i++) {
                         animatedTextures.push(this.getTexture(x, y, rotation, i, textures));
                     }
-                    sprite = new PIXI.extras.AnimatedSprite(animatedTextures);
-                    sprite.animationSpeed = (1.0 / 60.0) * (1000.0 / this.animTime);
-                    sprite.play();
+                    const animatedSprite = new PIXI.extras.AnimatedSprite(animatedTextures);
+                    animatedSprite.animationSpeed = (1.0 / 60.0) * (1000.0 / this.animTime);
+                    animatedSprite.onFrameChange = (currentFrame) => {
+                        // Re-calculate y offset on frame change.
+                        animatedSprite.y = worldY + this.yOffset - animatedSprite.height;
+                    };
+                    animatedSprite.play();
+                    sprite = animatedSprite;
                 }
                 sprite.x = worldX;
                 sprite.y = worldY + this.yOffset - sprite.height;
