@@ -60,6 +60,7 @@ const Viewport = require("pixi-viewport");
     const menu = new Menu(fs, gamParser, gameRenderer, viewport);
     await menu.render();
 
-    // (document.querySelector("body > div > p:nth-child(1)") as HTMLParagraphElement).click();
-    // document.body.style.zoom = "10%";
+    if (document.location.search.indexOf("debug=1") >= 0) {
+        (document.querySelector("body > div > p:nth-child(2)") as HTMLParagraphElement).click();
+    }
 })();
