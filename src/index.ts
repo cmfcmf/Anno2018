@@ -13,11 +13,11 @@ import UploadHandler from "./upload";
 
     // PIXI.utils.skipHello();
     const app = new PIXI.Application({
-        width: 256 * 1,
-        height: 256 * 1,
+        width: 64 * 500,
+        height: 31 * 500,
         antialias: true,
         transparent: false,
-        resolution: 1,
+        resolution: 0.2,
     });
     document.body.appendChild(app.view);
 

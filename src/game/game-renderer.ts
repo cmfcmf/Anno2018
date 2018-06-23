@@ -56,14 +56,30 @@ export default class GameRenderer {
         if (fieldId !== 0xFFFF) {
             // TODO: Render things smartly.
 
-            const worldX = (island.x + x) * 10;
-            const worldY = (island.y + y) * 10;
+            x += island.x;
+            y += island.y;
+
+            // Coordinates:
+            //
+            //          (0,0)
+            //       (1,0) (0,1)
+            //    (2,0) (1,1) (0,2)
+            // (3,0) (2,1) (1,2) (0,3)
+
+            const line = x + y;
+
+            const worldX = line * -(TILE_WIDTH / 2) + y * TILE_WIDTH + 512 * (TILE_WIDTH / 2);
+            const worldY = line * Math.ceil(TILE_HEIGHT / 2);
 
             assert(this.fieldIdToGfxMap.has(fieldId));
             const gfxId = this.fieldIdToGfxMap.get(fieldId).toString();
 
             const stadtfldTextures = this.textures.get("STADTFLD");
-            assert(stadtfldTextures.has(gfxId));
+            if (!stadtfldTextures.has(gfxId)) {
+                return;
+            }
+            // TODO
+            // assert(stadtfldTextures.has(gfxId));
 
             const sprite = new PIXI.Sprite(stadtfldTextures.get(gfxId));
             sprite.position.x = worldX;
