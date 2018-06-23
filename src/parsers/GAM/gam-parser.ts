@@ -276,16 +276,7 @@ export default class GAMParser {
 
             const buildingId = field.building;
             if (buildingId !== 0xFFFF) {
-                // TODO: Take building size and rotation into account.
-                fields[(field.x)][(field.y)] = field;
-                // x and y are actually relative to the current building.
-                fields[(field.x)][(field.y)].x = 0;
-                fields[(field.x)][(field.y)].y = 0;
-            } else {
-                fields[(field.x)][(field.y)] = field;
-                // x and y are actually relative to the current building.
-                fields[(field.x)][(field.y)].x = 0;
-                fields[(field.x)][(field.y)].y = 0;
+                fields[field.x][field.y] = field;
             }
         }
 
