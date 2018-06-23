@@ -51,6 +51,8 @@ export default class Field {
     private readonly rotate: number;
     private readonly animAdd: number;
     private readonly yOffset: number;
+    private readonly animTime: number;
+    private readonly animAnz: number;
 
     constructor(config: any) {
         this.id = config.Id;
@@ -59,6 +61,8 @@ export default class Field {
         this.size = new PIXI.Point(config.Size.x, config.Size.y);
         this.rotate = config.Rotate;
         this.animAdd = config.AnimAdd;
+        this.animAnz = config.AnimAnz;
+        this.animTime = config.AnimTime === 'TIMENEVER' ? -1 : config.AnimTime;
         this.yOffset = -config.Posoffs;
     }
 
@@ -69,17 +73,26 @@ export default class Field {
         const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
         for (let y = 0; y < sy; y++) {
             for (let x = 0; x < sx; x++) {
-                const tileId = this.getTileId(x, y, rotation, animationStep);
                 const xx = worldPos.x + x;
                 const yy = worldPos.y + y;
-
                 const worldX = (xx - yy) * (TILE_WIDTH / 2);
                 const worldY = (xx + yy) * Math.floor(TILE_HEIGHT / 2);
 
-                const sprite = new PIXI.Sprite(textures.get(tileId));
+                let sprite;
+                if (this.animAdd === 0 || this.animTime === -1) {
+                    const texture = this.getTexture(x, y, rotation, animationStep, textures);
+                    sprite = new PIXI.Sprite(texture);
+                } else {
+                    const animatedTextures = [];
+                    for (let i = 0; i < this.animAnz; i++) {
+                        animatedTextures.push(this.getTexture(x, y, rotation, i, textures));
+                    }
+                    sprite = new PIXI.extras.AnimatedSprite(animatedTextures);
+                    sprite.animationSpeed = (1.0 / 60.0) * (1000.0 / this.animTime);
+                    sprite.play();
+                }
                 sprite.x = worldX;
                 sprite.y = worldY + this.yOffset - sprite.height;
-
                 sprites.push({sprite: sprite, position: new PIXI.Point(xx, yy), layer: layer});
             }
         }
@@ -87,7 +100,8 @@ export default class Field {
         return sprites;
     }
 
-    private getTileId(x: number, y: number, rotation: Rotation, animationStep: number) {
+    private getTexture(x: number, y: number, rotation: Rotation, animationStep: number,
+                       textures: Map<number, PIXI.Texture>) {
         let tileId = this.gfxId;
         if (this.rotate > 0) {
             tileId += rotation * this.size.x * this.size.y;
@@ -106,6 +120,6 @@ export default class Field {
             throw new Error(`Invalid building rotation: ${rotation}.`);
         }
 
-        return tileId;
+        return textures.get(tileId);
     }
 }
