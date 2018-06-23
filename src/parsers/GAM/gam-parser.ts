@@ -9,6 +9,7 @@ import Stream from "../stream";
 import {AnnoMap} from "./anno-map";
 import Good from "./entities/good";
 import Player from "./entities/player";
+import Ship from "./entities/ship";
 import Task from "./entities/task";
 import IslandLoader from "./island-loader";
 
@@ -63,47 +64,6 @@ export interface IslandField {
     _2: number;
 }
 
-interface ShipGood {
-    good_id: number;
-    amount: number;
-    action: number;
-}
-
-interface ShipTradeStop {
-    id: number;
-    kontor_id: number;
-    _1: number;
-    goods: ShipGood[];
-    _2: number[];
-}
-
-export interface Ship {
-    name: string;
-    position: {
-        x: number,
-        y: number,
-    };
-    _1: number[];
-    course_from: number;
-    course_to: number;
-    course_current: number;
-    _2: number;
-    hp: number;
-    _3: number;
-    canons: number;
-    flags: number;
-    sell_price: number;
-    id: number;
-    type: number;
-    _4: number;
-    player: number;
-    _5: number;
-    rotation: number;
-    trade_stops: ShipTradeStop[];
-    _6: number;
-    cargo: ShipGood[];
-}
-
 export interface Kontor {
     island: number;
     position: PIXI.Point;
@@ -153,17 +113,14 @@ export default class GAMParser {
                 case "KONTOR2":
                     assert.strictEqual(kontors.length, 0);
                     kontors = this.parseKontors(block, data);
-                    console.table(kontors);
                     break;
                 case "PLAYER4":
                     assert.strictEqual(players.length, 0);
                     players = this.parsePlayers(block, data);
-                    console.table(players);
                     break;
                 case "AUFTRAG4":
                     assert.strictEqual(task, undefined);
                     task = new Task(data);
-                    console.log(task);
                     break;
                 case "NAME":
                     assert.strictEqual(gameName, undefined);
@@ -187,65 +144,9 @@ export default class GAMParser {
         const ships = [];
         const startPos = data.position();
         while (data.position() < startPos + block.length) {
-            ships.push(this.parseShip(data));
+            ships.push(new Ship(data));
         }
         return ships;
-    }
-
-    private parseShip(data: Stream): Ship {
-        return {
-            name: data.readString(28),
-            position: {
-                x: data.read16(),
-                y: data.read16(),
-            },
-            _1: data.read(3 * 4),
-            course_from: data.read32(),
-            course_to: data.read32(),
-            course_current: data.read32(),
-            _2: data.read32(),
-            hp: data.read16(),
-            _3: data.read32(),
-            canons: data.read8(),
-            flags: data.read8(),
-            sell_price: data.read16(),
-            id: data.read16(),
-            type: data.read16(),
-            _4: data.read8(),
-            player: data.read8(),
-            _5: data.read32(),
-            rotation: data.read16(),
-            trade_stops: this.parseShipTradeStops(data, 8),
-            _6: data.read16(),
-            cargo: this.parseShipGoods(data, 8),
-            // type_name: SHIP_TYPES[ship['type']],
-        };
-    }
-
-    private parseShipTradeStops(data: Stream, n: number): ShipTradeStop[] {
-        const tradeStops = [];
-        for (let i = 0; i < n; i++) {
-            tradeStops.push({
-                id: data.read8(),
-                kontor_id: data.read8(),
-                _1: data.read16(),
-                goods: this.parseShipGoods(data, 2),
-                _2: data.read(16),
-            });
-        }
-        return tradeStops;
-    }
-
-    private parseShipGoods(data: Stream, n: number): ShipGood[] {
-        const cargo = [];
-        for (let i = 0; i < n; i++) {
-            cargo.push({
-                good_id: data.read16(),
-                amount: data.read16(),
-                action: data.read32(), // 0 == 'load', 1 == 'unload'
-            });
-        }
-        return cargo;
     }
 
     private parseIsland(data: Stream): Island {
