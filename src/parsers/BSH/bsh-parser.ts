@@ -9,7 +9,7 @@ import BSHImage from "./bsh-image";
 
 const UPNG = require("upng-js/UPNG.js");
 
-interface AtlasData {meta: {scale: number}; frames: {[key: string]: object}; }
+interface AtlasData {meta: { }; frames: {[key: string]: object}; }
 
 export default class BSHParser {
     private zip: JSZip;
@@ -85,7 +85,7 @@ export default class BSHParser {
         let spritesheetIndex = 0;
         let binPacker = new BinPacker(this.SIZE,  this.SIZE);
         let pixels = new Uint8Array(this.SIZE * this.SIZE * 4);
-        let atlasData: AtlasData = { meta: { scale: 1 }, frames: {} };
+        let atlasData: AtlasData = { meta: {  }, frames: {} };
 
         for (let i = 0; i < images.length; i++) {
             const image = images[i];
@@ -95,7 +95,7 @@ export default class BSHParser {
                 spritesheetIndex++;
                 binPacker = new BinPacker(this.SIZE,  this.SIZE);
                 pixels = new Uint8Array(this.SIZE * this.SIZE * 4);
-                atlasData = { meta: { scale: 1 }, frames: {} };
+                atlasData = { meta: {  }, frames: {} };
             } else {
                 const startX = result.x;
                 const startY = result.y;
