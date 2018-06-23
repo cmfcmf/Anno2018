@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import {TILE_HEIGHT, TILE_WIDTH} from "./game-renderer";
+import {SpriteWithPositionAndLayer, WorldLayer} from "./world-field";
 
 export type LandFieldType =
     "BODEN"
@@ -62,8 +63,8 @@ export default class Field {
     }
 
     public getSprites(worldPos: PIXI.Point, rotation: Rotation, animationStep: number,
-                      textures: Map<number, PIXI.Texture>): PIXI.Sprite[] {
-        const sprites: PIXI.Sprite[] = [];
+                      textures: Map<number, PIXI.Texture>, layer: WorldLayer) {
+        const sprites: SpriteWithPositionAndLayer[] = [];
         const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
         const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
         for (let y = 0; y < sy; y++) {
@@ -79,7 +80,7 @@ export default class Field {
                 sprite.x = worldX;
                 sprite.y = worldY + this.yOffset - sprite.height;
 
-                sprites.push(sprite);
+                sprites.push({sprite: sprite, position: new PIXI.Point(xx, yy), layer: layer});
             }
         }
 

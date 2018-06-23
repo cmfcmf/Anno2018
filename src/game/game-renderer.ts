@@ -1,10 +1,9 @@
 import * as PIXI from "pixi.js";
 import FileSystem from "../filesystem";
 import {AnnoMap} from "../parsers/GAM/anno-map";
-import {Island, IslandField} from "../parsers/GAM/gam-parser";
 import {uInt8ToBase64} from "../util/util";
-import {default as Field, Rotation} from "./field";
-import WorldField from "./world-field";
+import {SpriteWithPositionAndLayer} from "./world-field";
+import WorldFieldBuilder from "./world-field-builder";
 
 export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 31;
@@ -13,66 +12,40 @@ export default class GameRenderer {
     private inited = false;
 
     private textures: Map<number, PIXI.Texture> = new Map();
-    private fields: Map<number, Field> = new Map();
 
-    constructor(private world: PIXI.Container, private fs: FileSystem) { }
+    constructor(private world: PIXI.Container, private fs: FileSystem, private worldFieldBuilder: WorldFieldBuilder) { }
 
     public async render(map: AnnoMap) {
         if (!this.inited) {
             await this.loadTextures();
-            await this.loadFieldData();
             this.inited = true;
         }
         this.world.removeChildren();
 
-        map.islands.forEach((island) => {
-            if (island.diff === 0) {
-                const defaultFields: WorldField[] = [];
-                for (let y = 0; y < island.height; y++) {
-                    for (let x = 0; x < island.width; x++) {
-                        this.drawField(island.default_fields[x][y], island, x, y, defaultFields);
-                    }
-                }
-                this.renderSpritesByYCoordinate(defaultFields);
-            }
+        const worldFields = await this.worldFieldBuilder.load(map);
 
-            const currentFields: WorldField[] = [];
-            for (let y = 0; y < island.height; y++) {
-                for (let x = 0; x < island.width; x++) {
-                    this.drawField(island.current_fields[x][y], island, x, y, currentFields);
+        worldFields
+            .reduce((sprites, field) => sprites.concat(field.getSprites(this.world, this.textures)), [])
+            .sort((a: SpriteWithPositionAndLayer, b: SpriteWithPositionAndLayer) => {
+                if (a.layer === b.layer) {
+                    const ra = a.position.x + a.position.y;
+                    const rb = b.position.x + b.position.y;
+                    if (ra === rb) {
+                        return 0;
+                    } else if (ra < rb) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else if (a.layer === "land") {
+                    return -1;
+                } else {
+                    return 1;
                 }
-            }
-            this.renderSpritesByYCoordinate(currentFields);
-        });
+            })
+            .forEach((sprite: SpriteWithPositionAndLayer) => this.world.addChild(sprite.sprite));
 
         console.log("Map drawn.");
-    }
-
-    private renderSpritesByYCoordinate(worldFields: WorldField[]) {
-        const sprites = worldFields.reduce((s, field) => s.concat(field.getSprites(this.world, this.textures)), []);
-        // sprites.sort((a: PIXI.Sprite, b: PIXI.Sprite) => {
-        //    // TODO: This needs to take yOffset into account.
-        //    const ay = a.y + a.height;
-        //    const by = b.y + b.height;
-        //    if (ay > by) {
-        //        return 1;
-        //    } else if (ay < by) {
-        //        return -1;
-        //    } else {
-        //        return 0;
-        //    }
-        // });
-        sprites.forEach((sprite) => this.world.addChild(sprite));
-    }
-
-    private drawField(field: IslandField, island: Island, x: number, y: number, worldFields: WorldField[]) {
-        const fieldId = field.building;
-        if (fieldId === 0xFFFF) {
-            return;
-        }
-        const fieldConfig = this.fields.get(fieldId);
-        const origin = new PIXI.Point(island.x + x, island.y + y);
-        worldFields.push(new WorldField(fieldConfig, origin, field.rotation as Rotation, field.ani));
     }
 
     private async loadTextures() {
@@ -101,15 +74,6 @@ export default class GameRenderer {
                     this.textures.set(parseInt(gfxId, 10), texture);
                 }
             }
-        }
-    }
-
-    private async loadFieldData() {
-        const fieldData = JSON.parse(await this.fs.openAndGetContentAsText("/fields.json")).objects.HAUS.items;
-
-        for (const key of Object.keys(fieldData)) {
-            const fieldId = parseInt(fieldData[key].Id, 10);
-            this.fields.set(fieldId, new Field(fieldData[key]));
         }
     }
 }

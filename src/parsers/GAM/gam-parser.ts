@@ -48,7 +48,7 @@ interface IslandOreLocation {
 }
 
 export interface IslandField {
-    building: number;
+    fieldId: number;
     x: number;
     y: number;
     rotation: number;
@@ -262,7 +262,7 @@ export default class GAMParser {
             fields.push([]);
             for (let y = 0; y < island.height; y++) {
                 fields[x].push({
-                    building: 0xFFFF,
+                    fieldId: 0xFFFF,
                     x: 0, // x relative to the building's origin
                     y: 0, // y relative to the building's origin
                 } as IslandField);
@@ -274,7 +274,7 @@ export default class GAMParser {
             assert(field.x < island.width);
             assert(field.y < island.height);
 
-            const buildingId = field.building;
+            const buildingId = field.fieldId;
             if (buildingId !== 0xFFFF) {
                 fields[field.x][field.y] = field;
             }
@@ -290,7 +290,7 @@ export default class GAMParser {
         const bits = data.read32();
 
         return {
-            building: buildingId,
+            fieldId: buildingId,
             // x and y are relative to the island's origin
             x: x,
             y: y,

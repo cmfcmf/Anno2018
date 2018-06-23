@@ -2,6 +2,7 @@ import * as log from "loglevel";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
 import GameRenderer from "./game/game-renderer";
+import WorldFieldBuilder from "./game/world-field-builder";
 import Menu from "./menu";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
@@ -53,10 +54,12 @@ const Viewport = require("pixi-viewport");
     uploadHandler.render();
 
     const gamParser = new GAMParser(new IslandLoader(fs));
-    const gameRenderer = new GameRenderer(viewport, fs);
+    const worldFieldBuilder = new WorldFieldBuilder(fs);
+    const gameRenderer = new GameRenderer(viewport, fs, worldFieldBuilder);
+
     const menu = new Menu(fs, gamParser, gameRenderer, viewport);
     await menu.render();
 
-    // (document.querySelector('body > div > p:nth-child(1)') as HTMLParagraphElement).click();
+    // (document.querySelector("body > div > p:nth-child(1)") as HTMLParagraphElement).click();
     // document.body.style.zoom = "10%";
 })();
