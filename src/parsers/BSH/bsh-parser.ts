@@ -76,11 +76,12 @@ export default class BSHParser {
             }
         }
 
-        images.sort((imageA: BSHImage, imageB: BSHImage) => {
-            const a = Math.max(imageA.width, imageA.height);
-            const b = Math.max(imageB.width, imageB.height);
-            return a > b ? 1 : a < b ? -1 : 0;
-        });
+        // Can't sort the images here, otherwise the index doesn't match the gfx in the next loop.
+        // images.sort((imageA: BSHImage, imageB: BSHImage) => {
+        //    const a = Math.max(imageA.width, imageA.height);
+        //    const b = Math.max(imageB.width, imageB.height);
+        //    return a > b ? 1 : a < b ? -1 : 0;
+        // });
 
         let spritesheetIndex = 0;
         let binPacker = new BinPacker(this.SIZE,  this.SIZE);
@@ -89,50 +90,55 @@ export default class BSHParser {
 
         for (let i = 0; i < images.length; i++) {
             const image = images[i];
-            const result = binPacker.addBlock({w: image.width, h: image.height});
+            let result = binPacker.addBlock({w: image.width, h: image.height});
             if (result === false) {
                 await this.saveSpriteSheet(pixels, atlasData, spritesheetIndex, outName);
                 spritesheetIndex++;
                 binPacker = new BinPacker(this.SIZE,  this.SIZE);
                 pixels = new Uint8Array(this.SIZE * this.SIZE * 4);
                 atlasData = { meta: {  }, frames: {} };
-            } else {
-                const startX = result.x;
-                const startY = result.y;
 
-                let j = 0;
-                for (let y = 0; y < image.height; y++) {
-                    for (let x = 0; x < image.width; x++) {
-                        const idx = (startX + x + this.SIZE * y + this.SIZE * startY) * 4;
-                        pixels[idx + 0] = image.pixels[j * 4 + 0];
-                        pixels[idx + 1] = image.pixels[j * 4 + 1];
-                        pixels[idx + 2] = image.pixels[j * 4 + 2];
-                        pixels[idx + 3] = image.pixels[j * 4 + 3];
-                        j++;
-                    }
-                }
-
-                atlasData.frames[i.toString(10)] = {
-                    frame: {
-                        x: startX,
-                        y: startY,
-                        w: image.width,
-                        h: image.height,
-                    },
-                    rotated: false,
-                    trimmed: false,
-                    spriteSourceSize: {
-                        x: 0,
-                        y: 0,
-                        w: image.width,
-                        h: image.height,
-                    },
-                    sourceSize: {
-                        w: image.width,
-                        h: image.height,
-                    },
-                };
+                result = binPacker.addBlock({w: image.width, h: image.height});
             }
+            if (!result) {
+                throw new Error("Could not add image to empty spritesheet!");
+            }
+
+            const startX = result.x;
+            const startY = result.y;
+
+            let j = 0;
+            for (let y = 0; y < image.height; y++) {
+                for (let x = 0; x < image.width; x++) {
+                    const idx = (startX + x + this.SIZE * y + this.SIZE * startY) * 4;
+                    pixels[idx + 0] = image.pixels[j * 4 + 0];
+                    pixels[idx + 1] = image.pixels[j * 4 + 1];
+                    pixels[idx + 2] = image.pixels[j * 4 + 2];
+                    pixels[idx + 3] = image.pixels[j * 4 + 3];
+                    j++;
+                }
+            }
+
+            atlasData.frames[i.toString(10)] = {
+                frame: {
+                    x: startX,
+                    y: startY,
+                    w: image.width,
+                    h: image.height,
+                },
+                rotated: false,
+                trimmed: false,
+                spriteSourceSize: {
+                    x: 0,
+                    y: 0,
+                    w: image.width,
+                    h: image.height,
+                },
+                sourceSize: {
+                    w: image.width,
+                    h: image.height,
+                },
+            };
         }
 
         await this.saveSpriteSheet(pixels, atlasData, spritesheetIndex, outName);
