@@ -1,4 +1,5 @@
 import Stream from "./parsers/stream";
+import {uInt8ToBase64} from "./util/util";
 
 const Filer = require("filer.js");
 
@@ -100,5 +101,17 @@ export default class FileSystem {
 
     public async rm(pathOrEntry: string|WebKitEntry) {
         return new Promise((resolve, reject) => this.filer.rm(pathOrEntry, resolve, reject));
+    }
+
+    public async download(pathOrEntry: string|WebKitEntry) {
+        const content = await this.openAndGetContentAsUint8Array(pathOrEntry);
+
+        const element = document.createElement("a");
+        element.setAttribute("href", `data:application/json;base64,${uInt8ToBase64(content)}`);
+        element.setAttribute("download", pathOrEntry.toString());
+        element.style.display = "none";
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     }
 }
