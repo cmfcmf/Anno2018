@@ -1,3 +1,9 @@
+/*
+ * The savegame data structure was reverse-engineered by Benedikt Freisen
+ * as part of the 'mdcii-engine' project and released under GPLv2+.
+ * https://github.com/roybaer/mdcii-engine
+ */
+
 import Stream from "../../stream";
 import {ShipCourse} from "./ship-course";
 

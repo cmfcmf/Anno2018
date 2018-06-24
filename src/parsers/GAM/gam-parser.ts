@@ -120,7 +120,9 @@ export default class GAMParser {
                     break;
                 case "AUFTRAG4":
                     assert.strictEqual(task, undefined);
-                    task = new Task(data);
+                    if (block.length > 0) {
+                        task = new Task(data);
+                    }
                     break;
                 case "NAME":
                     assert.strictEqual(gameName, undefined);
