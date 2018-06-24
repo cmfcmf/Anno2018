@@ -8,7 +8,7 @@ import WorldFieldBuilder from "./world-field-builder";
 export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 31;
 
-export default class GameRenderer {
+export default class IslandRenderer {
     private inited = false;
 
     private textures: Map<number, PIXI.Texture> = new Map();

@@ -1,7 +1,7 @@
 import * as log from "loglevel";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
-import GameRenderer from "./game/game-renderer";
+import IslandRenderer from "./game/island-renderer";
 import WorldFieldBuilder from "./game/world-field-builder";
 import Menu from "./menu";
 import GAMParser from "./parsers/GAM/gam-parser";
@@ -55,9 +55,9 @@ const Viewport = require("pixi-viewport");
 
     const gamParser = new GAMParser(new IslandLoader(fs));
     const worldFieldBuilder = new WorldFieldBuilder(fs);
-    const gameRenderer = new GameRenderer(viewport, fs, worldFieldBuilder);
+    const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
 
-    const menu = new Menu(fs, gamParser, gameRenderer, viewport);
+    const menu = new Menu(fs, gamParser, islandRenderer, viewport);
     await menu.render();
 
     if (document.location.search.indexOf("debug=1") >= 0) {

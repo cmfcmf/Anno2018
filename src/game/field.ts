@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import {TILE_HEIGHT, TILE_WIDTH} from "./game-renderer";
+import {TILE_HEIGHT, TILE_WIDTH} from "./island-renderer";
 import {SpriteWithPositionAndLayer, WorldLayer} from "./world-field";
 
 export type LandFieldType =

@@ -1,11 +1,12 @@
 import * as Viewport from "pixi-viewport";
 import FileSystem from "./filesystem";
-import GameRenderer from "./game/game-renderer";
+import IslandRenderer from "./game/island-renderer";
 import GAMParser from "./parsers/GAM/gam-parser";
+import AnnoGame from './game/anno-game';
 
 export default class Menu {
     constructor(private fs: FileSystem, private gamParser: GAMParser,
-                private gameRenderer: GameRenderer, private viewport: Viewport) { }
+                private islandRenderer: IslandRenderer, private viewport: Viewport) { }
 
     public async render() {
         const menu = document.body.appendChild(document.createElement("div"));
@@ -23,8 +24,8 @@ export default class Menu {
             title.onclick = async () => {
                 const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
                 const map = await this.gamParser.parse(saveGameData);
-                await this.gameRenderer.render(map);
-                this.viewport.fit();
+                const game = new AnnoGame(map, this.islandRenderer, this.viewport);
+                await game.begin();
             };
             menu.appendChild(title);
         }
