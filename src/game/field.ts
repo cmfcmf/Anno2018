@@ -89,15 +89,13 @@ export default class Field {
                     }
                     const animatedSprite = new PIXI.extras.AnimatedSprite(animatedTextures);
                     animatedSprite.animationSpeed = (1.0 / 60.0) * (1000.0 / this.animTime);
-                    animatedSprite.onFrameChange = (currentFrame) => {
-                        // Re-calculate y offset on frame change.
-                        animatedSprite.y = worldY + this.yOffset - animatedSprite.height;
-                    };
                     animatedSprite.play();
                     sprite = animatedSprite;
                 }
+                // Set bottom left corner of sprite as origin.
+                sprite.anchor.set(0, 1);
                 sprite.x = worldX;
-                sprite.y = worldY + this.yOffset - sprite.height;
+                sprite.y = worldY + this.yOffset;
                 sprites.push({sprite: sprite, position: new PIXI.Point(xx, yy), layer: layer});
             }
         }
