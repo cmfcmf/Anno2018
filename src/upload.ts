@@ -8,10 +8,12 @@ import DATParser from "./parsers/DAT/dat-parser";
 import Stream from "./parsers/stream";
 
 export default class UploadHandler {
+    private readonly FS_SIZE_MB = 200;
+
     constructor(private fs: FileSystem) { }
 
     public async init() {
-        await this.fs.init(1024 * 1024 * 200);
+        await this.fs.init(1024 * 1024 * this.FS_SIZE_MB);
 
         console.table(await this.fs.ls("/"));
         console.log(await this.fs.df());
@@ -22,7 +24,6 @@ export default class UploadHandler {
         uploadBtn.type = "file";
         uploadBtn.multiple = false;
         uploadBtn.accept = "zip";
-
         uploadBtn.onchange = async () => {
             const files = uploadBtn.files;
             if (files.length !== 1) {
@@ -35,35 +36,74 @@ export default class UploadHandler {
                 return;
             }
             uploadBtn.disabled = true;
+            await this.uploadAndParse(file);
 
-            await this.fs.write("/original.zip", file);
-
-            const zipFileEntry = await this.fs.open("/original.zip");
-
-            const zip = await JSZip.loadAsync(zipFileEntry);
-            const annoRoot = zip.folder("Anno 1602");
-
-            await this.copyIslands(annoRoot);
-            await this.copySaves(annoRoot);
-            await this.decryptCODs(annoRoot);
-            await this.parseDATs(annoRoot);
-            await this.parseBSHs(annoRoot);
-
-            console.info("Upload finished.");
+            alert("Upload finished. The page will now refresh.");
+            window.location.reload(true);
         };
-        document.body.appendChild(uploadBtn);
 
         const resetBtn = document.createElement("button");
         resetBtn.innerText = "Reset All Files";
         resetBtn.onclick = async () => {
-            const entries = await this.fs.ls("/");
-            for (const entry of entries) {
-                await this.fs.rm(entry);
-            }
-            alert("All files deleted");
+            resetBtn.disabled = true;
+            await this.fs.rmRoot();
+            alert("All files deleted. The page will now refresh.");
             window.location.reload(true);
         };
+
+        document.body.appendChild(uploadBtn);
         document.body.appendChild(resetBtn);
+    }
+
+    private async uploadAndParse(file: File): Promise<boolean> {
+        await this.fs.write("/original.zip", file);
+        const zipFileEntry = await this.fs.open("/original.zip");
+
+        let zip;
+        try {
+            zip = await JSZip.loadAsync(zipFileEntry);
+        } catch (e) {
+            this.error("Could not open the uploaded ZIP file.", e);
+            return false;
+        }
+
+        let annoRoot;
+        try {
+            annoRoot = this.findRootInZip(zip);
+        } catch (e) {
+            this.error("", e);
+            return false;
+        }
+        await this.fs.rmRoot();
+
+        await this.copyIslands(annoRoot);
+        await this.copySaves(annoRoot);
+        await this.decryptCODs(annoRoot);
+        await this.parseDATs(annoRoot);
+        await this.parseBSHs(annoRoot);
+
+        return true;
+    }
+
+    private findRootInZip(zip: JSZip, root: string = ""): JSZip {
+        const topFolderNames = [...new Set(
+            zip
+                .filter((relativePath, entry) => entry.dir)
+                .map((folder) => folder.name.substring(root.length).split("/")[0])),
+        ];
+        if (topFolderNames.length === 1) {
+            const newRoot = topFolderNames[0] + "/";
+            return this.findRootInZip(zip.folder(newRoot), newRoot);
+        }
+        if (topFolderNames.find((name) => name === "GFX") !== undefined) {
+            return zip;
+        }
+
+        throw new Error("Your ZIP file does not have the expected structure.");
+    }
+
+    private error(msg: string, error: Error) {
+        alert(msg + "\n" + error.message);
     }
 
     private async parseDATs(annoRoot: JSZip) {

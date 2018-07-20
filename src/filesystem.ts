@@ -28,11 +28,11 @@ export default class FileSystem {
         return new Promise((resolve, reject) => this.filer.mkdir(foldername, false, resolve, reject));
     }
 
-    public async ls(directory: string|WebKitEntry): Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]> {
+    public async ls(directory: string|WebKitEntry): Promise<WebKitEntry[]> {
         // noinspection TsLint
         return new Promise((resolve, reject) => {
             return this.filer.ls(directory, resolve, reject);
-        }) as Promise<WebKitFileEntry[]|WebKitDirectoryEntry[]>;
+        }) as Promise<WebKitEntry[]>;
     }
 
     public async exists(entryOrPath: string|WebKitEntry) {
@@ -101,6 +101,11 @@ export default class FileSystem {
 
     public async rm(pathOrEntry: string|WebKitEntry) {
         return new Promise((resolve, reject) => this.filer.rm(pathOrEntry, resolve, reject));
+    }
+
+    public async rmRoot() {
+        const entries = await this.ls("/");
+        return Promise.all(entries.map((entry) => this.rm(entry)));
     }
 
     public async download(pathOrEntry: string|WebKitEntry) {
