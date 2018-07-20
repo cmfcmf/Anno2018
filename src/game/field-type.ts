@@ -1,6 +1,8 @@
 import * as PIXI from "pixi.js";
 import {TILE_HEIGHT, TILE_WIDTH} from "./island-renderer";
-import {SpriteWithPositionAndLayer, WorldLayer} from "./world-field";
+import {SpriteWithPositionAndLayer} from "./island-sprite-loader";
+import {WorldLayer} from "./island-sprite-loader";
+import {Rotation4} from "./world/world";
 
 export type LandFieldType =
     "BODEN"
@@ -40,13 +42,12 @@ export type BuildingFieldType =
     | "TURM"
     | "TURMSTRAND";
 
-export type FieldType = LandFieldType | BuildingFieldType;
-export type Rotation = 0 | 1 | 2 | 3;
+export type FieldKind = LandFieldType | BuildingFieldType;
 
-export default class Field {
+export default class FieldType {
     private readonly id: number;
     private readonly gfxId: number;
-    private readonly kind: FieldType;
+    private readonly kind: FieldKind;
     private readonly size: PIXI.Point;
     private readonly rotate: number;
     private readonly animAdd: number;
@@ -66,7 +67,7 @@ export default class Field {
         this.yOffset = -config.Posoffs;
     }
 
-    public getSprites(worldPos: PIXI.Point, rotation: Rotation, animationStep: number,
+    public getSprites(worldPos: PIXI.Point, rotation: Rotation4, animationStep: number,
                       textures: Map<number, PIXI.Texture>, layer: WorldLayer) {
         const sprites: SpriteWithPositionAndLayer[] = [];
         const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
@@ -103,7 +104,7 @@ export default class Field {
         return sprites;
     }
 
-    private getTexture(x: number, y: number, rotation: Rotation, animationStep: number,
+    private getTexture(x: number, y: number, rotation: Rotation4, animationStep: number,
                        textures: Map<number, PIXI.Texture>) {
         let tileId = this.gfxId;
         if (this.rotate > 0) {

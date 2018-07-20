@@ -59,6 +59,12 @@ export default class Stream {
         return result;
     }
 
+    public slice(length: number) {
+        const data =  this.data.slice(this.pos, this.pos + length);
+        this.pos += length;
+        return data;
+    }
+
     public read16() {
         return this.readNBytes(2);
     }

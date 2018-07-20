@@ -1,5 +1,5 @@
 import FileSystem from "../../filesystem";
-import {Island} from "./gam-parser";
+import Island from "../../game/world/island";
 
 export default class IslandLoader {
     private readonly islandSizes = new Map([
@@ -13,8 +13,8 @@ export default class IslandLoader {
     constructor(private fs: FileSystem) {}
 
     public async load(island: Island) {
-        const climate = island.is_south ? "south" : "north";
-        const islandNumber = island.num_base_island.toString().padStart(2, "0");
+        const climate = island.isSouth ? "south" : "north";
+        const islandNumber = island.baseIslandNumber.toString().padStart(2, "0");
         for (const entry of this.islandSizes.entries()) {
             const size = entry[0];
             const sizeName = entry[1];

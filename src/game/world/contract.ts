@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import Stream from "../../stream";
+import Stream from "../../parsers/stream";
 
 export enum ContractState {
     Inactive = 0,
@@ -14,10 +14,14 @@ export enum ContractState {
 }
 
 export default class Contract {
-    public readonly state: ContractState;
-
-    constructor(data: Stream) {
-        this.state = data.read32();
+    public static fromSaveGame(data: Stream) {
+        const contract = new Contract(
+            data.read32(),
+        );
         data.read32();
+
+        return contract;
     }
+
+    constructor(public readonly state: ContractState) { }
 }
