@@ -138,29 +138,33 @@ export default class GAMParser {
         const islands: Map<number, Island> = new Map();
         for (const islandBlock of islandBlocks) {
             const island = Island.fromSaveGame(islandBlock.data);
-            const islandBuildingBlocks = islandBlock.inselHausBlocks;
-            assert(islandBuildingBlocks.length === 2);
-            const islandBottomBlock = islandBuildingBlocks[0];
-            const islandTopBlock = islandBuildingBlocks[1];
+            const islandBuildingBlocks = islandBlock.inselHausBlocks !== undefined ? islandBlock.inselHausBlocks : [];
 
-            if (!island.differsFromBaseIsland) {
+            let islandTopBlock = Block.empty("INSELHAUS");
+            let islandBottomBlock;
+            if (!island.differsFromBaseIsland && islandBuildingBlocks.length <= 1) {
+                if (islandBuildingBlocks.length === 1) {
+                    islandTopBlock = islandBuildingBlocks[0];
+                }
+
                 const islandFile = await this.islandLoader.load(island);
                 // TODO: Why do we ignore this block
                 const islandBasisBlock = this.readBlock(islandFile);
-                const islandBaseFieldsBlock = this.readBlock(islandFile);
                 // TODO: Are there more blocks?
-                island.baseFields = this.parseIslandBuildings(
-                    island,
-                    islandBaseFieldsBlock,
-                    players,
-                );
+                islandBottomBlock = this.readBlock(islandFile);
             } else {
-                island.baseFields = this.parseIslandBuildings(
-                    island,
-                    islandBottomBlock,
-                    players,
-                );
+                assert(islandBuildingBlocks.length >= 1 && islandBuildingBlocks.length <= 2);
+                islandBottomBlock = islandBuildingBlocks[0];
+                if (islandBuildingBlocks.length === 2) {
+                    islandTopBlock = islandBuildingBlocks[1];
+                }
+
             }
+            island.baseFields = this.parseIslandBuildings(
+                island,
+                islandBottomBlock,
+                players,
+            );
 
             island.topFields = this.parseIslandBuildings(
                 island,

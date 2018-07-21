@@ -1,6 +1,10 @@
 import Stream from "../stream";
 
 export class Block {
+    public static empty(type: string) {
+        return new Block(type, 0, new Stream(new Uint8Array()));
+    }
+
     public readonly data: Stream;
 
     constructor(
