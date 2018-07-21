@@ -17,8 +17,16 @@ export default class Menu {
         } catch (e) {
             return;
         }
+        const missions = [];
+        try {
+            missions.push(...await this.getMissions("missions-original"));
+            missions.push(...await this.getMissions("missions-custom"));
+        } catch (e) {
+            return;
+        }
+
         console.table(saves);
-        for (const saveGame of saves) {
+        for (const saveGame of saves.concat(missions)) {
             const title = document.createElement("p");
             title.innerText = saveGame.name;
             title.onclick = async () => {
@@ -29,5 +37,11 @@ export default class Menu {
             };
             menu.appendChild(title);
         }
+    }
+
+    private async getMissions(folderName: string) {
+        return (await this.fs.ls("/" + folderName)).filter((file) => {
+            return file.isFile && file.name.endsWith(".szs");
+        });
     }
 }

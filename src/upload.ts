@@ -20,13 +20,23 @@ export default class UploadHandler {
     }
 
     public render() {
+        const uploadBtn = this.createUploadButton();
+        const saveOrMissionUploadButton = this.createSaveOrMissionUploadButton();
+        const resetBtn = this.createResetButton();
+
+        document.body.appendChild(uploadBtn);
+        document.body.appendChild(saveOrMissionUploadButton);
+        document.body.appendChild(resetBtn);
+    }
+
+    private createUploadButton() {
         const uploadBtn = document.createElement("input");
         uploadBtn.type = "file";
         uploadBtn.multiple = false;
-        uploadBtn.accept = "zip";
+        uploadBtn.accept = ".zip";
         uploadBtn.onchange = async () => {
             const files = uploadBtn.files;
-            if (files.length !== 1) {
+            if (files === null || files.length !== 1) {
                 alert("Please select the zipped Anno1602 folder to upload.");
                 return;
             }
@@ -41,7 +51,28 @@ export default class UploadHandler {
             alert("Upload finished. The page will now refresh.");
             window.location.reload(true);
         };
+        return uploadBtn;
+    }
 
+    private createSaveOrMissionUploadButton() {
+        const uploadBtn = document.createElement("input");
+        uploadBtn.type = "file";
+        uploadBtn.multiple = true;
+        uploadBtn.accept = ".szm,.szs,.gam";
+        uploadBtn.onchange = async () => {
+            const files = uploadBtn.files;
+            if (files === null || files.length === 0) {
+                return;
+            }
+            uploadBtn.disabled = true;
+            await Promise.all(Array.from(files).map((file) => this.uploadSaveOrMission(file)));
+            alert("Upload finished. The page will now refresh.");
+            window.location.reload(true);
+        };
+        return uploadBtn;
+    }
+
+    private createResetButton() {
         const resetBtn = document.createElement("button");
         resetBtn.innerText = "Reset All Files";
         resetBtn.onclick = async () => {
@@ -50,9 +81,7 @@ export default class UploadHandler {
             alert("All files deleted. The page will now refresh.");
             window.location.reload(true);
         };
-
-        document.body.appendChild(uploadBtn);
-        document.body.appendChild(resetBtn);
+        return resetBtn;
     }
 
     private async uploadAndParse(file: File): Promise<boolean> {
@@ -78,11 +107,20 @@ export default class UploadHandler {
 
         await this.copyIslands(annoRoot);
         await this.copySaves(annoRoot);
+        await this.copyMissions(annoRoot);
         await this.decryptCODs(annoRoot);
         await this.parseDATs(annoRoot);
         await this.parseBSHs(annoRoot);
 
         return true;
+    }
+
+    private async uploadSaveOrMission(file: File) {
+        if (file.name.endsWith(".gam")) {
+            await this.fs.write(`/saves/${file.name}`, file);
+        } else {
+            await this.fs.write(`/missions-custom/${file.name}`, file);
+        }
     }
 
     private findRootInZip(zip: JSZip, root: string = ""): JSZip {
@@ -177,28 +215,39 @@ export default class UploadHandler {
     }
 
     private async copySaves(annoRoot: JSZip) {
-        return this.copyFolderFromZip(annoRoot, "SAVEGAME", "/saves", ".gam");
+        await this.copyFolderFromZip(annoRoot, "SAVEGAME", "/saves", ".gam");
     }
 
-    private async copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtension: string,
+    private async copyMissions(annoRoot: JSZip) {
+        await this.copyFolderFromZip(annoRoot, "Szenes", "/missions-original", ".szm|.szs|.hss");
+        await this.copyFolderFromZip(annoRoot, "Eigene Szenarien", "/missions-custom", ".szm|.szs|.hss");
+    }
+
+    private async copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtensions: string,
                                     makeLowerCase: boolean = true) {
         inPath = `${inPath}/`;
-        console.debug(`Copying '${fileExtension}' files from '${inPath}' to '${outPath}'.`);
+        console.debug(`Copying '${fileExtensions}' files from '${inPath}' to '${outPath}'.`);
         // await fs.rm(outPath);
         await this.fs.mkdir(outPath);
 
         const files: Array<{path: string, file: JSZipObject}> = [];
         zip.forEach((relativePath, file) => {
-            if (relativePath.startsWith(inPath) && relativePath.toLowerCase().endsWith(fileExtension.toLowerCase())) {
-                relativePath = relativePath.substring(inPath.length);
-                relativePath = relativePath.substring(0, relativePath.length - fileExtension.length) + fileExtension;
-                if (makeLowerCase) {
-                    relativePath = relativePath.toLowerCase();
+            if (relativePath.startsWith(inPath)) {
+                for (const fileExtension of fileExtensions.split("|")) {
+                    if (relativePath.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+                        relativePath = relativePath.substring(inPath.length);
+                        relativePath = relativePath.substring(0, relativePath.length - fileExtension.length);
+                        relativePath += fileExtension;
+                        if (makeLowerCase) {
+                            relativePath = relativePath.toLowerCase();
+                        }
+                        files.push({
+                            path: relativePath,
+                            file: file,
+                        });
+                        break;
+                    }
                 }
-                files.push({
-                    path: relativePath,
-                    file: file,
-                });
             }
         });
 
