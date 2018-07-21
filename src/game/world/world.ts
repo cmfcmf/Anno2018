@@ -7,6 +7,7 @@ import Player from "./player";
 import Ship from "./ship";
 import Soldier from "./soldier";
 import Task from "./task";
+import Trader from "./trader";
 
 export type Rotation4 = 0 | 1 | 2 | 3;
 export type Rotation8 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -32,6 +33,7 @@ export default class World {
         public readonly kontors: Kontor[],
         public readonly castles: Castle[],
         public readonly cities: City[],
+        public readonly trader: Trader|null,
     ) {
         console.log(task);
         console.log(gameName);
@@ -42,6 +44,7 @@ export default class World {
         console.table(kontors);
         console.table(castles);
         console.table(cities);
+        console.log(trader);
     }
 
     // Called every 10 seconds

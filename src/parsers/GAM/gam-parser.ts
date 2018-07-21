@@ -14,6 +14,7 @@ import Player from "../../game/world/player";
 import Ship from "../../game/world/ship";
 import Soldier from "../../game/world/soldier";
 import Task from "../../game/world/task";
+import Trader from "../../game/world/trader";
 import World from "../../game/world/world";
 import Stream from "../stream";
 import {Block, IslandBlock} from "./block";
@@ -100,6 +101,10 @@ export default class GAMParser {
         const cities   = this.handleBlock<City>(   blocks, "STADT4",  City,    players, islands);
 
         // TODO: HIRSCH2, PRODLIST2, WERFT, SIEDLER, ROHWACHS2, MARKT2, HANDLER, TURM, TIMERS, WIFF
+        let trader = null;
+        if (blocks.has("HANDLER") && blocks.get("HANDLER")[0].length > 0) {
+            trader = Trader.fromSaveGame(blocks.get("HANDLER")[0].data, players, islands);
+        }
 
         return new World(
             [...islands.values()],
@@ -111,6 +116,7 @@ export default class GAMParser {
             kontors,
             castles,
             cities,
+            trader,
         );
     }
 
