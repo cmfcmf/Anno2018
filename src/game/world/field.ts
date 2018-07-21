@@ -26,6 +26,11 @@ export default class Field {
         const playerId  = (bits >> 22) & (2 ** 3 - 1);
         const empty     = (bits >> 25) & (2 ** 7 - 1);
 
+        const player = playerId === 7 ? null : players.get(playerId);
+        if (player === undefined) {
+            throw new Error(`Could not find player with id ${playerId}`);
+        }
+
         return new Field(
             buildingId,
             x,
@@ -34,7 +39,7 @@ export default class Field {
             animation,
             status,
             random,
-            players.get(playerId),
+            player,
         );
     }
 

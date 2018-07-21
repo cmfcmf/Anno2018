@@ -18,7 +18,13 @@ export default class Kontor {
         const goods = this.parseGoods(data);
 
         const player = players.get(playerId);
+        if (player === undefined) {
+            throw new Error(`Could not find player with id ${playerId}`);
+        }
         const island = islands.get(islandId);
+        if (island === undefined) {
+            throw new Error(`Could not find island with id ${islandId}`);
+        }
 
         return new Kontor(island, position, player, goods);
     }

@@ -52,6 +52,10 @@ export default class Ship {
         // type_name = SHIP_TYPES[ship['type']],
 
         const player = players.get(playerId);
+        if (player === undefined) {
+            throw new Error(`Could not find player with id ${playerId}`);
+        }
+
         const ship = new Ship(
             id,
             player,

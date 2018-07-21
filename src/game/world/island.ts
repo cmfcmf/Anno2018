@@ -11,7 +11,7 @@ import {OreLocation} from "./island-ore-location";
 
 export default class Island {
     public static fromSaveGame(data: Stream) {
-        const num = data.read8();
+        const id = data.read8();
         const width = data.read8();
         const height = data.read8();
         const _1 = data.read8();
@@ -36,8 +36,8 @@ export default class Island {
         const diff = data.read8();
         const _9 = data.read(14);
 
-        return new Island(
-            num,
+        const island = new Island(
+            id,
             new PIXI.Point(x, y),
             new PIXI.Point(width, height),
             numBaseIsland,
@@ -48,11 +48,16 @@ export default class Island {
             diff !== 0,
             fertilityDiscovered !== 0,
         );
+        island.debug = {_1, _2, _3, _4, _5, _6, _7, _8, _9, diff};
+
+        return island;
     }
 
-    public baseFields: Field[][];
+    public debug: any;
 
-    public topFields: Array<Array<Field|null>>;
+    public baseFields: Field[][] = [];
+
+    public topFields: Array<Array<Field|null>> = [];
 
     public cities: City[];
 
@@ -65,7 +70,10 @@ export default class Island {
         public readonly oreLocations: OreLocation[],
         public readonly fertility: number,
         private readonly south: boolean,
-        public readonly diff: boolean, // Hmm. What exactly does this mean?
+        public readonly differsFromBaseIsland: boolean, // If this is 1, we need to ignore the .scp file for this island
+                                                        // and instead use the data in INSELHAUS[0] directly after
+                                                        // the island block. This can happen, for example, when the
+                                                        // island is rotated.
 
         public fertilityDiscovered: boolean,
     ) {

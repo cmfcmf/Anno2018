@@ -12,8 +12,6 @@ export default class IslandRenderer {
                 private spriteLoader: IslandSpriteLoader) { }
 
     public async render(islands: Island[]) {
-        this.world.removeChildren();
-
         const sprites = (await this.spriteLoader.getIslandSprites(islands));
         console.log("Map sprites loaded.");
         sprites.sort((a: SpriteWithPositionAndLayer, b: SpriteWithPositionAndLayer) => {

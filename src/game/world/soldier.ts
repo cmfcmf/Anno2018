@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import {PlayerMap} from "../../parsers/GAM/gam-parser";
+import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Stream from "../../parsers/stream";
 import Field from "./field";
 import Player from "./player";
@@ -20,7 +20,7 @@ export enum SoldierType {
 }
 
 export default class Soldier {
-    public static fromSaveGame(data: Stream, players: PlayerMap) {
+    public static fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap) {
         const x = data.read16() / 2;
         const y = data.read16() / 2;
         const hp = data.read16();
@@ -43,6 +43,10 @@ export default class Soldier {
         const empty = data.read(30);
 
         const player = players.get(playerId);
+        if (player === undefined) {
+            throw new Error(`Could not find player with id ${playerId}`);
+        }
+
         const soldier = new Soldier(
             id,
             player,
@@ -56,7 +60,7 @@ export default class Soldier {
         return soldier;
     }
 
-    private patrollingPoints: [PIXI.Point, PIXI.Point];
+    private patrollingPoints?: [PIXI.Point, PIXI.Point];
 
     constructor(
         public readonly id: number,

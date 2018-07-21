@@ -64,7 +64,11 @@ export default class FileSystem {
         return new Promise<string>((resolve, reject) => {
             const fileReader = new FileReader();
             fileReader.onload = ((event) => {
-                resolve(event.target.result);
+                if (event.target !== null) {
+                    resolve(event.target.result);
+                } else {
+                    reject();
+                }
             });
             fileReader.onerror = ((event) => {
                 reject();
@@ -77,7 +81,11 @@ export default class FileSystem {
         return new Promise<Uint8Array>((resolve, reject) => {
             const fileReader = new FileReader();
             fileReader.onload = ((event) => {
-                resolve(new Uint8Array(event.target.result));
+                if (event.target !== null) {
+                    resolve(new Uint8Array(event.target.result));
+                } else {
+                    reject();
+                }
             });
             fileReader.onerror = ((event) => {
                 reject();

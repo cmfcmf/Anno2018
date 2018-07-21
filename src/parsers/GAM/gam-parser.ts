@@ -32,21 +32,25 @@ export interface IslandField {
     _2: number;
 }
 
-export type PlayerMap = Map<number, Player>;
-export type IslandMap = Map<number, Island>;
+export type PlayerMap = ReadonlyMap<number, Player>;
+export type IslandMap = ReadonlyMap<number, Island>;
+
+interface Entity<T> {
+    fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap): T;
+}
 
 export default class GAMParser {
     constructor(private islandLoader: IslandLoader) { }
 
     public async parse(data: Stream) {
         const blocks: Map<string, Block[]> = new Map();
-        const blockTypes = [];
         while (!data.eof()) {
             const block = this.readBlock(data);
-            if (!blocks.has(block.type)) {
-                blocks.set(block.type, []);
-            }
+            console.log(block.type);
             if (block.type !== "INSELHAUS") {
+                if (!blocks.has(block.type)) {
+                    blocks.set(block.type, []);
+                }
                 blocks.get(block.type).push(block);
             } else {
                 const lastIslandBlock = blocks.get("INSEL5")[blocks.get("INSEL5").length - 1] as IslandBlock;
@@ -55,46 +59,47 @@ export default class GAMParser {
                 }
                 lastIslandBlock.inselHausBlocks.push(block);
             }
-            blockTypes.push(block.type);
         }
 
         return this.doParse(blocks);
     }
 
     private async doParse(blocks: Map<string, Block[]>) {
-        const nameBlock = blocks.get("NAME")[0];
-        const gameName = nameBlock.data.readString(nameBlock.length);
+        // console.log([...blocks.keys()].map(key => [key, blocks.get(key).length]));
+        console.log(
+            [...blocks.keys()]
+                .filter((key) => blocks.get(key).find((block) => block.length > 0) !== undefined)
+                .map((key) => [key, blocks.get(key)]),
+        );
 
-        const taskBlock = blocks.get("AUFTRAG4")[0];
+        let gameName = "";
+        if (blocks.has("NAME")) {
+            // Missions don't have a name.
+            const nameBlock = blocks.get("NAME")[0];
+            gameName = nameBlock.data.readString(nameBlock.length);
+        }
+
         let task = null;
-        if (taskBlock.length > 0) {
-            task = Task.fromSaveGame(taskBlock.data);
+        if (blocks.has("AUFTRAG4")) {
+            const taskBlock = blocks.get("AUFTRAG4")[0];
+            if (taskBlock.length > 0) {
+                task = Task.fromSaveGame(taskBlock.data);
+            }
         }
 
         const playerBlock = blocks.get("PLAYER4")[0];
         const players = this.parsePlayers(playerBlock);
 
-        const shipBlock = blocks.get("SHIP4")[0];
-        const ships = this.parseShips(shipBlock, players);
-
-        const soldierBlock = blocks.get("SOLDAT3")[0];
-        const soldiers = this.parseSoldiers(soldierBlock, players);
-
-        const islandBlocks = blocks.get("INSEL5") as IslandBlock[];
+        const islandBlocks = blocks.has("INSEL5") ? blocks.get("INSEL5") as IslandBlock[] : [];
         const islands = await this.parseIslands(islandBlocks, players);
 
-        const kontorBlock = blocks.get("KONTOR2")[0];
-        const kontors = this.parseKontors(kontorBlock, players, islands);
-
-        const castleBlock = blocks.get("MILITAR")[0];
-        const castles = this.parseCastles(castleBlock, islands);
-
-        const cityBlock = blocks.get("STADT4")[0];
-        const cities = this.parseCities(cityBlock, players, islands);
+        const ships    = this.handleBlock<Ship>(   blocks, "SHIP4",   Ship,    players, islands);
+        const soldiers = this.handleBlock<Soldier>(blocks, "SOLDAT3", Soldier, players, islands);
+        const kontors  = this.handleBlock<Kontor>( blocks, "KONTOR2", Kontor,  players, islands);
+        const castles  = this.handleBlock<Castle>( blocks, "MILITAR", Castle,  players, islands);
+        const cities   = this.handleBlock<City>(   blocks, "STADT4",  City,    players, islands);
 
         // TODO: HIRSCH2, PRODLIST2, WERFT, SIEDLER, ROHWACHS2, MARKT2, HANDLER, TURM, TIMERS, WIFF
-
-        console.log(blocks.keys());
 
         return new World(
             [...islands.values()],
@@ -109,13 +114,30 @@ export default class GAMParser {
         );
     }
 
+    private handleBlock<T>(blocks: Map<string, Block[]>, name: string, entity: any, players: PlayerMap,
+                           islands: IslandMap): T[] {
+        if (!blocks.has(name)) {
+            return [];
+        }
+        const entities: T[] = [];
+        for (const block of blocks.get(name)) {
+            while (!block.data.eof()) {
+                entities.push(entity.fromSaveGame(block.data, players, islands));
+            }
+        }
+        return entities;
+    }
+
     private async parseIslands(islandBlocks: IslandBlock[], players: PlayerMap) {
-        const islands: IslandMap = new Map();
+        const islands: Map<number, Island> = new Map();
         for (const islandBlock of islandBlocks) {
-            const islandBuildingBlocks = islandBlock.inselHausBlocks;
             const island = Island.fromSaveGame(islandBlock.data);
-            // TODO: What does diff stand for?
-            if (!island.diff) {
+            const islandBuildingBlocks = islandBlock.inselHausBlocks;
+            assert(islandBuildingBlocks.length === 2);
+            const islandBottomBlock = islandBuildingBlocks[0];
+            const islandTopBlock = islandBuildingBlocks[1];
+
+            if (!island.differsFromBaseIsland) {
                 const islandFile = await this.islandLoader.load(island);
                 // TODO: Why do we ignore this block
                 const islandBasisBlock = this.readBlock(islandFile);
@@ -126,34 +148,23 @@ export default class GAMParser {
                     islandBaseFieldsBlock,
                     players,
                 );
+            } else {
+                island.baseFields = this.parseIslandBuildings(
+                    island,
+                    islandBottomBlock,
+                    players,
+                );
             }
 
             island.topFields = this.parseIslandBuildings(
                 island,
-                // TODO: Why do we only use the last block?
-                islandBuildingBlocks[islandBuildingBlocks.length - 1],
+                islandTopBlock,
                 players,
             );
 
             islands.set(island.id, island);
         }
         return islands;
-    }
-
-    private parseShips(block: Block, players: PlayerMap) {
-        const ships = [];
-        while (!block.data.eof()) {
-            ships.push(Ship.fromSaveGame(block.data, players));
-        }
-        return ships;
-    }
-
-    private parseSoldiers(block: Block, players: PlayerMap) {
-        const soldiers = [];
-        while (!block.data.eof()) {
-            soldiers.push(Soldier.fromSaveGame(block.data, players));
-        }
-        return soldiers;
     }
 
     private parseIslandBuildings(island: Island, block: Block, players: PlayerMap): Array<Array<Field|null>> {
@@ -175,32 +186,8 @@ export default class GAMParser {
         return fields;
     }
 
-    private parseKontors(block: Block, players: PlayerMap, islands: IslandMap): Kontor[] {
-        const kontors: Kontor[] = [];
-        while (!block.data.eof()) {
-            kontors.push(Kontor.fromSaveGame(block.data, players, islands));
-        }
-        return kontors;
-    }
-
-    private parseCastles(block: Block, islands: IslandMap): Castle[] {
-        const castles: Castle[] = [];
-        while (!block.data.eof()) {
-            castles.push(Castle.fromSaveGame(block.data, islands));
-        }
-        return castles;
-    }
-
-    private parseCities(block: Block, players: PlayerMap, islands: IslandMap): City[] {
-        const cities: City[] = [];
-        while (!block.data.eof()) {
-            cities.push(City.fromSaveGame(block.data, players, islands));
-        }
-        return cities;
-    }
-
     private parsePlayers(block: Block) {
-        const players: PlayerMap = new Map();
+        const players: Map<number, Player> = new Map();
         while (!block.data.eof()) {
             const player = Player.fromSaveGame(block.data);
             players.set(player.id, player);

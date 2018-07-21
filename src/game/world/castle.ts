@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import {IslandMap} from "../../parsers/GAM/gam-parser";
+import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Stream from "../../parsers/stream";
 import Island from "./island";
 import {SoldierType} from "./soldier";
@@ -25,7 +25,7 @@ class Unit {
 
 // tslint:disable-next-line:max-classes-per-file
 export default class Castle {
-    public static fromSaveGame(data: Stream, islands: IslandMap) {
+    public static fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap) {
         const islandId = data.read8();
         const position = new PIXI.Point(data.read8(), data.read8());
         data.read8();
@@ -38,6 +38,9 @@ export default class Castle {
         data.read(32);
 
         const island = islands.get(islandId);
+        if (island === undefined) {
+            throw new Error(`Could not find island with id ${islandId}`);
+        }
 
         return new Castle(
             island,

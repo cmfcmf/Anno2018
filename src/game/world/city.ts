@@ -28,8 +28,14 @@ export default class City {
         const _3 = data.read(3);
         const name = data.readString(33);
 
-        const island = islands.get(islandId);
         const player = players.get(playerId);
+        if (player === undefined) {
+            throw new Error(`Could not find player with id ${playerId}`);
+        }
+        const island = islands.get(islandId);
+        if (island === undefined) {
+            throw new Error(`Could not find island with id ${islandId}`);
+        }
 
         const city = new City(island, player, progressAllowed, inhabitants, taxes, name);
         city.debug = {_0, _1, _2, _3};

@@ -7,5 +7,5 @@
 import Kontor from "./kontor";
 
 export default class TradeRoute {
-    private kontors: Kontor[];
+    private kontors: Kontor[] = [];
 }

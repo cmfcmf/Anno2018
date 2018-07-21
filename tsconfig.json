@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "noImplicitAny": true,
     "sourceMap": true,
     "module": "es6",
     "target": "es2015",
-    //"jsx": "react",
     "allowJs": true,
     "lib": [
       "es2017",
       "dom"
     ],
-    "moduleResolution": "node"
+    "moduleResolution": "Node",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictFunctionTypes": true
   }
 }

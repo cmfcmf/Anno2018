@@ -32,11 +32,9 @@ export default class IslandSpriteLoader {
         const sprites: SpriteWithPositionAndLayer[] = [];
 
         islands.forEach((island) => {
-            if (!island.diff) {
-                for (let x = 0; x < island.width; x++) {
-                    for (let y = 0; y < island.height; y++) {
-                        this.handleField(island.baseFields[x][y], island, x, y, sprites, "land");
-                    }
+            for (let x = 0; x < island.width; x++) {
+                for (let y = 0; y < island.height; y++) {
+                    this.handleField(island.baseFields[x][y], island, x, y, sprites, "land");
                 }
             }
             for (let x = 0; x < island.width; x++) {
@@ -54,6 +52,9 @@ export default class IslandSpriteLoader {
             return;
         }
         const fieldConfig = this.fields.get(field.fieldId);
+        if (fieldConfig === undefined) {
+            throw new Error(`Could not load config for ${field.fieldId}.`);
+        }
         const origin = new PIXI.Point(island.x + x, island.y + y);
 
         const newSprites = fieldConfig.getSprites(origin, field.rotation, field.ani, this.textures, layer);

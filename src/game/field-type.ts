@@ -105,7 +105,7 @@ export default class FieldType {
     }
 
     private getTexture(x: number, y: number, rotation: Rotation4, animationStep: number,
-                       textures: Map<number, PIXI.Texture>) {
+                       textures: Map<number, PIXI.Texture>): PIXI.Texture {
         let tileId = this.gfxId;
         if (this.rotate > 0) {
             tileId += rotation * this.size.x * this.size.y;
@@ -124,6 +124,11 @@ export default class FieldType {
             throw new Error(`Invalid building rotation: ${rotation}.`);
         }
 
-        return textures.get(tileId);
+        const texture = textures.get(tileId);
+        if (texture === undefined) {
+            throw new Error(`Could not load texture ${tileId}.`);
+        }
+
+        return texture;
     }
 }

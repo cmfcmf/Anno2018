@@ -25,7 +25,7 @@ export default class World {
     constructor(
         public readonly islands: Island[],
         public readonly players: Player[],
-        public readonly task: Task,
+        public readonly task: Task|null,
         public readonly gameName: string,
         public readonly soldiers: Soldier[],
         public readonly ships: Ship[],

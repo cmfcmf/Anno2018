@@ -7,6 +7,8 @@ export default class GameRenderer {
                 private viewport: Viewport) { }
 
     public async begin() {
+        this.viewport.removeChildren();
+
         // Render islands
         await this.islandRenderer.render(this.world.islands);
 
