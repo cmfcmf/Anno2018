@@ -31,8 +31,14 @@ export default class Kontor {
 
     private static parseGoods(data: Stream) {
         const goods = [];
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 2; i++) {
+            Good.fromSaveGame(data);
+        }
+        for (let i = 2; i < 2 + 23; i++) {
             goods.push(Good.fromSaveGame(data));
+        }
+        for (let i = 2 + 23; i < 50; i++) {
+            Good.fromSaveGame(data);
         }
         return goods;
     }
