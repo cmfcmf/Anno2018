@@ -33,6 +33,12 @@ export default class Menu {
                 const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
                 const world = await this.gamParser.parse(saveGameData);
                 const game = new GameRenderer(world, this.islandRenderer, this.viewport);
+
+                this.viewport.parent.addChild(new PIXI.Text(
+                    `Money: ${world.players.find((player) => player.id === 0).money}`,
+                    {fontFamily : "Arial", fontSize: 24, fill : 0xff1010},
+                ));
+
                 await game.begin();
             };
             menu.appendChild(title);
