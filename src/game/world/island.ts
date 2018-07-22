@@ -4,37 +4,87 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import * as assert from "assert";
 import Stream from "../../parsers/stream";
 import City from "./city";
 import Field from "./field";
 import {OreLocation} from "./island-ore-location";
+
+enum IslandFertilityFlags {
+    TOBACCO = 1,
+    SUGARCANE = 3,
+    WINE = 5,
+    COTTON = 4,
+    CACAO = 6,
+    SPICE = 2,
+}
+
+export interface IslandFertility {
+    tobacco: boolean;
+    sugarcane: boolean;
+    wine: boolean;
+    cotton: boolean;
+    cacao: boolean;
+    spice: boolean;
+}
 
 export default class Island {
     public static fromSaveGame(data: Stream) {
         const id = data.read8();
         const width = data.read8();
         const height = data.read8();
+        /*
+        uint8      strtduerrflg:1;
+        uint8      nofixflg:1;
+        uint8      vulkanflg:1;
+         */
         const _1 = data.read8();
         const x = data.read16();
         const y = data.read16();
-        const _2 = data.read16();
-        const _3 = data.read16();
-        const _4 = data.read(14);
+
+        const hirschreviercnt = data.read16();
+        const speedcnt = data.read16();
+        // the order in which players built their cities on this island
+        // is 7, 7, 7, 7, 7, 7, 7, 7, by default
+        // fills up from the beginning with player ids once a player builds a kontor.
+        // natives are also listed; islands with natives start with 6, 7, 7, ...
+        const stadtplayernr = data.read(8);
+
+        assert(data.read(3).every((e) => e === 0));
+
+        const vulcanoCount = data.read8();
+        const treasureFlag = data.read8Bool();
+        const rohstanz = data.read8();
+
         const numOreLocations = data.read8();
         const fertilityDiscovered = data.read8();
         const oreLocations = [
             OreLocation.fromSaveGame(data),
             OreLocation.fromSaveGame(data),
         ];
+        // These look like even more ore locations.
         const _5 = data.read(48);
-        const fertility = data.read8();
-        const _6 = data.read8();
-        const _7 = data.read16();
+
+        const fertility = this.parseFertility(data.read32());
         const numBaseIsland = data.read16();
-        const _8 = data.read16();
+
+        // unsure
+        const sizenr = data.read16();
+
         const isSouth = data.read8Bool();
-        const diff = data.read8();
-        const _9 = data.read(14);
+        const differsFromBaseIsland = data.read8Bool();
+
+        // unsure
+        const duerrproz = data.read8();
+        // unsure
+        const rotier = data.read8();
+
+        const seeplayerflags = data.read32(); // 1 nach bloßem Vorbeifahren (= zeigt Eingebohrene), 0xFF nach Kontorbau
+
+        // unsure
+        const duerrcnt = data.read32();
+
+        assert(data.read32() === 0);
 
         const island = new Island(
             id,
@@ -45,12 +95,41 @@ export default class Island {
             oreLocations,
             fertility,
             isSouth,
-            diff !== 0,
+            differsFromBaseIsland,
             fertilityDiscovered !== 0,
         );
-        island.debug = {_1, _2, _3, _4, _5, _6, _7, _8, _9, diff};
+        island.debug = {
+            _1,
+            _5,
+            hirschreviercnt,
+            speedcnt,
+            stadtplayernr,
+            vulcanoCount,
+            treasureFlag,
+            rohstanz,
+
+            sizenr,
+            duerrproz,
+            rotier,
+
+            seeplayerflags,
+            duerrcnt,
+        };
+
+        console.log(island.debug);
 
         return island;
+    }
+
+    private static parseFertility(fertility: number): IslandFertility {
+        return {
+            tobacco:   (fertility & (1 << IslandFertilityFlags.TOBACCO)) > 0,
+            sugarcane: (fertility & (1 << IslandFertilityFlags.SUGARCANE)) > 0,
+            wine:      (fertility & (1 << IslandFertilityFlags.WINE)) > 0,
+            cotton:    (fertility & (1 << IslandFertilityFlags.COTTON)) > 0,
+            cacao:     (fertility & (1 << IslandFertilityFlags.CACAO)) > 0,
+            spice:     (fertility & (1 << IslandFertilityFlags.SPICE)) > 0,
+        };
     }
 
     public debug: any;
@@ -68,7 +147,7 @@ export default class Island {
         public readonly baseIslandNumber: number,
         public readonly numOreLocations: number,
         public readonly oreLocations: OreLocation[],
-        public readonly fertility: number,
+        public readonly fertility: IslandFertility,
         private readonly south: boolean,
         public readonly differsFromBaseIsland: boolean, // If this is 1, we need to ignore the .scp file for this island
                                                         // and instead use the data in INSELHAUS[0] directly after

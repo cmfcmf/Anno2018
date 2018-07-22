@@ -4,37 +4,46 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import * as assert from "assert";
 import Stream from "../../parsers/stream";
 
-export enum OreLocationType {
+export enum OreLocationKind {
     Iron = 2,
     Gold = 3,
 }
 
+export enum OreLocationSize {
+    Small = 1,
+    Big = 0,
+}
+
 export class OreLocation {
     public static fromSaveGame(data: Stream) {
-        const oreLocation = new OreLocation(
+        const kind = data.read8();
+        const position = new PIXI.Point(
             data.read8(),
-            new PIXI.Point(
-                data.read8(),
-                data.read8(),
-            ),
-            data.read8() !== 0,
+            data.read8(),
         );
+        const discoveredBy = data.read8(); // unsure
+        const size = data.read8();
+        assert(data.read8() === 0);
+        const amount = data.read16(); // unsure
 
-        // TODO: Figure out how these work exactly.
-        // SmallIron = 0x0A000001,
-        // BigIron   = 0x1E000000,
-        // Gold      = 0x06400001,
-        data.read32();
-
-        return oreLocation;
+        return new OreLocation(
+            kind,
+            size,
+            amount,
+            position,
+            discoveredBy,
+        );
     }
 
     constructor(
-        public type: OreLocationType,
+        public kind: OreLocationKind,
+        public size: OreLocationSize,
+        public amount: number,
         public position: PIXI.Point,
-        public discovered: boolean,
+        public discoveredBy: number,
     ) {
     }
 }

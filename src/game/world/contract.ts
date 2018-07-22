@@ -15,13 +15,14 @@ export enum ContractState {
 
 export default class Contract {
     public static fromSaveGame(data: Stream) {
-        const contract = new Contract(
-            data.read32(),
-        );
-        data.read32();
+        const state = data.read32();
+        const time = data.read32(); // unsure
 
-        return contract;
+        return new Contract(
+            state,
+            time,
+        );
     }
 
-    constructor(public readonly state: ContractState) { }
+    constructor(public readonly state: ContractState, public readonly time: number) { }
 }

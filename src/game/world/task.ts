@@ -25,7 +25,7 @@ export default class Task {
         assert(data.read8() === 0);
         const helpOtherToReachInhabitantsPlayerId = data.read8(); // Can be 0, 1, 2, 3 or 7 for any player.
 
-        const _2 = data.read(6);
+        assert(data.read(6).every((e) => e === 0));
 
         const playersToKill = [];
         if (data.read8Bool()) {
@@ -84,7 +84,7 @@ export default class Task {
             requiredLevelCount: data.read32(),
         };
 
-        console.warn("task", taskId, _1, _2, _3, _5, _6, _7);
+        console.warn("task", taskId, _1, _3, _5, _6, _7);
 
         return new Task(
             taskId,
