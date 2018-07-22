@@ -147,8 +147,8 @@ export default class UploadHandler {
 
     private async parseDATs(annoRoot: JSZip) {
         return Promise.all([
-            ["fields.dat", "fields.json"],
-            ["animations.dat", "animations.json"],
+            ["/fields.dat", "/fields.json"],
+            ["/animations.dat", "/animations.json"],
         ].map(async (r) => {
             const inName = r[0];
             const outName = r[1];
@@ -166,8 +166,8 @@ export default class UploadHandler {
         const parser = new CODParser();
 
         return Promise.all([
-            ["haeuser.cod", "fields.dat"],
-            ["figuren.cod", "animations.dat"],
+            ["haeuser.cod", "/fields.dat"],
+            ["figuren.cod", "/animations.dat"],
         ].map(async (r) => {
             const inName = r[0];
             const outName = r[1];
