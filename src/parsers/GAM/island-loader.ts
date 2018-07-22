@@ -1,5 +1,9 @@
+import * as assert from "assert";
 import FileSystem from "../../filesystem";
+import Field from "../../game/world/field";
 import Island from "../../game/world/island";
+import {Block} from "./block";
+import {PlayerMap} from "./gam-parser";
 
 export type IslandSizeId = 0|1|2|3|4;
 export type IslandSizeName = "lit"|"mit"|"med"|"big"|"lar";
@@ -40,7 +44,7 @@ export default class IslandLoader {
 
     constructor(private fs: FileSystem) {}
 
-    public async load(island: Island) {
+    public async loadIslandFile(island: Island) {
         const climate = island.isSouth ? "south" : "north";
         const islandNumber = island.baseIslandNumber.toString().padStart(2, "0");
         for (const islandSize of this.islandSizes) {
@@ -54,7 +58,7 @@ export default class IslandLoader {
         throw new Error("Could not load island");
     }
 
-    public async loadRandom(sizeId: 0|1|2|3|4, climate: "NORTH"|"SOUTH"|"ANY") {
+    public async loadRandomIslandFile(sizeId: 0|1|2|3|4, climate: "NORTH"|"SOUTH"|"ANY") {
         const islandSize = this.islandSizes.find((size) => size.id === sizeId);
         if (islandSize === undefined) {
             throw new Error("This should never happen.");
@@ -70,12 +74,42 @@ export default class IslandLoader {
 
         const randomIslandFile = islandFiles[Math.floor(Math.random() * islandFiles.length)];
 
-        console.log(randomIslandFile.fullPath);
+        return {
+            data: await this.fs.openAndGetContentAsStream(randomIslandFile.file.fullPath),
+            isSouth: randomIslandFile.climate === "south",
+            id: randomIslandFile.id,
+        };
+    }
 
-        return await this.fs.openAndGetContentAsStream(randomIslandFile.fullPath);
+    public parseIslandBuildings(island: Island, block: Block, players: PlayerMap): Array<Array<Field|null>> {
+        const data = block.data;
+        const dataLength = block.length;
+
+        const fields: Field[][] = [];
+        for (let x = 0; x < island.width; x++) {
+            fields.push(new Array(island.height).fill(null));
+        }
+
+        for (let i = 0; i < dataLength / Field.saveGameDataLength; i++) {
+            const field = Field.fromSaveGame(data, players);
+            assert(field.x < island.width);
+            assert(field.y < island.height);
+            fields[field.x][field.y] = field;
+        }
+
+        return fields;
     }
 
     private async loadIslandsWithSizeAndClimate(sizeName: IslandSizeName, climate: "north"|"south") {
-        return (await this.fs.ls(`/islands/${climate}`)).filter((islandFile) => islandFile.name.startsWith(sizeName));
+        return (await this.fs.ls(`/islands/${climate}`))
+            .filter((islandFile) => islandFile.name.startsWith(sizeName))
+            .filter((islandFile) => islandFile.name.match(/\d\d\.scp$/) !== null)
+            .map((file) => {
+                return {
+                    file: file,
+                    climate: climate,
+                    id: parseInt(file.name.substr(3, 2), 10),
+                };
+            });
     }
 }

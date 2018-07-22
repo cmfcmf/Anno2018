@@ -1,3 +1,4 @@
+import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Castle from "./castle";
 import City from "./city";
 import Field from "./field";
@@ -22,11 +23,14 @@ export enum SimulationSpeed {
 }
 
 export default class World {
+    public readonly players: Player[];
+    public readonly islands: Island[];
+
     private simulationSpeed: SimulationSpeed = SimulationSpeed.Default;
 
     constructor(
-        public readonly islands: Island[],
-        public readonly players: Player[],
+        public readonly islandMap: IslandMap,
+        public readonly playerMap: PlayerMap,
         public readonly tasks: Task[],
         public readonly gameName: string,
         public readonly soldiers: Soldier[],
@@ -37,10 +41,13 @@ export default class World {
         public readonly trader: Trader|null,
         public readonly timers: Timers,
     ) {
+        this.players = [...playerMap.values()];
+        this.islands = [...islandMap.values()];
+
         console.table(tasks);
         console.log(gameName);
-        console.table(islands);
-        console.table(players);
+        console.table(this.islands);
+        console.table(this.players);
         console.table(soldiers);
         console.table(ships);
         console.table(kontors);

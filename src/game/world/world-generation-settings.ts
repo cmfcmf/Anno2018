@@ -35,7 +35,7 @@ export default class WorldGenerationSettings {
         const numSpice = _2[86];        // Ware:       GEWUERZBAUM, 2
         const numCacao = _2[118];       // Ware:       KAKAOBAUM, 2
         const numTobacco = _2[78];      // Ware:       TABAKBAUM, 3
-        const numWool = _2[102];        // Ware:       BAUMWOLLE, 3
+        const numCotton = _2[102];      // Ware:       BAUMWOLLE, 3
 
         const numTreasures = _2[174];   // Schatz:     10
 
@@ -88,7 +88,7 @@ export default class WorldGenerationSettings {
             numSpice,
             numCacao,
             numTobacco,
-            numWool,
+            numCotton,
             numTreasures,
             islandTemplates,
         );
@@ -123,7 +123,7 @@ export default class WorldGenerationSettings {
         public readonly numSpice: number,
         public readonly numCacao: number,
         public readonly numTobacco: number,
-        public readonly numWool: number,
+        public readonly numCotton: number,
         public readonly numTreasures: number,
         public readonly islandTemplates: IslandTemplate[],
     ) { }

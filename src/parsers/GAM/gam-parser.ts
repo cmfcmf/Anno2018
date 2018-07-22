@@ -121,8 +121,8 @@ export default class GAMParser {
         }
 
         const world = new World(
-            [...islands.values()],
-            [...players.values()],
+            islands,
+            players,
             tasks,
             gameName,
             soldiers,
@@ -164,7 +164,7 @@ export default class GAMParser {
                     islandTopBlock = islandBuildingBlocks[0];
                 }
 
-                const islandFile = await this.islandLoader.load(island);
+                const islandFile = await this.islandLoader.loadIslandFile(island);
                 // TODO: Why do we ignore this block
                 const islandBasisBlock = Block.fromStream(islandFile);
                 // TODO: Are there more blocks?
@@ -177,13 +177,13 @@ export default class GAMParser {
                 }
 
             }
-            island.baseFields = this.parseIslandBuildings(
+            island.baseFields = this.islandLoader.parseIslandBuildings(
                 island,
                 islandBottomBlock,
                 players,
             );
 
-            island.topFields = this.parseIslandBuildings(
+            island.topFields = this.islandLoader.parseIslandBuildings(
                 island,
                 islandTopBlock,
                 players,
@@ -192,25 +192,6 @@ export default class GAMParser {
             islands.set(island.id, island);
         }
         return islands;
-    }
-
-    private parseIslandBuildings(island: Island, block: Block, players: PlayerMap): Array<Array<Field|null>> {
-        const data = block.data;
-        const dataLength = block.length;
-
-        const fields: Field[][] = [];
-        for (let x = 0; x < island.width; x++) {
-            fields.push(new Array(island.height).fill(null));
-        }
-
-        for (let i = 0; i < dataLength / Field.saveGameDataLength; i++) {
-            const field = Field.fromSaveGame(data, players);
-            assert(field.x < island.width);
-            assert(field.y < island.height);
-            fields[field.x][field.y] = field;
-        }
-
-        return fields;
     }
 
     private parsePlayers(block: Block) {

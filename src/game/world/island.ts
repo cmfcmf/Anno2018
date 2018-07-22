@@ -29,6 +29,42 @@ export interface IslandFertility {
 }
 
 export default class Island {
+    public static fromIsland3File(id: number, position: PIXI.Point, isSouth: boolean, numBaseIsland: number,
+                                  data: Stream) {
+        data.read8(); // Ignore id
+        const size = new PIXI.Point(data.read8(), data.read8());
+
+        return new Island(
+            id,
+            position,
+            size,
+            numBaseIsland,
+            0,
+            [],
+            {
+                tobacco: false,
+                sugarcane: false,
+                wine: false,
+                cotton: false,
+                cacao: false,
+                spice: false,
+            },
+            isSouth,
+            false,
+            false,
+        );
+    }
+
+    public static fromIsland4File(id: number, position: PIXI.Point, isSouth: boolean, numBaseIsland: number,
+                                  data: Stream) {
+        return this.fromIsland3File(id, position, isSouth, numBaseIsland, data);
+    }
+
+    public static fromIsland5File(id: number, position: PIXI.Point, isSouth: boolean, numBaseIsland: number,
+                                  data: Stream) {
+        return this.fromIsland3File(id, position, isSouth, numBaseIsland, data);
+    }
+
     public static fromSaveGame(data: Stream) {
         const id = data.read8();
         const width = data.read8();
@@ -115,7 +151,6 @@ export default class Island {
             seeplayerflags,
             duerrcnt,
         };
-
         console.log(island.debug);
 
         return island;
