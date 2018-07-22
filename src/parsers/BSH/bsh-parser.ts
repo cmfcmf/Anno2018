@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert from "browser-assert";
 import * as JSZip from "jszip";
 import * as log from "loglevel";
 import FileSystem from "../../filesystem";

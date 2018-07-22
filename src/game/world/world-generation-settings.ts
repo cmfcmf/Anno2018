@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import assert from "browser-assert";
 import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import {IslandSizeId} from "../../parsers/GAM/island-loader";
 import Stream from "../../parsers/stream";
@@ -48,14 +49,14 @@ export default class WorldGenerationSettings {
             if (islandSize < 0 || islandSize > 4) {
                 throw new Error(`Invalid island size category: ${islandSize}.`);
             }
-            console.assert(data.read8() === 0x0000);
+            assert(data.read8() === 0x0000);
             const num = data.read8();
-            console.assert(data.read16() === 0xFFFF);
-            console.assert(data.read16() === 0x0000);
+            assert(data.read16() === 0xFFFF);
+            assert(data.read16() === 0x0000);
             const xPos = data.read16();
-            console.assert(data.read16() === 0x0000);
+            assert(data.read16() === 0x0000);
             const yPos = data.read16();
-            console.assert(data.read16() === 0x0000);
+            assert(data.read16() === 0x0000);
             islandTemplates.push({
                 num,
                 size: islandSize as IslandSizeId,
@@ -64,7 +65,7 @@ export default class WorldGenerationSettings {
             });
         }
         for (const each of data.slice(data.length - data.position())) {
-            console.assert(each === 0);
+            assert(each === 0);
         }
 
         // function dbg(arr: Uint8Array) {

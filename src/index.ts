@@ -1,3 +1,5 @@
+// tslint:disable-next-line:no-reference
+/// <reference path="../types/browser-assert.d.ts"/>
 import * as log from "loglevel";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";

@@ -4,10 +4,9 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import * as assert from "assert";
+import assert from "browser-assert";
 import Castle from "../../game/world/castle";
 import City from "../../game/world/city";
-import Field from "../../game/world/field";
 import Island from "../../game/world/island";
 import Kontor from "../../game/world/kontor";
 import Player from "../../game/world/player";

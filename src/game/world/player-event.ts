@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert from "browser-assert";
 import Stream from "../../parsers/stream";
 
 enum PlayerEventKind {

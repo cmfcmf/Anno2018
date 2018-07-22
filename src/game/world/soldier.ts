@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import assert from "browser-assert";
 import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Stream from "../../parsers/stream";
 import Field from "./field";
@@ -88,7 +89,7 @@ export default class Soldier {
 
     public attack(entity: Field|Soldier|Ship) {
         // Make sure you can't attack your own units.
-        console.assert(entity.player !== this.player);
+        assert(entity.player !== this.player);
         // TODO
     }
 
@@ -100,7 +101,7 @@ export default class Soldier {
     }
 
     public setPatrollingPoints(otherPoint: PIXI.Point) {
-        console.assert(otherPoint !== this.position);
+        assert(otherPoint !== this.position);
         this.patrollingPoints = [
             this.position,
             otherPoint,

@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import * as assert from "assert";
+import assert from "browser-assert";
 import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Stream from "../../parsers/stream";
 

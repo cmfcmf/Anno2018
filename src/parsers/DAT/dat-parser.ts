@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert from "browser-assert";
 import * as log from "loglevel";
 
 export default class DATParser {
@@ -78,9 +78,9 @@ export default class DATParser {
             assert(this.template == null);
             this.template = item;
         } else {
-            assert.strictEqual(Object.keys(item).length, 1);
+            assert(Object.keys(item).length === 1);
             assert(item.hasOwnProperty("nested_objects"));
-            assert.strictEqual(Object.keys(item.nested_objects).length, 0);
+            assert(Object.keys(item.nested_objects).length === 0);
 
             const baseItemNum = this.getValue(null, fill, false);
             const baseItem = this.objects[this.currentObject].items[baseItemNum];

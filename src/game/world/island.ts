@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import * as assert from "assert";
+import assert from "browser-assert";
 import Stream from "../../parsers/stream";
 import City from "./city";
 import Field from "./field";
@@ -228,7 +228,7 @@ export default class Island {
     }
 
     public getBuildingAtWorldPosition(worldPosition: PIXI.Point): Field|null {
-        console.assert(this.positionRect.contains(worldPosition.x, worldPosition.y));
+        assert(this.positionRect.contains(worldPosition.x, worldPosition.y));
 
         return this.topFields[worldPosition.x][worldPosition.y];
     }

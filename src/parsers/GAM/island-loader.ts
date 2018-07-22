@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import assert from "browser-assert";
 import FileSystem from "../../filesystem";
 import Field from "../../game/world/field";
 import Island from "../../game/world/island";

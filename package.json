@@ -4,6 +4,7 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
+    "browser-assert": "^1.2.1",
     "filer.js": "^0.4.5",
     "iconv-lite": "^0.4.23",
     "idb.filesystem.js": "^0.0.8",

@@ -4,14 +4,13 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import assert from "browser-assert";
 import Stream from "../../parsers/stream";
 import City from "./city";
-import Ship from "./ship";
-import Soldier from "./soldier";
-
-import * as assert from "assert";
 import Contract from "./contract";
 import PlayerEvent from "./player-event";
+import Ship from "./ship";
+import Soldier from "./soldier";
 
 export enum PlayerKind {
     HUMAN = 0,
