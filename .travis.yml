@@ -11,7 +11,7 @@ install:
   - yarn install
 
 script:
-  - yarn run webpack
+  - yarn run webpack --mode production
 
 deploy:
   provider: pages

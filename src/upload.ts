@@ -16,7 +16,8 @@ export default class UploadHandler {
         await this.fs.init(1024 * 1024 * this.FS_SIZE_MB);
 
         console.table(await this.fs.ls("/"));
-        console.log(await this.fs.df());
+        // Doesn't work in Firefox
+        // console.log(await this.fs.df());
     }
 
     public render() {

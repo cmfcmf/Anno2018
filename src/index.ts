@@ -10,6 +10,8 @@ import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
 import UploadHandler from "./upload";
 
+require("idb.filesystem.js");
+
 const Viewport = require("pixi-viewport");
 
 // tslint:disable-next-line:no-floating-promises

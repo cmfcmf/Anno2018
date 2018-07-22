@@ -1,10 +1,14 @@
 const path = require("path");
 const webpack = require("webpack");
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 /* tslint:disable */
 module.exports = {
   entry: {
-    app: "./src/index.ts",
+    app: [
+      "@babel/polyfill",
+      "./src/index.ts",
+    ]
   },
   mode: "development",
   devtool: "inline-source-map",
@@ -16,11 +20,28 @@ module.exports = {
     new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin(),
   ],
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({
+          parallel: true,
+      })
+    ]
+  },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: "ts-loader",
+        use: [
+          {
+            loader: "babel-loader",
+            options: {
+              presets: ['@babel/preset-env']
+            },
+          },
+          {
+            loader: "ts-loader",
+          },
+        ],
         exclude: /node_modules/,
       },
     ],
