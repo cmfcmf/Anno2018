@@ -10,7 +10,6 @@ import City from "../../game/world/city";
 import Field from "../../game/world/field";
 import Island from "../../game/world/island";
 import Kontor from "../../game/world/kontor";
-import MapSettings from "../../game/world/map-settings";
 import Player from "../../game/world/player";
 import Ship from "../../game/world/ship";
 import Soldier from "../../game/world/soldier";
@@ -18,9 +17,11 @@ import Task from "../../game/world/task";
 import Timers from "../../game/world/timers";
 import Trader from "../../game/world/trader";
 import World from "../../game/world/world";
+import WorldGenerationSettings from "../../game/world/world-generation-settings";
 import Stream from "../stream";
 import {Block, IslandBlock} from "./block";
 import IslandLoader from "./island-loader";
+import WorldGenerator from "./world-generator";
 
 export interface IslandField {
     fieldId: number;
@@ -43,12 +44,16 @@ interface Entity<T> {
 }
 
 export default class GAMParser {
-    constructor(private islandLoader: IslandLoader) { }
+    private worldGenerator: WorldGenerator;
+
+    constructor(private islandLoader: IslandLoader) {
+        this.worldGenerator = new WorldGenerator(islandLoader);
+    }
 
     public async parse(data: Stream) {
         const blocks: Map<string, Block[]> = new Map();
         while (!data.eof()) {
-            const block = this.readBlock(data);
+            const block = Block.fromStream(data);
             console.log(block.type);
             if (block.type !== "INSELHAUS") {
                 if (!blocks.has(block.type)) {
@@ -64,7 +69,11 @@ export default class GAMParser {
             }
         }
 
-        return this.doParse(blocks);
+        const {world, worldGenerationSettings} = await this.doParse(blocks);
+
+        await this.worldGenerator.populateWorld(world, worldGenerationSettings);
+
+        return world;
     }
 
     private async doParse(blocks: Map<string, Block[]>) {
@@ -95,7 +104,7 @@ export default class GAMParser {
         const castles  = this.handleBlock<Castle>( blocks, "MILITAR",  Castle,  players, islands);
         const cities   = this.handleBlock<City>(   blocks, "STADT4",   City,    players, islands);
 
-        // TODO: HIRSCH2, PRODLIST2, WERFT, SIEDLER, ROHWACHS2, MARKT2, HANDLER, TURM, TIMERS, WIFF
+        // TODO: HIRSCH2, PRODLIST2, WERFT, SIEDLER, ROHWACHS2, MARKT2, TURM, WIFF
         let trader = null;
         if (blocks.has("HANDLER") && blocks.get("HANDLER")[0].length > 0) {
             trader = Trader.fromSaveGame(blocks.get("HANDLER")[0].data, players, islands);
@@ -105,13 +114,13 @@ export default class GAMParser {
         assert(blocks.get("TIMERS").length === 1);
         const timers = Timers.fromSaveGame(blocks.get("TIMERS")[0].data, players, islands);
 
-        let mapSettings = null;
+        let worldGenerationSettings = WorldGenerationSettings.empty();
         if (blocks.has("SZENE")) {
             const data = blocks.get("SZENE")[0].data;
-            mapSettings = MapSettings.fromSaveGame(data, players, islands);
+            worldGenerationSettings = WorldGenerationSettings.fromSaveGame(data, players, islands);
         }
 
-        return new World(
+        const world = new World(
             [...islands.values()],
             [...players.values()],
             tasks,
@@ -123,8 +132,9 @@ export default class GAMParser {
             cities,
             trader,
             timers,
-            mapSettings,
         );
+
+        return {world, worldGenerationSettings};
     }
 
     private handleBlock<T>(blocks: Map<string, Block[]>, name: string, entity: any, players: PlayerMap,
@@ -156,9 +166,9 @@ export default class GAMParser {
 
                 const islandFile = await this.islandLoader.load(island);
                 // TODO: Why do we ignore this block
-                const islandBasisBlock = this.readBlock(islandFile);
+                const islandBasisBlock = Block.fromStream(islandFile);
                 // TODO: Are there more blocks?
-                islandBottomBlock = this.readBlock(islandFile);
+                islandBottomBlock = Block.fromStream(islandFile);
             } else {
                 assert(islandBuildingBlocks.length >= 1 && islandBuildingBlocks.length <= 2);
                 islandBottomBlock = islandBuildingBlocks[0];
@@ -210,9 +220,5 @@ export default class GAMParser {
             players.set(player.id, player);
         }
         return players;
-    }
-
-    private readBlock(data: Stream): Block {
-        return new Block(data.readString(16), data.read32(), data);
     }
 }

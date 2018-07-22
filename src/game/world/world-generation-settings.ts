@@ -5,16 +5,17 @@
  */
 
 import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
+import {IslandSizeId} from "../../parsers/GAM/island-loader";
 import Stream from "../../parsers/stream";
 
 export interface IslandTemplate {
     num: number;
-    size: number;
+    size: 0|1|2|3|4;
     position: PIXI.Point;
-    clima: "NORTH"|"SOUTH"|"ANY";
+    climate: "NORTH"|"SOUTH"|"ANY";
 }
 
-export default class MapSettings {
+export default class WorldGenerationSettings {
     public static fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap) {
         const _1 = data.slice(100);
 
@@ -43,7 +44,10 @@ export default class MapSettings {
             const flags = data.read8();
             const forceNorth = flags === 0;
             const forceSouth = flags === 1;
-            const islandSize = data.read8(); // 0...3
+            const islandSize = data.read8(); // 0...4, where 0 is small and 4 is large.
+            if (islandSize < 0 || islandSize > 4) {
+                throw new Error(`Invalid island size category: ${islandSize}.`);
+            }
             console.assert(data.read8() === 0x0000);
             const num = data.read8();
             console.assert(data.read16() === 0xFFFF);
@@ -54,9 +58,9 @@ export default class MapSettings {
             console.assert(data.read16() === 0x0000);
             islandTemplates.push({
                 num,
-                size: islandSize,
+                size: islandSize as IslandSizeId,
                 position: new PIXI.Point(xPos, yPos),
-                clima: forceNorth ? "NORTH" : forceSouth ? "SOUTH" : "ANY",
+                climate: forceNorth ? "NORTH" : forceSouth ? "SOUTH" : "ANY",
             });
         }
         for (const each of data.slice(data.length - data.position())) {
@@ -73,7 +77,7 @@ export default class MapSettings {
         // dbg(_1);
         // dbg(_2);
 
-        return new MapSettings(
+        return new WorldGenerationSettings(
             numNativesNorth,
             numNativesSouth,
             numBigIronOre,
@@ -87,6 +91,24 @@ export default class MapSettings {
             numWool,
             numTreasures,
             islandTemplates,
+        );
+    }
+
+    public static empty() {
+        return new WorldGenerationSettings(
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            [],
         );
     }
 

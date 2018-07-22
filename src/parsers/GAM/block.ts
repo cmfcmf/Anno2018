@@ -5,6 +5,10 @@ export class Block {
         return new Block(type, 0, new Stream(new Uint8Array()));
     }
 
+    public static fromStream(data: Stream) {
+        return new Block(data.readString(16), data.read32(), data);
+    }
+
     public readonly data: Stream;
 
     constructor(

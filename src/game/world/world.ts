@@ -3,7 +3,6 @@ import City from "./city";
 import Field from "./field";
 import Island from "./island";
 import Kontor from "./kontor";
-import MapSettings from "./map-settings";
 import Player from "./player";
 import Ship from "./ship";
 import Soldier from "./soldier";
@@ -37,7 +36,6 @@ export default class World {
         public readonly cities: City[],
         public readonly trader: Trader|null,
         public readonly timers: Timers,
-        public readonly mapSettings: MapSettings,
     ) {
         console.table(tasks);
         console.log(gameName);
@@ -50,7 +48,6 @@ export default class World {
         console.table(cities);
         console.log(trader);
         console.log(timers);
-        console.log(mapSettings);
     }
 
     // Called every 10 seconds
