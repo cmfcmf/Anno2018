@@ -41,7 +41,7 @@ export default class Menu {
 
     private async getMissions(folderName: string) {
         return (await this.fs.ls("/" + folderName)).filter((file) => {
-            return file.isFile && file.name.endsWith(".szs");
+            return file.isFile && (file.name.endsWith(".szs") || file.name.endsWith(".szm"));
         });
     }
 }
