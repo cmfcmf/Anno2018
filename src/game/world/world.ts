@@ -3,10 +3,12 @@ import City from "./city";
 import Field from "./field";
 import Island from "./island";
 import Kontor from "./kontor";
+import MapSettings from "./map-settings";
 import Player from "./player";
 import Ship from "./ship";
 import Soldier from "./soldier";
 import Task from "./task";
+import Timers from "./timers";
 import Trader from "./trader";
 
 export type Rotation4 = 0 | 1 | 2 | 3;
@@ -26,7 +28,7 @@ export default class World {
     constructor(
         public readonly islands: Island[],
         public readonly players: Player[],
-        public readonly task: Task|null,
+        public readonly tasks: Task[],
         public readonly gameName: string,
         public readonly soldiers: Soldier[],
         public readonly ships: Ship[],
@@ -34,8 +36,10 @@ export default class World {
         public readonly castles: Castle[],
         public readonly cities: City[],
         public readonly trader: Trader|null,
+        public readonly timers: Timers,
+        public readonly mapSettings: MapSettings,
     ) {
-        console.log(task);
+        console.table(tasks);
         console.log(gameName);
         console.table(islands);
         console.table(players);
@@ -45,6 +49,8 @@ export default class World {
         console.table(castles);
         console.table(cities);
         console.log(trader);
+        console.log(timers);
+        console.log(mapSettings);
     }
 
     // Called every 10 seconds

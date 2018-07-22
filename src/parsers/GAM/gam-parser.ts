@@ -10,10 +10,12 @@ import City from "../../game/world/city";
 import Field from "../../game/world/field";
 import Island from "../../game/world/island";
 import Kontor from "../../game/world/kontor";
+import MapSettings from "../../game/world/map-settings";
 import Player from "../../game/world/player";
 import Ship from "../../game/world/ship";
 import Soldier from "../../game/world/soldier";
 import Task from "../../game/world/task";
+import Timers from "../../game/world/timers";
 import Trader from "../../game/world/trader";
 import World from "../../game/world/world";
 import Stream from "../stream";
@@ -80,25 +82,18 @@ export default class GAMParser {
             gameName = nameBlock.data.readString(nameBlock.length);
         }
 
-        let task = null;
-        if (blocks.has("AUFTRAG4")) {
-            const taskBlock = blocks.get("AUFTRAG4")[0];
-            if (taskBlock.length > 0) {
-                task = Task.fromSaveGame(taskBlock.data);
-            }
-        }
-
         const playerBlock = blocks.get("PLAYER4")[0];
         const players = this.parsePlayers(playerBlock);
 
         const islandBlocks = blocks.has("INSEL5") ? blocks.get("INSEL5") as IslandBlock[] : [];
         const islands = await this.parseIslands(islandBlocks, players);
 
-        const ships    = this.handleBlock<Ship>(   blocks, "SHIP4",   Ship,    players, islands);
-        const soldiers = this.handleBlock<Soldier>(blocks, "SOLDAT3", Soldier, players, islands);
-        const kontors  = this.handleBlock<Kontor>( blocks, "KONTOR2", Kontor,  players, islands);
-        const castles  = this.handleBlock<Castle>( blocks, "MILITAR", Castle,  players, islands);
-        const cities   = this.handleBlock<City>(   blocks, "STADT4",  City,    players, islands);
+        const tasks    = this.handleBlock<Task>(   blocks, "AUFTRAG4", Task,    players, islands);
+        const ships    = this.handleBlock<Ship>(   blocks, "SHIP4",    Ship,    players, islands);
+        const soldiers = this.handleBlock<Soldier>(blocks, "SOLDAT3",  Soldier, players, islands);
+        const kontors  = this.handleBlock<Kontor>( blocks, "KONTOR2",  Kontor,  players, islands);
+        const castles  = this.handleBlock<Castle>( blocks, "MILITAR",  Castle,  players, islands);
+        const cities   = this.handleBlock<City>(   blocks, "STADT4",   City,    players, islands);
 
         // TODO: HIRSCH2, PRODLIST2, WERFT, SIEDLER, ROHWACHS2, MARKT2, HANDLER, TURM, TIMERS, WIFF
         let trader = null;
@@ -106,10 +101,20 @@ export default class GAMParser {
             trader = Trader.fromSaveGame(blocks.get("HANDLER")[0].data, players, islands);
         }
 
+        assert(blocks.has("TIMERS"));
+        assert(blocks.get("TIMERS").length === 1);
+        const timers = Timers.fromSaveGame(blocks.get("TIMERS")[0].data, players, islands);
+
+        let mapSettings = null;
+        if (blocks.has("SZENE")) {
+            const data = blocks.get("SZENE")[0].data;
+            mapSettings = MapSettings.fromSaveGame(data, players, islands);
+        }
+
         return new World(
             [...islands.values()],
             [...players.values()],
-            task,
+            tasks,
             gameName,
             soldiers,
             ships,
@@ -117,6 +122,8 @@ export default class GAMParser {
             castles,
             cities,
             trader,
+            timers,
+            mapSettings,
         );
     }
 
