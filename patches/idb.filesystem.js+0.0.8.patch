@@ -1,0 +1,12 @@
+patch-package
+--- a/node_modules/idb.filesystem.js/src/idb.filesystem.js
++++ b/node_modules/idb.filesystem.js/src/idb.filesystem.js
+@@ -598,7 +598,7 @@ DirectoryEntry.prototype.getDirectory = function(path, options, successCallback,
+                                                  opt_errorCallback) {
+ 
+   // Create an absolute path if we were handed a relative one.
+-  path = resolveToFullPath_(this.fullPath, path);
++  path = path !== undefined ? resolveToFullPath_(this.fullPath, path) : this.fullPath;
+ 
+   idb_.get(path, function(folderEntry) {
+     if (!options) {
