@@ -29,6 +29,7 @@
     "postinstall-prepare": "^1.0.1",
     "ts-jest": "^22.4.6",
     "ts-loader": "^4.4.1",
+    "ts-node": "^7.0.0",
     "tslint": "^5.10.0",
     "typescript": "^2.9.1",
     "uglifyjs-webpack-plugin": "^1.2.6",
@@ -41,7 +42,8 @@
     "build": "webpack",
     "lint": "tslint --project .",
     "test": "jest --notify --watchAll",
-    "prepare": "patch-package"
+    "prepare": "patch-package",
+    "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts"
   },
   "jest": {
     "transform": {

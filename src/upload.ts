@@ -176,7 +176,7 @@ export default class UploadHandler {
 
             const codFile = annoRoot.file(inName);
             const codStream = await Stream.fromZipObject(codFile);
-            await this.fs.write(outName, parser.parse(codStream));
+            await this.fs.write(outName, parser.decrypt(codStream));
 
             log.info(`Finished parsing "${inName}".`);
         }));

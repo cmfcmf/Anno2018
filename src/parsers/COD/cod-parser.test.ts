@@ -13,7 +13,7 @@ test("Correctly parses bytes", async () => {
         0xdb, 0xe0, 0xad, 0x8c, 0x9b, 0x8b, 0x9b, 0x8e, 0xc6, 0xf3, 0xf6,
     ]));
 
-    expect(codParser.parse(byteStream)).toBe(
+    expect(codParser.decrypt(byteStream)).toBe(
         "------------------\r\n[GAME]\r\nLager:\r\nleerleerleer\r\n%d%% Steuer:\r\n",
     );
 });
