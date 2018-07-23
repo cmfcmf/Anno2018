@@ -51,16 +51,12 @@ export default class WorldGenerationSettings {
             }
             assert(data.read8() === 0x0000);
             const num = data.read8();
-            assert(data.read16() === 0xFFFF);
-            assert(data.read16() === 0x0000);
-            const xPos = data.read16();
-            assert(data.read16() === 0x0000);
-            const yPos = data.read16();
-            assert(data.read16() === 0x0000);
+            const fileNr = data.read32(); // Largely uninteresting, mostly 0x0000FFFF, sometimes 0x00000000
+            const position = new PIXI.Point(data.read32(), data.read32());
             islandTemplates.push({
                 num,
                 size: islandSize as IslandSizeId,
-                position: new PIXI.Point(xPos, yPos),
+                position: position,
                 climate: forceNorth ? "NORTH" : forceSouth ? "SOUTH" : "ANY",
             });
         }
