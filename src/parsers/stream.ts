@@ -51,10 +51,12 @@ export default class Stream {
         return result;
     }
 
-    public read(length: number) {
+    public read(length: number, size: number = 1) {
+        length *= size;
         const result = [];
-        while (length--) {
-            result.push(this.read8());
+        while (length > 0) {
+            result.push(this.readNBytes(size));
+            length -= size;
         }
         return result;
     }
