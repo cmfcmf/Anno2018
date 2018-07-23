@@ -6,6 +6,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 module.exports = {
   entry: {
     app: [
+      "idb.filesystem.js",
       "@babel/polyfill",
       "./src/index.ts",
     ]
