@@ -13,6 +13,7 @@ export enum CourseState {
     Unknown = 53,
     Unknown2 = 52,
     Unknown3 = 54,
+    Unknown4 = 51,
 }
 
 export class ShipCourse {
