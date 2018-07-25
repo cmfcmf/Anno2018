@@ -1,5 +1,3 @@
-// tslint:disable-next-line:no-reference
-/// <reference path="../types/browser-assert.d.ts"/>
 import * as log from "loglevel";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
@@ -16,6 +14,8 @@ const Viewport = require("pixi-viewport");
 (async () => {
     log.enableAll();
 
+    const game = document.getElementById("game");
+
     // PIXI.utils.skipHello();
     const app = new PIXI.Application({
         width: window.innerWidth,
@@ -24,7 +24,7 @@ const Viewport = require("pixi-viewport");
         transparent: false,
         // resolution: window.devicePixelRatio,
     });
-    document.body.appendChild(app.view);
+    game.appendChild(app.view);
 
     const viewport = new Viewport({
         screenWidth: window.innerWidth,
@@ -53,16 +53,18 @@ const Viewport = require("pixi-viewport");
 
     const uploadHandler = new UploadHandler(fs);
     await uploadHandler.init();
-    uploadHandler.render();
+    uploadHandler.render(game);
 
     const gamParser = new GAMParser(new IslandLoader(fs));
     const worldFieldBuilder = new IslandSpriteLoader(fs);
     const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
 
     const menu = new Menu(fs, gamParser, islandRenderer, viewport);
-    await menu.render();
+    await menu.render(game);
 
     if (document.location.search.indexOf("debug=1") >= 0) {
         (document.querySelector("body > div > p:nth-child(2)") as HTMLParagraphElement).click();
     }
+
+    document.getElementById("version").innerText = `Anno 2018, version ${__VERSION__}.`;
 })();

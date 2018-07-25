@@ -20,14 +20,14 @@ export default class UploadHandler {
         // console.log(await this.fs.df());
     }
 
-    public render() {
+    public render(game: HTMLElement) {
         const uploadBtn = this.createUploadButton();
         const saveOrMissionUploadButton = this.createSaveOrMissionUploadButton();
         const resetBtn = this.createResetButton();
 
-        document.body.appendChild(uploadBtn);
-        document.body.appendChild(saveOrMissionUploadButton);
-        document.body.appendChild(resetBtn);
+        game.appendChild(uploadBtn);
+        game.appendChild(saveOrMissionUploadButton);
+        game.appendChild(resetBtn);
     }
 
     private createUploadButton() {

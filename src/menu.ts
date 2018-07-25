@@ -8,8 +8,8 @@ export default class Menu {
     constructor(private fs: FileSystem, private gamParser: GAMParser,
                 private islandRenderer: IslandRenderer, private viewport: Viewport) { }
 
-    public async render() {
-        const menu = document.body.appendChild(document.createElement("div"));
+    public async render(game: HTMLElement) {
+        const menu = game.appendChild(document.createElement("div"));
 
         let saves;
         try {
@@ -32,14 +32,14 @@ export default class Menu {
             title.onclick = async () => {
                 const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
                 const world = await this.gamParser.parse(saveGameData);
-                const game = new GameRenderer(world, this.islandRenderer, this.viewport);
+                const gameRenderer = new GameRenderer(world, this.islandRenderer, this.viewport);
 
                 this.viewport.parent.addChild(new PIXI.Text(
                     `Money: ${world.players.find((player) => player.id === 0).money}`,
                     {fontFamily : "Arial", fontSize: 24, fill : 0xff1010},
                 ));
 
-                await game.begin();
+                await gameRenderer.begin();
             };
             menu.appendChild(title);
         }

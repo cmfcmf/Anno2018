@@ -1,6 +1,10 @@
 const path = require("path");
 const webpack = require("webpack");
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const GitRevisionPlugin = require("git-revision-webpack-plugin");
+const gitRevisionPlugin = new GitRevisionPlugin({
+  // branch: true,
+});
 
 /* tslint:disable */
 module.exports = {
@@ -20,6 +24,12 @@ module.exports = {
   plugins: [
     new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin(),
+    gitRevisionPlugin,
+    new webpack.DefinePlugin({
+      '__VERSION__': JSON.stringify(gitRevisionPlugin.version()),
+      // '__COMMITHASH__': JSON.stringify(gitRevisionPlugin.commithash()),
+      // '__BRANCH__': JSON.stringify(gitRevisionPlugin.branch()),
+    })
   ],
   optimization: {
     minimizer: [
