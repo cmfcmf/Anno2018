@@ -11,3 +11,22 @@ export function uInt8ToBase64(arr: Uint8Array): string {
     }
     return btoa(result);
 }
+
+/**
+ * Get the value of the first query parameter with the given name.
+ *
+ * Taken from https://stackoverflow.com/a/901144
+ */
+export function getQueryParameter(name: string): string {
+    const url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+    const results = regex.exec(url);
+    if (!results) {
+        return null;
+    }
+    if (!results[2]) {
+        return "";
+    }
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}

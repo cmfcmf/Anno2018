@@ -1,0 +1,33 @@
+diff --git a/node_modules/pixi-keyboard/package.json b/node_modules/pixi-keyboard/package.json
+index c8e8927..0d67213 100644
+--- a/node_modules/pixi-keyboard/package.json
++++ b/node_modules/pixi-keyboard/package.json
+@@ -2,7 +2,7 @@
+   "name": "pixi-keyboard",
+   "version": "0.9.4",
+   "description": "pixi-keyboard is a plugin for Pixi.js v3.0.8 or higher to manage the keyboard events easily.",
+-  "main": "./build/pixi-keyboard.js",
++  "main": "./src/index.js",
+   "author": "Nazariglez <nazari.nz@gmail.com> (http://www.nazariglez.com)",
+   "license": "MIT",
+   "keywords": [
+diff --git a/node_modules/pixi-keyboard/src/KeyboardManager.js b/node_modules/pixi-keyboard/src/KeyboardManager.js
+index 087b558..bc6be15 100644
+--- a/node_modules/pixi-keyboard/src/KeyboardManager.js
++++ b/node_modules/pixi-keyboard/src/KeyboardManager.js
+@@ -1,4 +1,4 @@
+-import PIXI from 'pixi.js';
++import * as PIXI from 'pixi.js';
+ import HotKey from './HotKey';
+ 
+ export default class KeyboardManager extends PIXI.utils.EventEmitter {
+diff --git a/node_modules/pixi-keyboard/src/index.js b/node_modules/pixi-keyboard/src/index.js
+index 288e509..b5c5f79 100644
+--- a/node_modules/pixi-keyboard/src/index.js
++++ b/node_modules/pixi-keyboard/src/index.js
+@@ -1,4 +1,4 @@
+-import PIXI from'pixi.js';
++import * as PIXI from 'pixi.js';
+ import KeyboardManager from './KeyboardManager';
+ import HotKey from './HotKey';
+ import Key from './Key';

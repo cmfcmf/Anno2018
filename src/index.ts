@@ -1,4 +1,5 @@
 import * as log from "loglevel";
+import "pixi-keyboard";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
 import IslandRenderer from "./game/island-renderer";
@@ -7,6 +8,7 @@ import Menu from "./menu";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
 import UploadHandler from "./upload";
+import {getQueryParameter} from "./util/util";
 
 const Viewport = require("pixi-viewport");
 
@@ -62,8 +64,9 @@ const Viewport = require("pixi-viewport");
     const menu = new Menu(fs, gamParser, islandRenderer, viewport);
     await menu.render(game);
 
-    if (document.location.search.indexOf("debug=1") >= 0) {
-        (document.querySelector("body > div > p:nth-child(2)") as HTMLParagraphElement).click();
+    const gameName = getQueryParameter("load");
+    if (gameName !== null) {
+        await menu.loadByName(gameName);
     }
 
     document.getElementById("version").innerText = `Anno 2018, version ${__VERSION__}.`;

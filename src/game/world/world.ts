@@ -15,11 +15,12 @@ export type Rotation4 = 0 | 1 | 2 | 3;
 export type Rotation8 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export enum SimulationSpeed {
-    Default = 0,
-    Slow = 0,
-    Medium = 1,
-    Fast = 2,
-    SuperFast = 3,
+    Paused = 0,
+    Default = 1,
+    Slow = Default,
+    Medium = 2,
+    Fast = 4,
+    SuperFast = 8,
 }
 
 export default class World {
