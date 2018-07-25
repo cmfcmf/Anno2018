@@ -4,7 +4,6 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import assert from "browser-assert";
 import Castle from "../../game/world/castle";
 import City from "../../game/world/city";
 import Island from "../../game/world/island";
@@ -17,6 +16,7 @@ import Timers from "../../game/world/timers";
 import Trader from "../../game/world/trader";
 import World from "../../game/world/world";
 import WorldGenerationSettings from "../../game/world/world-generation-settings";
+import assert from "../../util/assert";
 import Stream from "../stream";
 import {Block, IslandBlock} from "./block";
 import IslandLoader from "./island-loader";

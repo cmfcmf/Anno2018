@@ -4,8 +4,8 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import assert from "browser-assert";
 import Stream from "../../parsers/stream";
+import assert from "../../util/assert";
 
 export enum OreLocationKind {
     Iron = 2,

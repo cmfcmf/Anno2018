@@ -1,7 +1,7 @@
-import assert from "browser-assert";
 import * as JSZip from "jszip";
 import * as log from "loglevel";
 import FileSystem from "../../filesystem";
+import assert from "../../util/assert";
 import Stream from "../stream";
 import BinPacker from "./bin-packer";
 import colorPalette from "./bsh-color-palette";

@@ -1,7 +1,7 @@
-import assert from "browser-assert";
 import FileSystem from "../../filesystem";
 import Field from "../../game/world/field";
 import Island from "../../game/world/island";
+import assert from "../../util/assert";
 import {Block} from "./block";
 import {PlayerMap} from "./gam-parser";
 

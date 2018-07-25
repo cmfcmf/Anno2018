@@ -1,5 +1,5 @@
-import assert from "browser-assert";
 import Stream from "../../parsers/stream";
+import assert from "../../util/assert";
 
 enum PlayerEventKind {
     // TODO

@@ -4,8 +4,8 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import assert from "browser-assert";
 import Stream from "../../parsers/stream";
+import assert from "../../util/assert";
 import City from "./city";
 import Field from "./field";
 import {OreLocation} from "./island-ore-location";

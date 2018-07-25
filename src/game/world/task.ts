@@ -4,9 +4,9 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import assert from "browser-assert";
 import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Stream from "../../parsers/stream";
+import assert from "../../util/assert";
 
 interface ReachInhabitants {
     count: number;              // require n inhabitants

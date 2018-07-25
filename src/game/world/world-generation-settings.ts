@@ -4,10 +4,10 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import assert from "browser-assert";
 import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import {IslandSizeId} from "../../parsers/GAM/island-loader";
 import Stream from "../../parsers/stream";
+import assert from "../../util/assert";
 
 export interface IslandTemplate {
     num: number;

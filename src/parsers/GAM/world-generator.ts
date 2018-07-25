@@ -1,7 +1,7 @@
-import assert from "browser-assert";
 import Island from "../../game/world/island";
 import World from "../../game/world/world";
 import WorldGenerationSettings from "../../game/world/world-generation-settings";
+import assert from "../../util/assert";
 import {Block} from "./block";
 import IslandLoader from "./island-loader";
 

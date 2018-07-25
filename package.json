@@ -5,7 +5,6 @@
   "license": "MIT",
   "dependencies": {
     "@babel/polyfill": "^7.0.0-beta.51",
-    "browser-assert": "^1.2.1",
     "filer.js": "^0.4.5",
     "iconv-lite": "^0.4.23",
     "idb.filesystem.js": "^0.0.8",
@@ -61,5 +60,7 @@
     ]
   },
   "browserslist": "last 2 versions, ie 10",
-  "types": ["./types"]
+  "types": [
+    "./types"
+  ]
 }

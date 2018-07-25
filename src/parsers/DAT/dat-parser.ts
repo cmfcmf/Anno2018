@@ -1,5 +1,5 @@
-import assert from "browser-assert";
 import * as log from "loglevel";
+import assert from "../../util/assert";
 
 export default class DATParser {
     private log: log.Logger;
