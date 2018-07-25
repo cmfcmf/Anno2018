@@ -11,6 +11,10 @@ install:
   - yarn install
 
 script:
+  - yarn run test
+  - yarn run lint
+
+before_deploy:
   - yarn run webpack --mode production
 
 deploy:

@@ -41,7 +41,8 @@
     "start": "webpack-dev-server --host 0.0.0.0",
     "build": "webpack",
     "lint": "tslint --project .",
-    "test": "jest --notify --watchAll",
+    "test": "jest",
+    "test-watch": "jest --notify --watchAll",
     "prepare": "patch-package",
     "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts"
   },
