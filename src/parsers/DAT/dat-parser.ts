@@ -123,7 +123,10 @@ export default class DATParser {
             this.currentNestedObject = objectName;
             this.currentNestedItem = 0;
             const item = this.objects[this.currentObject].items[this.currentItem];
-            item.nested_objects[this.currentNestedObject] = {[this.currentNestedItem]: {}};
+            if (item.nested_objects[this.currentNestedObject] === undefined ||
+                item.nested_objects[this.currentNestedObject][this.currentNestedItem] === undefined) {
+                item.nested_objects[this.currentNestedObject] = {[this.currentNestedItem]: {}};
+            }
         } else {
             throw new Error("It appears like there is more than one nesting level. " +
                 "This is not supported by this parser.");
@@ -182,8 +185,7 @@ export default class DATParser {
             }
         } else {
             const nestedItem = item.nested_objects[this.currentNestedObject][this.currentNestedItem];
-            if (nestedItem.hasOwnProperty(key)) {
-                assert(this.isObject(nestedItem[key]));
+            if (Object.keys(nestedItem).includes(key) && this.isObject(nestedItem[key])) {
                 nestedItem[key] = this.deepMerge(nestedItem[key], value);
             } else {
                 nestedItem[key] = value;

@@ -177,6 +177,57 @@ test("handles ObjFill", () => {
         {});
 });
 
+test("handles ObjFill with nested properties", () => {
+    doTest(`
+        Objekt: HELLO
+            @Nummer:    0
+            BASE =      Nummer
+            Objekt:     HAUS_PRODTYP
+              Bauinfra:	  INFRA_KONTOR_1
+              Kosten:     KOST_KONTOR_1, KOST_KONTOR_1
+            EndObj;
+
+            @Nummer:    +1
+            ObjFill:    BASE
+            Objekt:     HAUS_PRODTYP
+              Bauinfra:	  INFRA_KONTOR_2
+            EndObj;
+        EndObj;`,
+        {
+            HELLO: {
+                items: {
+                    0: {
+                        nested_objects: {
+                            HAUS_PRODTYP: {
+                                0: {
+                                    Bauinfra: "INFRA_KONTOR_1",
+                                    Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
+                                },
+                            },
+                        },
+                    },
+                    1: {
+                        nested_objects: {
+                            HAUS_PRODTYP: {
+                                0: {
+                                    Bauinfra: "INFRA_KONTOR_2",
+                                    Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            BASE: 0,
+            Bauinfra: "INFRA_KONTOR_2",
+            Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
+            Nummer: 1,
+        },
+        {});
+});
+
 test("handles ObjFill max", () => {
     doTest(`
         Objekt: HELLO
