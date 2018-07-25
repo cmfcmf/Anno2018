@@ -23,6 +23,32 @@ export default class Good {
         const wantedBuyingAmount = data.read16() >> 5;
         const currentAmount = data.read16() >> 5;
         const _2 = data.read16();
+
+        /*
+        100101100001 // iron ore
+        100101100101 // gold ore
+        010111100001 // wool
+        010111100111 // sugarcane
+        010111100011 // tobacco
+        010111101001 // cows
+        010111011111 // grain
+        000111110101 // flour
+        001000001001 // iron
+        001000000101 // swords
+        001000010001 // muskets
+        001000001111 // canons
+        010000110011 // food
+        001000001101 // tobacco
+        010111011101 // spice
+        010111100101 // cacao
+        001000000111 // wine
+        000111111011 // fabric
+        000111111001 // clothing
+        001000010101 // jewellery
+        001000000011 // tools
+        011111010001 // wood
+        001000000001 // stone
+         */
         const goodId = data.read16();
         const _3 = data.read16();
 
