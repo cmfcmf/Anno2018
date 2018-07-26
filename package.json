@@ -48,7 +48,8 @@
     "test": "jest",
     "test-watch": "jest --notify --watchAll",
     "prepare": "patch-package",
-    "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts"
+    "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts",
+    "bsh-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/bsh-converter.ts"
   },
   "jest": {
     "transform": {

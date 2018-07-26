@@ -12,33 +12,12 @@ const UPNG = require("upng-js/UPNG.js");
 interface AtlasData {meta: { }; frames: {[key: string]: object}; }
 
 export default class BSHParser {
-    private zip: JSZip;
-    private fileSystem: FileSystem;
-
     private readonly SIZE = 2048;
 
     private log: log.Logger;
 
-    constructor(zip: JSZip, fileSystem: FileSystem) {
-        this.zip = zip;
-        this.fileSystem = fileSystem;
+    constructor(private readonly fileSystem: FileSystem) {
         this.log = log.getLogger("bsh-parser");
-    }
-
-    public async parse(inName: string, outName: string) {
-        this.log.info(`Started parsing "${inName}".`);
-
-        let path = "GFX";
-        if (inName === "TOOLS") {
-            path = "ToolGfx";
-        }
-
-        inName = `${path}/${inName}.BSH`;
-
-        const bshFile = this.zip.file(inName);
-        await this.doParse(await Stream.fromZipObject(bshFile), outName);
-
-        this.log.info(`Finished parsing "${inName}".`);
     }
 
     /**
@@ -46,11 +25,7 @@ export default class BSHParser {
      * project by Benedikt Freisen released under GPLv2+.
      * https://github.com/roybaer/mdcii-engine
      */
-    private async doParse(data: Stream, outName: string) {
-        await this.fileSystem.mkdir(`/gfx/${outName}`);
-        // this.log.table(await this.fileSystem.ls(`/gfx`));
-        // this.log.table(await this.fileSystem.ls(`/gfx/${outName}`));
-
+    public async parse(data: Stream) {
         const HEADER_SIZE = 20;
 
         const fileType = data.readString(16);
@@ -76,12 +51,18 @@ export default class BSHParser {
             }
         }
 
+        return images;
+    }
+
+    public async createSpriteSheets(images: BSHImage[], outName: string) {
         // Can't sort the images here, otherwise the index doesn't match the gfx in the next loop.
         // images.sort((imageA: BSHImage, imageB: BSHImage) => {
         //    const a = Math.max(imageA.width, imageA.height);
         //    const b = Math.max(imageB.width, imageB.height);
         //    return a > b ? 1 : a < b ? -1 : 0;
         // });
+
+        await this.fileSystem.mkdir(`/gfx/${outName}`);
 
         let spritesheetIndex = 0;
         let binPacker = new BinPacker(this.SIZE,  this.SIZE);
@@ -194,11 +175,6 @@ export default class BSHParser {
 
     private async saveSpriteSheet(pixels: Uint8Array, atlasData: AtlasData, spritesheetIndex: number, outName: string) {
         const png: ArrayBuffer = UPNG.encode([pixels.buffer], this.SIZE, this.SIZE, 0);
-
-        // const imageNode = new Image();
-        // imageNode.src = 'data:image/png;base64,'+ uInt8ToBase64(new Uint8Array(png));
-        // document.body.appendChild(imageNode);
-        // document.body.appendChild(document.createElement('br'));
 
         await this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.png`, png);
         await this.fileSystem.write(`/gfx/${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(atlasData));

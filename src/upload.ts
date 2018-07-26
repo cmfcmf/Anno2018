@@ -183,24 +183,41 @@ export default class UploadHandler {
     }
 
     private async parseBSHs(annoRoot: JSZip) {
-        const parser = new BSHParser(annoRoot, this.fs);
+        const parser = new BSHParser(this.fs);
 
-        return Promise.all([
-            ["NUMBERS",  "NUMBERS"],
-            ["STADTFLD", "STADTFLD"],
-            ["EFFEKTE",  "EFFEKT"],
-            ["FISCHE",   "WAL"],
-            ["GAUKLER",  "GAUKLER"],
-            ["MAEHER",   "MAEHER"],
-            ["SCHATTEN", "SCHATTEN"],
-            ["SHIP",     "SHIP"],
-            ["SOLDAT",   "SOLDAT"],
-            ["TIERE",    "RIND"],
-            ["TRAEGER",  "TRAEGER"],
-            ["TOOLS",    "TOOLS"],
-        ].map((r) => {
-            return parser.parse(r[0], r[1]);
-        }));
+        const files = [
+            ["GFX/NUMBERS",   "NUMBERS"],
+            ["GFX/STADTFLD",  "STADTFLD"],
+            ["GFX/EFFEKTE",   "EFFEKT"],
+            ["GFX/FISCHE",    "WAL"],
+            ["GFX/GAUKLER",   "GAUKLER"],
+            ["GFX/MAEHER",    "MAEHER"],
+            ["GFX/SCHATTEN",  "SCHATTEN"],
+            ["GFX/SHIP",      "SHIP"],
+            ["GFX/SOLDAT",    "SOLDAT"],
+            ["GFX/TIERE",     "RIND"],
+            ["GFX/TRAEGER",   "TRAEGER"],
+            ["ToolGfx/BAUHAUS", "TOOLS/BAUHAUS"],
+            ["ToolGfx/BAUSHIP", "TOOLS/BAUSHIP"],
+            // ["ToolGfx/EDITOR",  "TOOLS/EDITOR"],
+            ["ToolGfx/START",   "TOOLS/START"],
+            ["ToolGfx/SYMBOL",  "TOOLS/SYMBOL"],
+            ["ToolGfx/TOOLS",   "TOOLS/TOOLS"],
+        ];
+        for (const r of files) {
+            const inName = r[0] + ".BSH";
+            const outName = r[1];
+
+            log.info(`Started parsing "${inName}".`);
+            const caseInsensitiveFileInName = new RegExp(escapeStringRegexp(inName), "i");
+            const bshFile = annoRoot.file(caseInsensitiveFileInName)[0];
+            if (bshFile === undefined) {
+                throw new Error(`Could not find file ${inName}.`);
+            }
+            const images = await parser.parse(await Stream.fromZipObject(bshFile));
+            await parser.createSpriteSheets(images, outName);
+            log.info(`Finished parsing "${inName}".`);
+        }
     }
 
     private async copyIslands(annoRoot: JSZip) {
