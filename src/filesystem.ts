@@ -117,14 +117,31 @@ export default class FileSystem {
     }
 
     public async download(pathOrEntry: string|WebKitEntry) {
-        const content = await this.openAndGetContentAsUint8Array(pathOrEntry);
+        let files;
+        try {
+            files = await this.ls(pathOrEntry);
+        } catch (e) {
+            return await this.downloadFile(pathOrEntry);
+        }
+        return await this.downloadDirectory(files);
+    }
 
+    private async downloadFile(pathOrEntry: string|WebKitEntry) {
+        const fileName = typeof pathOrEntry === "string" ? pathOrEntry : pathOrEntry.fullPath;
+
+        const content = await this.openAndGetContentAsUint8Array(pathOrEntry);
         const element = document.createElement("a");
         element.setAttribute("href", `data:application/json;base64,${uInt8ToBase64(content)}`);
-        element.setAttribute("download", pathOrEntry.toString());
+        element.setAttribute("download", fileName);
         element.style.display = "none";
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
+    }
+
+    private async downloadDirectory(files: WebKitEntry[]) {
+        for (const file of files) {
+            await this.download(file);
+        }
     }
 }
