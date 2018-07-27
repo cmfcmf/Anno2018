@@ -15,7 +15,8 @@
     "pixi.js": "^4.8.1",
     "redux": "^4.0.0",
     "redux-watch": "^1.1.1",
-    "upng-js": "^2.1.0"
+    "upng-js": "^2.1.0",
+    "wavefile": "^8.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.51",
@@ -49,7 +50,8 @@
     "test-watch": "jest --notify --watchAll",
     "prepare": "patch-package",
     "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts",
-    "bsh-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/bsh-converter.ts"
+    "bsh-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/bsh-converter.ts",
+    "wav-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/wav-converter.ts"
   },
   "jest": {
     "transform": {
