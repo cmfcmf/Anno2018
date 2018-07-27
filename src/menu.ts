@@ -4,6 +4,7 @@ import ConfigLoader from "./game/config-loader";
 import Game from "./game/game";
 import GameRenderer from "./game/game-renderer";
 import IslandRenderer from "./game/island-renderer";
+import MusicPlayer from "./game/music-player";
 import GAMParser from "./parsers/GAM/gam-parser";
 
 export default class Menu {
@@ -11,7 +12,7 @@ export default class Menu {
 
     constructor(private readonly fs: FileSystem, private readonly gamParser: GAMParser,
                 private readonly islandRenderer: IslandRenderer, private readonly viewport: Viewport,
-                private readonly configLoader: ConfigLoader) { }
+                private readonly configLoader: ConfigLoader, private readonly musicPlayer: MusicPlayer) { }
 
     public async render(game: HTMLElement) {
         await this.loadSavesAndMissions();
@@ -38,6 +39,7 @@ export default class Menu {
         const gameRenderer = new GameRenderer(world, this.islandRenderer, this.viewport);
         const gameLogic = new Game(gameRenderer, this.configLoader);
         await gameLogic.begin(world);
+        this.musicPlayer.play();
 
 //      this.viewport.parent.addChild(new PIXI.Text(
 //          `Money: ${world.players.find((player) => player.id === 0).money}`,

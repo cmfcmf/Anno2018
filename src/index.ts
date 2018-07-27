@@ -5,6 +5,7 @@ import FileSystem from "./filesystem";
 import ConfigLoader from "./game/config-loader";
 import IslandRenderer from "./game/island-renderer";
 import IslandSpriteLoader from "./game/island-sprite-loader";
+import MusicPlayer from "./game/music-player";
 import Menu from "./menu";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
@@ -49,7 +50,8 @@ const Viewport = require("pixi-viewport");
     // viewport.position.set(app.renderer.width / 2, 0);
 
     const fs = new FileSystem();
-    await fs.init(1024 * 1024 * 200);
+    const FS_SIZE_MB = 1000;
+    await fs.init(1024 * 1024 * FS_SIZE_MB);
 
     (window as any).app = app;
     (window as any).fs = fs;
@@ -58,14 +60,21 @@ const Viewport = require("pixi-viewport");
     await uploadHandler.init();
     uploadHandler.render(game);
 
+    if (!await uploadHandler.isUploaded()) {
+        return;
+    }
+
     const configLoader = new ConfigLoader(fs);
     await configLoader.load();
+
+    const musicPlayer = new MusicPlayer(fs);
+    await musicPlayer.load();
 
     const gamParser = new GAMParser(new IslandLoader(fs));
     const worldFieldBuilder = new IslandSpriteLoader(fs, configLoader);
     const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
 
-    const menu = new Menu(fs, gamParser, islandRenderer, viewport, configLoader);
+    const menu = new Menu(fs, gamParser, islandRenderer, viewport, configLoader, musicPlayer);
     await menu.render(game);
 
     const gameName = getQueryParameter("load");

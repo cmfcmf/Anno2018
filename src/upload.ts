@@ -1,3 +1,5 @@
+import WAVParser from "./parsers/WAV/wav-parser";
+
 const escapeStringRegexp = require("escape-string-regexp");
 import * as JSZip from "jszip";
 import {JSZipObject} from "jszip";
@@ -9,13 +11,9 @@ import DATParser from "./parsers/DAT/dat-parser";
 import Stream from "./parsers/stream";
 
 export default class UploadHandler {
-    private readonly FS_SIZE_MB = 200;
-
-    constructor(private fs: FileSystem) { }
+    constructor(private readonly fs: FileSystem) { }
 
     public async init() {
-        await this.fs.init(1024 * 1024 * this.FS_SIZE_MB);
-
         console.table(await this.fs.ls("/"));
         // Doesn't work in Firefox
         // console.log(await this.fs.df());
@@ -29,6 +27,10 @@ export default class UploadHandler {
         game.appendChild(uploadBtn);
         game.appendChild(saveOrMissionUploadButton);
         game.appendChild(resetBtn);
+    }
+
+    public async isUploaded() {
+        return await this.fs.exists("/fields.dat");
     }
 
     private createUploadButton() {
@@ -113,6 +115,7 @@ export default class UploadHandler {
         await this.decryptCODs(annoRoot);
         await this.parseDATs(annoRoot);
         await this.parseBSHs(annoRoot);
+        await this.parseMusic(annoRoot);
 
         return true;
     }
@@ -218,6 +221,22 @@ export default class UploadHandler {
             const images = await parser.parse(await Stream.fromZipObject(bshFile));
             await parser.createSpriteSheets(images, outName);
             log.info(`Finished parsing "${inName}".`);
+        }
+    }
+
+    private async parseMusic(annoRoot: JSZip) {
+        if (!annoRoot.folder("MUSIC8")) {
+            console.warn("No music files found.");
+            return;
+        }
+        await this.copyFolderFromZip(annoRoot, "MUSIC8", "/music", ".wav");
+        const songs = await this.fs.ls("/music");
+        const wavParser = new WAVParser();
+        for (const song of songs) {
+            log.info(`Converting song ${song.name}`);
+            const convertedSong = wavParser.parse(await this.fs.openAndGetContentAsUint8Array(song));
+            await this.fs.write(song, convertedSong);
+            log.info(`Finished converting song ${song.name}`);
         }
     }
 

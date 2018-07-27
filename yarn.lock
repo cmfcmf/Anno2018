@@ -4844,6 +4844,10 @@ pixi-keyboard@^0.9.4:
   version "0.9.4"
   resolved "https://registry.yarnpkg.com/pixi-keyboard/-/pixi-keyboard-0.9.4.tgz#75ee9930b7ceb6818e913c7c6105c5330ad4d737"
 
+pixi-sound@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/pixi-sound/-/pixi-sound-2.0.2.tgz#3a48d72287b0a5ce2d20a240ec0d724a9f62c0a2"
+
 pixi-viewport@^2.7.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/pixi-viewport/-/pixi-viewport-2.7.0.tgz#fd010c984851a9aacabc2b77e6eb019effc58e70"
