@@ -2,7 +2,7 @@
   "name": "anno-2018",
   "version": "1.0.0",
   "private": true,
-  "license": "MIT",
+  "license": "AGPLv3",
   "dependencies": {
     "@babel/polyfill": "^7.0.0-beta.51",
     "filer.js": "^0.4.5",
