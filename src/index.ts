@@ -3,12 +3,15 @@ import "pixi-keyboard";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
 import ConfigLoader from "./game/config-loader";
+import GADRenderer from "./game/gad-renderer";
 import IslandRenderer from "./game/island-renderer";
 import IslandSpriteLoader from "./game/island-sprite-loader";
+import MenuStructure from "./game/menu-structure";
 import MusicPlayer from "./game/music-player";
 import Menu from "./menu";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
+import SpriteLoader from "./sprite-loader";
 import UploadHandler from "./upload";
 import {getQueryParameter} from "./util/util";
 
@@ -17,6 +20,8 @@ const Viewport = require("pixi-viewport");
 // tslint:disable-next-line:no-floating-promises
 (async () => {
     log.enableAll();
+
+    document.getElementById("version").innerText = `Anno 2018, version ${__VERSION__}.`;
 
     const game = document.getElementById("game");
 
@@ -31,10 +36,8 @@ const Viewport = require("pixi-viewport");
     game.appendChild(app.view);
 
     const viewport = new Viewport({
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight,
-        worldWidth: 20000,
-        worldHeight: 20000,
+        screenWidth: app.screen.width,
+        screenHeight: app.screen.height,
     });
 
     app.stage.addChild(viewport);
@@ -46,8 +49,13 @@ const Viewport = require("pixi-viewport");
     //    .clamp({direction: "all"})
     ;
 
-    // Set (0, 0) to center of the screen.
-    // viewport.position.set(app.renderer.width / 2, 0);
+    const menuViewport = new Viewport({
+        screenWidth: app.screen.width,
+        screenHeight: app.screen.height,
+        worldWidth: 1024,
+        worldHeight: 768,
+    });
+    app.stage.addChild(menuViewport);
 
     const fs = new FileSystem();
     const FS_SIZE_MB = 1000;
@@ -64,6 +72,8 @@ const Viewport = require("pixi-viewport");
         return;
     }
 
+    const spriteLoader = new SpriteLoader(fs);
+
     const configLoader = new ConfigLoader(fs);
     await configLoader.load();
 
@@ -71,16 +81,24 @@ const Viewport = require("pixi-viewport");
     await musicPlayer.load();
 
     const gamParser = new GAMParser(new IslandLoader(fs));
-    const worldFieldBuilder = new IslandSpriteLoader(fs, configLoader);
+    const worldFieldBuilder = new IslandSpriteLoader(fs, configLoader, spriteLoader);
     const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
 
     const menu = new Menu(fs, gamParser, islandRenderer, viewport, configLoader, musicPlayer);
     await menu.render(game);
 
-    const gameName = getQueryParameter("load");
-    if (gameName !== null) {
-        await menu.loadByName(gameName);
+    const queryGameName = getQueryParameter("load");
+    if (queryGameName !== null) {
+        await menu.loadByName(queryGameName);
+        menuViewport.visible = false;
+    } else {
+        // menuViewport.fit(); // TODO: Makes usage of sliders harder
+        const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
+        const menuStructure = new MenuStructure(fs, gadRenderer);
+        menuStructure.on("load-game", async (gameName: string) => {
+            await menu.loadByName(gameName);
+            menuViewport.visible = false;
+        });
+        await menuStructure.renderScreen("menu_main");
     }
-
-    document.getElementById("version").innerText = `Anno 2018, version ${__VERSION__}.`;
 })();

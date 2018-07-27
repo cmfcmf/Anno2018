@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import FileSystem from "../filesystem";
-import {uInt8ToBase64} from "../util/util";
+import SpriteLoader from "../sprite-loader";
 import ConfigLoader from "./config-loader";
 import {default as FieldX} from "./field-type";
 import Field from "./world/field";
@@ -21,11 +21,12 @@ export default class IslandSpriteLoader {
 
     private textures: Map<number, PIXI.Texture> = new Map();
 
-    constructor(private readonly fs: FileSystem, private readonly configLoader: ConfigLoader) { }
+    constructor(private readonly fs: FileSystem, private readonly configLoader: ConfigLoader,
+                private readonly spriteLoader: SpriteLoader) { }
 
     public async getIslandSprites(islands: Island[]) {
         if (!this.inited) {
-            await this.loadTextures();
+            this.textures = await this.spriteLoader.getTextures("STADTFLD");
             this.fields = this.configLoader.getFieldData();
             this.inited = true;
         }
@@ -60,34 +61,5 @@ export default class IslandSpriteLoader {
 
         const newSprites = fieldConfig.getSprites(origin, field.rotation, field.ani, this.textures, layer);
         sprites.push(...newSprites);
-    }
-
-    private async loadTextures() {
-        const files = await this.fs.ls("/gfx/STADTFLD/");
-        for (const file of files) {
-            const fileExtension = file.name.substr(file.name.lastIndexOf(".") + 1);
-            if (fileExtension === "png") {
-                const dataFileName = file.name.substring(0, file.name.lastIndexOf(".")) + ".json";
-                const spriteSheetData = JSON.parse(await this.fs.openAndGetContentAsText(dataFileName));
-
-                const spriteSheetImageData = await this.fs.openAndGetContentAsUint8Array(file);
-                const tmpImage = new Image();
-                tmpImage.src = `data:image/png;base64,${uInt8ToBase64(spriteSheetImageData)}`;
-
-                const spritesheet = new PIXI.Spritesheet(PIXI.Texture.from(tmpImage).baseTexture, spriteSheetData);
-
-                const textures = await new Promise<{ [key: string]: PIXI.Texture }>((resolve, reject) => {
-                    spritesheet.parse((sheet: any, hmm: any) => {
-                        // This appears to be a bug.
-                        resolve(sheet as { [key: string]: PIXI.Texture });
-                    });
-                });
-
-                for (const gfxId of Object.keys(textures)) {
-                    const texture = textures[gfxId];
-                    this.textures.set(parseInt(gfxId, 10), texture);
-                }
-            }
-        }
     }
 }
