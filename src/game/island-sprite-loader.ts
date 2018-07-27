@@ -1,9 +1,10 @@
 import * as PIXI from "pixi.js";
 import FileSystem from "../filesystem";
 import {uInt8ToBase64} from "../util/util";
+import ConfigLoader from "./config-loader";
 import {default as FieldX} from "./field-type";
 import Field from "./world/field";
-import Island from "./world/island";
+import {Island} from "./world/island";
 
 export type WorldLayer = "land" | "building";
 
@@ -16,29 +17,29 @@ export interface SpriteWithPositionAndLayer {
 export default class IslandSpriteLoader {
     private inited = false;
 
-    private fields: Map<number, FieldX> = new Map();
+    private fields: ReadonlyMap<number, FieldX> = new Map();
 
     private textures: Map<number, PIXI.Texture> = new Map();
 
-    constructor(private fs: FileSystem) { }
+    constructor(private readonly fs: FileSystem, private readonly configLoader: ConfigLoader) { }
 
     public async getIslandSprites(islands: Island[]) {
         if (!this.inited) {
-            await this.loadFieldData();
             await this.loadTextures();
+            this.fields = this.configLoader.getFieldData();
             this.inited = true;
         }
 
         const sprites: SpriteWithPositionAndLayer[] = [];
 
         islands.forEach((island) => {
-            for (let x = 0; x < island.width; x++) {
-                for (let y = 0; y < island.height; y++) {
+            for (let x = 0; x < island.size.x; x++) {
+                for (let y = 0; y < island.size.y; y++) {
                     this.handleField(island.baseFields[x][y], island, x, y, sprites, "land");
                 }
             }
-            for (let x = 0; x < island.width; x++) {
-                for (let y = 0; y < island.height; y++) {
+            for (let x = 0; x < island.size.x; x++) {
+                for (let y = 0; y < island.size.y; y++) {
                     this.handleField(island.topFields[x][y], island, x, y, sprites, "building");
                 }
             }
@@ -55,19 +56,10 @@ export default class IslandSpriteLoader {
         if (fieldConfig === undefined) {
             throw new Error(`Could not load config for ${field.fieldId}.`);
         }
-        const origin = new PIXI.Point(island.x + x, island.y + y);
+        const origin = new PIXI.Point(island.position.x + x, island.position.y + y);
 
         const newSprites = fieldConfig.getSprites(origin, field.rotation, field.ani, this.textures, layer);
         sprites.push(...newSprites);
-    }
-
-    private async loadFieldData() {
-        const fieldData = JSON.parse(await this.fs.openAndGetContentAsText("/fields.json")).objects.HAUS.items;
-
-        for (const key of Object.keys(fieldData)) {
-            const fieldId = parseInt(fieldData[key].Id, 10);
-            this.fields.set(fieldId, new FieldX(fieldData[key]));
-        }
     }
 
     private async loadTextures() {

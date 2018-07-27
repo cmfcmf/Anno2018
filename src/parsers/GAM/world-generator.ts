@@ -1,4 +1,4 @@
-import Island from "../../game/world/island";
+import {islandFromIsland3File, islandFromIsland4File, islandFromIsland5File} from "../../game/world/island";
 import World from "../../game/world/world";
 import WorldGenerationSettings from "../../game/world/world-generation-settings";
 import assert from "../../util/assert";
@@ -47,15 +47,15 @@ export default class WorldGenerator {
             let newIsland;
             switch (inselBlock.type) {
                 case "INSEL5":
-                    newIsland = Island.fromIsland5File(nextIslandId++, islandTemplate.position, isSouth, numBaseIsland,
+                    newIsland = islandFromIsland5File(nextIslandId++, islandTemplate.position, isSouth, numBaseIsland,
                         inselBlock.data);
                     break;
                 case "INSEL4":
-                    newIsland = Island.fromIsland4File(nextIslandId++, islandTemplate.position, isSouth, numBaseIsland,
+                    newIsland = islandFromIsland4File(nextIslandId++, islandTemplate.position, isSouth, numBaseIsland,
                         inselBlock.data);
                     break;
                 case "INSEL3":
-                    newIsland = Island.fromIsland3File(nextIslandId++, islandTemplate.position, isSouth, numBaseIsland,
+                    newIsland = islandFromIsland3File(nextIslandId++, islandTemplate.position, isSouth, numBaseIsland,
                         inselBlock.data);
                     break;
                 default:
@@ -65,12 +65,10 @@ export default class WorldGenerator {
             newIsland.baseFields = this.islandLoader.parseIslandBuildings(
                 newIsland,
                 inselHausBlock,
-                world.playerMap,
             );
             newIsland.topFields = this.islandLoader.parseIslandBuildings(
                 newIsland,
                 Block.empty("INSELHAUS"),
-                world.playerMap,
             );
 
             world.islands.push(newIsland);

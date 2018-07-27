@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import FileSystem from "../filesystem";
 import IslandSpriteLoader from "./island-sprite-loader";
 import {SpriteWithPositionAndLayer} from "./island-sprite-loader";
-import Island from "./world/island";
+import {Island} from "./world/island";
 
 export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 31;

@@ -71,6 +71,10 @@ export default class Stream {
         return this.readNBytes(2);
     }
 
+    public read24() {
+        return this.readNBytes(3);
+    }
+
     public read32() {
         return this.readNBytes(4);
     }
@@ -98,7 +102,7 @@ export default class Stream {
     private readNBytes(n: number) {
         let result = 0;
         for (let i = 0; i < n; i++) {
-            result += this.read8() << (i * 8);
+            result += this.read8() * 2 ** (i * 8);
         }
         return result;
     }

@@ -4,7 +4,6 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 
@@ -14,104 +13,90 @@ interface ReachInhabitants {
     requiredLevelCount: number; // require y of n inhabitants with level x
 }
 
-export default class Task {
-    public static fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap) {
-        const taskId = data.read32();
-        const _1 = data.read(28);
+export type Task = ReturnType<typeof taskFromSaveGame>;
 
-        const monopolyGoodId1 = data.read8();
-        assert(data.read8() === 0);
-        const monopolyGoodId2 = data.read8();
-        assert(data.read8() === 0);
-        const helpOtherToReachInhabitantsPlayerId = data.read8(); // Can be 0, 1, 2, 3 or 7 for any player.
+export function taskFromSaveGame(data: Stream) {
+    const id = data.read32();
+    const _1 = data.read(28);
 
-        assert(data.read(6).every((e) => e === 0));
+    const monopolyGoodId1 = data.read8();
+    assert(data.read8() === 0);
+    const monopolyGoodId2 = data.read8();
+    assert(data.read8() === 0);
+    const helpOtherToReachInhabitantsPlayerId = data.read8(); // Can be 0, 1, 2, 3 or 7 for any player.
 
-        const playersToKill = [];
-        if (data.read8Bool()) {
-            // Any does not include trader, pirate and native.
-            playersToKill.push("any");
-        }
-        if (data.read8Bool()) {
-            playersToKill.push("red");
-        }
-        if (data.read8Bool()) {
-            playersToKill.push("blue");
-        }
-        if (data.read8Bool()) {
-            playersToKill.push("yellow");
-        }
-        if (data.read8Bool()) {
-            playersToKill.push("white");
-        }
-        if (data.read8Bool()) {
-            // Should never be true
-            playersToKill.push("trader");
-        }
-        if (data.read8Bool()) {
-            playersToKill.push("pirate");
-        }
-        if (data.read8Bool()) {
-            // Should never be true
-            playersToKill.push("native");
-        }
+    assert(data.read(6).every((e) => e === 0));
 
-        const _3 = data.read(25);
+    const playersToKill = [];
+    if (data.read8Bool()) {
+        // Any does not include trader, pirate and native.
+        playersToKill.push("any");
+    }
+    if (data.read8Bool()) {
+        playersToKill.push("red");
+    }
+    if (data.read8Bool()) {
+        playersToKill.push("blue");
+    }
+    if (data.read8Bool()) {
+        playersToKill.push("yellow");
+    }
+    if (data.read8Bool()) {
+        playersToKill.push("white");
+    }
+    if (data.read8Bool()) {
+        // Should never be true
+        playersToKill.push("trader");
+    }
+    if (data.read8Bool()) {
+        playersToKill.push("pirate");
+    }
+    if (data.read8Bool()) {
+        // Should never be true
+        playersToKill.push("native");
+    }
 
-        const requiredBalance = data.read32();
-        const successVideoId = data.read32();
-        const requiredTradeBalance = data.read32();
-        const _5 = data.read(16);
+    const _3 = data.read(25);
 
-        const text = data.readString(2048);
+    const requiredBalance = data.read32();
+    const successVideoId = data.read32();
+    const requiredTradeBalance = data.read32();
+    const _5 = data.read(16);
 
-        const _6 = data.read(8);
+    const text = data.readString(2048);
 
-        const ownCityReachInhabitants: ReachInhabitants[] = [];
-        for (let i = 0; i < 3; i++) {
-            ownCityReachInhabitants.push({
-                count: data.read32(),
-                requiredLevel: data.read32(),
-                requiredLevelCount: data.read32(),
-            });
-        }
+    const _6 = data.read(8);
 
-        const _7 = data.read(36);
-
-        const helpOtherToReachInhabitants: ReachInhabitants = {
+    const ownCityReachInhabitants: ReachInhabitants[] = [];
+    for (let i = 0; i < 3; i++) {
+        ownCityReachInhabitants.push({
             count: data.read32(),
             requiredLevel: data.read32(),
             requiredLevelCount: data.read32(),
-        };
-
-        console.warn("task", taskId, _1, _3, _5, _6, _7);
-
-        return new Task(
-            taskId,
-            text,
-            successVideoId,
-            playersToKill,
-            requiredBalance,
-            requiredTradeBalance,
-            ownCityReachInhabitants,
-            helpOtherToReachInhabitantsPlayerId,
-            helpOtherToReachInhabitants,
-            monopolyGoodId1,
-            monopolyGoodId2,
-        );
+        });
     }
 
-    constructor(
-        public readonly taskId: number,
-        public readonly text: string,
-        public readonly successVideoId: number,
-        public readonly playersToKill: string[],
-        public readonly requiredBalance: number,
-        public readonly requiredTradeBalance: number,
-        public readonly ownCityReachInhabitants: ReachInhabitants[],
-        public readonly helpOtherToReachInhabitantsPlayerId: number,
-        public readonly helpOtherToReachInhabitants: ReachInhabitants,
-        public readonly monopolyGoodId1: number,
-        public readonly monopolyGoodId2: number,
-    ) { }
+    const _7 = data.read(36);
+
+    const helpOtherToReachInhabitants: ReachInhabitants = {
+        count: data.read32(),
+        requiredLevel: data.read32(),
+        requiredLevelCount: data.read32(),
+    };
+
+    console.warn("task", id, _1, _3, _5, _6, _7);
+
+    return {
+        id,
+        text,
+        successVideoId,
+        playersToKill,
+        requiredBalance,
+        requiredTradeBalance,
+        ownCityReachInhabitants,
+        helpOtherToReachInhabitantsPlayerId,
+        helpOtherToReachInhabitants,
+        monopolyGoodId1,
+        monopolyGoodId2,
+    };
 }

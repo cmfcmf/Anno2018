@@ -4,16 +4,17 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import Castle from "../../game/world/castle";
-import City from "../../game/world/city";
-import Island from "../../game/world/island";
-import Kontor from "../../game/world/kontor";
-import Player from "../../game/world/player";
-import Ship from "../../game/world/ship";
-import Soldier from "../../game/world/soldier";
-import Task from "../../game/world/task";
-import Timers from "../../game/world/timers";
-import Trader from "../../game/world/trader";
+import {castleFromSaveGame} from "../../game/world/castle";
+import {cityFromSaveGame} from "../../game/world/city";
+import {Island, islandFromSaveGame} from "../../game/world/island";
+import {kontorFromSaveGame} from "../../game/world/kontor";
+import {Player, playerFromSaveGame} from "../../game/world/player";
+import {producerFromSaveGame} from "../../game/world/producer";
+import {shipFromSaveGame} from "../../game/world/ship";
+import {soldierFromSaveGame} from "../../game/world/soldier";
+import {taskFromSaveGame} from "../../game/world/task";
+import {timersFromSaveGame} from "../../game/world/timers";
+import {traderFromSaveGame} from "../../game/world/trader";
 import World from "../../game/world/world";
 import WorldGenerationSettings from "../../game/world/world-generation-settings";
 import assert from "../../util/assert";
@@ -21,26 +22,6 @@ import Stream from "../stream";
 import {Block, IslandBlock} from "./block";
 import IslandLoader from "./island-loader";
 import WorldGenerator from "./world-generator";
-
-export interface IslandField {
-    fieldId: number;
-    x: number;
-    y: number;
-    rotation: number;
-    ani: number;
-    _1: number;
-    status: number;
-    random: number;
-    player: number;
-    _2: number;
-}
-
-export type PlayerMap = ReadonlyMap<number, Player>;
-export type IslandMap = ReadonlyMap<number, Island>;
-
-interface Entity<T> {
-    fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap): T;
-}
 
 export default class GAMParser {
     private worldGenerator: WorldGenerator;
@@ -94,29 +75,30 @@ export default class GAMParser {
         const players = this.parsePlayers(playerBlock);
 
         const islandBlocks = blocks.has("INSEL5") ? blocks.get("INSEL5") as IslandBlock[] : [];
-        const islands = await this.parseIslands(islandBlocks, players);
+        const islands = await this.parseIslands(islandBlocks);
 
-        const tasks    = this.handleBlock<Task>(   blocks, "AUFTRAG4", Task,    players, islands);
-        const ships    = this.handleBlock<Ship>(   blocks, "SHIP4",    Ship,    players, islands);
-        const soldiers = this.handleBlock<Soldier>(blocks, "SOLDAT3",  Soldier, players, islands);
-        const kontors  = this.handleBlock<Kontor>( blocks, "KONTOR2",  Kontor,  players, islands);
-        const castles  = this.handleBlock<Castle>( blocks, "MILITAR",  Castle,  players, islands);
-        const cities   = this.handleBlock<City>(   blocks, "STADT4",   City,    players, islands);
+        const tasks     = this.handleBlock(blocks, "AUFTRAG4",  taskFromSaveGame);
+        const ships     = this.handleBlock(blocks, "SHIP4",     shipFromSaveGame);
+        const soldiers  = this.handleBlock(blocks, "SOLDAT3",   soldierFromSaveGame);
+        const kontors   = this.handleBlock(blocks, "KONTOR2",   kontorFromSaveGame);
+        const castles   = this.handleBlock(blocks, "MILITAR",   castleFromSaveGame);
+        const cities    = this.handleBlock(blocks, "STADT4",    cityFromSaveGame);
+        const producers = this.handleBlock(blocks, "PRODLIST2", producerFromSaveGame);
 
-        // TODO: HIRSCH2, PRODLIST2, WERFT, SIEDLER, ROHWACHS2, MARKT2, TURM, WIFF
+        // TODO: HIRSCH2, WERFT, SIEDLER, ROHWACHS2, MARKT2, TURM, WIFF
         let trader = null;
         if (blocks.has("HANDLER") && blocks.get("HANDLER")[0].length > 0) {
-            trader = Trader.fromSaveGame(blocks.get("HANDLER")[0].data, players, islands);
+            trader = traderFromSaveGame(blocks.get("HANDLER")[0].data);
         }
 
         assert(blocks.has("TIMERS"));
         assert(blocks.get("TIMERS").length === 1);
-        const timers = Timers.fromSaveGame(blocks.get("TIMERS")[0].data, players, islands);
+        const timers = timersFromSaveGame(blocks.get("TIMERS")[0].data);
 
         let worldGenerationSettings = WorldGenerationSettings.empty();
         if (blocks.has("SZENE")) {
             const data = blocks.get("SZENE")[0].data;
-            worldGenerationSettings = WorldGenerationSettings.fromSaveGame(data, players, islands);
+            worldGenerationSettings = WorldGenerationSettings.fromSaveGame(data);
         }
 
         const world = new World(
@@ -131,29 +113,29 @@ export default class GAMParser {
             cities,
             trader,
             timers,
+            producers,
         );
 
         return {world, worldGenerationSettings};
     }
 
-    private handleBlock<T>(blocks: Map<string, Block[]>, name: string, entity: any, players: PlayerMap,
-                           islands: IslandMap): T[] {
+    private handleBlock<T>(blocks: Map<string, Block[]>, name: string, fromSaveGame: (data: Stream) => T): T[] {
         if (!blocks.has(name)) {
             return [];
         }
         const entities: T[] = [];
         for (const block of blocks.get(name)) {
             while (!block.data.eof()) {
-                entities.push(entity.fromSaveGame(block.data, players, islands));
+                entities.push(fromSaveGame(block.data));
             }
         }
         return entities;
     }
 
-    private async parseIslands(islandBlocks: IslandBlock[], players: PlayerMap) {
-        const islands: Map<number, Island> = new Map();
+    private async parseIslands(islandBlocks: IslandBlock[]) {
+        const islands: Island[] = [];
         for (const islandBlock of islandBlocks) {
-            const island = Island.fromSaveGame(islandBlock.data);
+            const island = islandFromSaveGame(islandBlock.data);
             const islandBuildingBlocks = islandBlock.inselHausBlocks !== undefined ? islandBlock.inselHausBlocks : [];
 
             let islandTopBlock = Block.empty("INSELHAUS");
@@ -179,25 +161,22 @@ export default class GAMParser {
             island.baseFields = this.islandLoader.parseIslandBuildings(
                 island,
                 islandBottomBlock,
-                players,
             );
 
             island.topFields = this.islandLoader.parseIslandBuildings(
                 island,
                 islandTopBlock,
-                players,
             );
 
-            islands.set(island.id, island);
+            islands.push(island);
         }
         return islands;
     }
 
     private parsePlayers(block: Block) {
-        const players: Map<number, Player> = new Map();
+        const players: Player[] = [];
         while (!block.data.eof()) {
-            const player = Player.fromSaveGame(block.data);
-            players.set(player.id, player);
+            players.push(playerFromSaveGame(block.data));
         }
         return players;
     }

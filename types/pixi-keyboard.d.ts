@@ -1,17 +1,23 @@
 declare namespace PIXI {
     namespace keyboard {
+        type valueof<T> = T[keyof T];
+        export type Keys = valueof<keyof typeof PIXI.keyboard.Key>;
+
         export class KeyboardManager extends PIXI.utils.EventEmitter {
             public isEnabled: boolean;
             constructor();
             public enable(): void;
             public disable(): void;
-            public setPreventDefault(key: number, value?: boolean): void;
-            public isDown(key: number): boolean;
-            public isPressed(key: number): boolean;
-            public isReleased(key: number): boolean;
+            public setPreventDefault(key: Keys|Keys[], value?: boolean): void;
+            public isDown(key: Keys): boolean;
+            public isPressed(key: Keys): boolean;
+            public isReleased(key: Keys): boolean;
             public update(): void;
-            public getHotKey(key: number): HotKey;
+            public getHotKey(key: Keys): HotKey;
             public removeHotKey(key: HotKey): void;
+
+            public onKeyPressedWithPreventDefault(key: Keys, callback: () => void): void;
+            public onKeysPressedWithPreventDefault(keys: Keys[], callback: () => void): void;
         }
 
         export class HotKey {
@@ -22,7 +28,7 @@ declare namespace PIXI {
             public ctrl: boolean;
             public shift: boolean;
             public alt: boolean;
-            constructor(key: number, manager: KeyboardManager);
+            constructor(key: Keys, manager: KeyboardManager);
             public remove(): void;
         }
 

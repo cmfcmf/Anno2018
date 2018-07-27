@@ -4,7 +4,6 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import {IslandMap, PlayerMap} from "../../parsers/GAM/gam-parser";
 import {IslandSizeId} from "../../parsers/GAM/island-loader";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
@@ -17,7 +16,7 @@ export interface IslandTemplate {
 }
 
 export default class WorldGenerationSettings {
-    public static fromSaveGame(data: Stream, players: PlayerMap, islands: IslandMap) {
+    public static fromSaveGame(data: Stream) {
         const _1 = data.slice(100);
 
         const numNativesNorth = _1[64];

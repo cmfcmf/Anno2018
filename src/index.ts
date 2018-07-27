@@ -2,6 +2,7 @@ import * as log from "loglevel";
 import "pixi-keyboard";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
+import ConfigLoader from "./game/config-loader";
 import IslandRenderer from "./game/island-renderer";
 import IslandSpriteLoader from "./game/island-sprite-loader";
 import Menu from "./menu";
@@ -57,11 +58,14 @@ const Viewport = require("pixi-viewport");
     await uploadHandler.init();
     uploadHandler.render(game);
 
+    const configLoader = new ConfigLoader(fs);
+    await configLoader.load();
+
     const gamParser = new GAMParser(new IslandLoader(fs));
-    const worldFieldBuilder = new IslandSpriteLoader(fs);
+    const worldFieldBuilder = new IslandSpriteLoader(fs, configLoader);
     const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
 
-    const menu = new Menu(fs, gamParser, islandRenderer, viewport);
+    const menu = new Menu(fs, gamParser, islandRenderer, viewport, configLoader);
     await menu.render(game);
 
     const gameName = getQueryParameter("load");

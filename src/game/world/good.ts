@@ -15,9 +15,9 @@ export enum GoodAction {
 export default class Good {
     public static fromSaveGame(data: Stream) {
         const tmp = data.read32();
-        const sellingPrice = (tmp & 0b00000000000000000000001111111111) >>  0;
-        const buyingPrice  = (tmp & 0b00000000000011111111110000000000) >> 10;
-        const action       = (tmp & 0b11111111111100000000000000000000) >> 20;
+        const sellingPrice       = (tmp & 0b00000000000000000000001111111111) >>  0;
+        const buyingPrice        = (tmp & 0b00000000000011111111110000000000) >> 10;
+        const action: GoodAction = (tmp & 0b11111111111100000000000000000000) >> 20;
         const _1 = data.read32();
         const wantedSellingAmount = data.read16() >> 5;
         const wantedBuyingAmount = data.read16() >> 5;

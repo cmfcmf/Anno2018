@@ -1,3 +1,4 @@
+const escapeStringRegexp = require("escape-string-regexp");
 import * as JSZip from "jszip";
 import {JSZipObject} from "jszip";
 import * as log from "loglevel";

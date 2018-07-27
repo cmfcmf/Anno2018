@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import {TILE_HEIGHT, TILE_WIDTH} from "./island-renderer";
+import GameRenderer from "./game-renderer";
 import {SpriteWithPositionAndLayer} from "./island-sprite-loader";
 import {WorldLayer} from "./island-sprite-loader";
 import {Rotation4} from "./world/world";
@@ -30,7 +30,7 @@ export type LandFieldType =
 
 export type BuildingFieldType =
     "GEBAEUDE"
-    | "HQ"
+    | "HQ" // Kontor
     | "STRASSE"
     | "BRUECKE"
     | "PLATZ"
@@ -45,15 +45,22 @@ export type BuildingFieldType =
 export type FieldKind = LandFieldType | BuildingFieldType;
 
 export default class FieldType {
-    private readonly id: number;
-    private readonly gfxId: number;
-    private readonly kind: FieldKind;
-    private readonly size: PIXI.Point;
-    private readonly rotate: number;
-    private readonly animAdd: number;
-    private readonly yOffset: number;
-    private readonly animTime: number;
-    private readonly animAnz: number;
+    public readonly id: number;
+    public readonly gfxId: number;
+    public readonly kind: FieldKind;
+    public readonly size: PIXI.Point;
+    public readonly rotate: number;
+    public readonly animAdd: number;
+    public readonly yOffset: number;
+    public readonly animTime: number;
+    public readonly animAnz: number;
+    public readonly production: {
+        good: string,
+        upkeep: {
+            active: number,
+            inactive: number,
+        },
+    };
 
     constructor(config: any) {
         this.id = config.Id;
@@ -65,19 +72,34 @@ export default class FieldType {
         this.animAnz = config.AnimAnz;
         this.animTime = config.AnimTime === "TIMENEVER" ? -1 : config.AnimTime;
         this.yOffset = -config.Posoffs;
+
+        const productionConfig = config.nested_objects.HAUS_PRODTYP[0];
+        const upkeep = {
+            active: 0,
+            inactive: 0,
+        };
+        if (Array.isArray(productionConfig.Kosten)) {
+            upkeep.active = productionConfig.Kosten[0];
+            upkeep.inactive = productionConfig.Kosten[1];
+        } else {
+            upkeep.active = upkeep.inactive = productionConfig.Kosten !== undefined ? productionConfig.Kosten : 0;
+        }
+        this.production = {
+            good: productionConfig.Ware,
+            upkeep,
+        };
     }
 
-    public getSprites(worldPos: PIXI.Point, rotation: Rotation4, animationStep: number,
+    public getSprites(fieldPos: PIXI.Point, rotation: Rotation4, animationStep: number,
                       textures: Map<number, PIXI.Texture>, layer: WorldLayer) {
         const sprites: SpriteWithPositionAndLayer[] = [];
         const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
         const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
         for (let y = 0; y < sy; y++) {
             for (let x = 0; x < sx; x++) {
-                const xx = worldPos.x + x;
-                const yy = worldPos.y + y;
-                const worldX = (xx - yy) * (TILE_WIDTH / 2);
-                const worldY = (xx + yy) * Math.floor(TILE_HEIGHT / 2);
+                const xx = fieldPos.x + x;
+                const yy = fieldPos.y + y;
+                const {x: worldX, y: worldY} = GameRenderer.fieldPosToWorldPos(new PIXI.Point(xx, yy));
 
                 let sprite: PIXI.Sprite|PIXI.extras.AnimatedSprite;
                 if (this.animAdd === 0 || this.animTime === -1) {

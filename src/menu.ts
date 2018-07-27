@@ -1,5 +1,6 @@
 import * as Viewport from "pixi-viewport";
 import FileSystem from "./filesystem";
+import ConfigLoader from "./game/config-loader";
 import Game from "./game/game";
 import GameRenderer from "./game/game-renderer";
 import IslandRenderer from "./game/island-renderer";
@@ -8,8 +9,9 @@ import GAMParser from "./parsers/GAM/gam-parser";
 export default class Menu {
     private savesAndMissions: WebKitEntry[];
 
-    constructor(private fs: FileSystem, private gamParser: GAMParser,
-                private islandRenderer: IslandRenderer, private viewport: Viewport) { }
+    constructor(private readonly fs: FileSystem, private readonly gamParser: GAMParser,
+                private readonly islandRenderer: IslandRenderer, private readonly viewport: Viewport,
+                private readonly configLoader: ConfigLoader) { }
 
     public async render(game: HTMLElement) {
         await this.loadSavesAndMissions();
@@ -34,8 +36,8 @@ export default class Menu {
         const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
         const world = await this.gamParser.parse(saveGameData);
         const gameRenderer = new GameRenderer(world, this.islandRenderer, this.viewport);
-        const gameLogic = new Game(world, gameRenderer);
-        await gameLogic.begin();
+        const gameLogic = new Game(gameRenderer, this.configLoader);
+        await gameLogic.begin(world);
 
 //      this.viewport.parent.addChild(new PIXI.Text(
 //          `Money: ${world.players.find((player) => player.id === 0).money}`,

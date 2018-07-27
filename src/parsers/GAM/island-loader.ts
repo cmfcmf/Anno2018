@@ -1,9 +1,8 @@
 import FileSystem from "../../filesystem";
 import Field from "../../game/world/field";
-import Island from "../../game/world/island";
+import {Island} from "../../game/world/island";
 import assert from "../../util/assert";
 import {Block} from "./block";
-import {PlayerMap} from "./gam-parser";
 
 export type IslandSizeId = 0|1|2|3|4;
 export type IslandSizeName = "lit"|"mit"|"med"|"big"|"lar";
@@ -46,9 +45,9 @@ export default class IslandLoader {
 
     public async loadIslandFile(island: Island) {
         const climate = island.isSouth ? "south" : "north";
-        const islandNumber = island.baseIslandNumber.toString().padStart(2, "0");
+        const islandNumber = island.numBaseIsland.toString().padStart(2, "0");
         for (const islandSize of this.islandSizes) {
-            if (island.width <= islandSize.maxSize) {
+            if (island.size.x <= islandSize.maxSize) {
                 return await this.fs.openAndGetContentAsStream(
                     `/islands/${climate}/${islandSize.name}${islandNumber}.scp`,
                 );
@@ -81,19 +80,19 @@ export default class IslandLoader {
         };
     }
 
-    public parseIslandBuildings(island: Island, block: Block, players: PlayerMap): Array<Array<Field|null>> {
+    public parseIslandBuildings(island: Island, block: Block): Array<Array<Field|null>> {
         const data = block.data;
         const dataLength = block.length;
 
         const fields: Field[][] = [];
-        for (let x = 0; x < island.width; x++) {
-            fields.push(new Array(island.height).fill(null));
+        for (let x = 0; x < island.size.x; x++) {
+            fields.push(new Array(island.size.y).fill(null));
         }
 
         for (let i = 0; i < dataLength / Field.saveGameDataLength; i++) {
-            const field = Field.fromSaveGame(data, players);
-            assert(field.x < island.width);
-            assert(field.y < island.height);
+            const field = Field.fromSaveGame(data);
+            assert(field.x < island.size.x);
+            assert(field.y < island.size.y);
             fields[field.x][field.y] = field;
         }
 

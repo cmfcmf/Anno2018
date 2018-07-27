@@ -1,5 +1,5 @@
 diff --git a/node_modules/pixi-keyboard/package.json b/node_modules/pixi-keyboard/package.json
-index c8e8927..0d67213 100644
+index c8e8927..1ccf318 100644
 --- a/node_modules/pixi-keyboard/package.json
 +++ b/node_modules/pixi-keyboard/package.json
 @@ -2,7 +2,7 @@
@@ -12,7 +12,7 @@ index c8e8927..0d67213 100644
    "license": "MIT",
    "keywords": [
 diff --git a/node_modules/pixi-keyboard/src/KeyboardManager.js b/node_modules/pixi-keyboard/src/KeyboardManager.js
-index 087b558..bc6be15 100644
+index 087b558..abbd55b 100644
 --- a/node_modules/pixi-keyboard/src/KeyboardManager.js
 +++ b/node_modules/pixi-keyboard/src/KeyboardManager.js
 @@ -1,4 +1,4 @@
@@ -21,8 +21,28 @@ index 087b558..bc6be15 100644
  import HotKey from './HotKey';
  
  export default class KeyboardManager extends PIXI.utils.EventEmitter {
+@@ -76,6 +76,19 @@ export default class KeyboardManager extends PIXI.utils.EventEmitter {
+     }
+   }
+ 
++  onKeyPressedWithPreventDefault(key, callback) {
++    this.onKeysPressedWithPreventDefault([key], callback);
++  }
++
++  onKeysPressedWithPreventDefault(keys, callback) {
++    this.setPreventDefault(keys);
++    this.on("pressed", () => {
++      if (keys.every(key => this.isPressed(key))) {
++        callback();
++      }
++    })
++  }
++
+   isDown(key){
+     return (this._downKeys.indexOf(key) !== -1);
+   }
 diff --git a/node_modules/pixi-keyboard/src/index.js b/node_modules/pixi-keyboard/src/index.js
-index 288e509..b5c5f79 100644
+index 288e509..336c81e 100644
 --- a/node_modules/pixi-keyboard/src/index.js
 +++ b/node_modules/pixi-keyboard/src/index.js
 @@ -1,4 +1,4 @@

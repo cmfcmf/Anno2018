@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import Kontor from "./kontor";
+import {Kontor} from "./kontor";
 
 export default class TradeRoute {
     private kontors: Kontor[] = [];

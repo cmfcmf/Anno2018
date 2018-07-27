@@ -5,6 +5,8 @@
   "license": "AGPLv3",
   "dependencies": {
     "@babel/polyfill": "^7.0.0-beta.51",
+    "@types/escape-string-regexp": "^1.0.0",
+    "escape-string-regexp": "^1.0.5",
     "filer.js": "^0.4.5",
     "iconv-lite": "^0.4.23",
     "idb.filesystem.js": "^0.0.8",
@@ -15,6 +17,7 @@
     "pixi.js": "^4.8.1",
     "redux": "^4.0.0",
     "redux-watch": "^1.1.1",
+    "rxjs": "^6.2.2",
     "upng-js": "^2.1.0",
     "wavefile": "^8.3.2"
   },
