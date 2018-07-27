@@ -33,6 +33,67 @@ test("comments and constants", () => {
     );
 });
 
+test("math within arrays", () => {
+    doTest(`
+        X = 670
+        Y = 141
+        IDHAUPT = 5
+
+        Objekt: HARRY
+            Nummer:     7
+            Id:         IDHAUPT+10
+            Pos:        X-120, Y-1
+    `, {
+            HARRY: {
+                items: {
+                    7: {
+                        Id: 15,
+                        Pos: [
+                            550,
+                            140,
+                        ],
+                        nested_objects: {},
+                    },
+                },
+            },
+        },
+        {
+            IDHAUPT: 5,
+            Id: 15,
+            Nummer: 7,
+            Pos: [
+                550,
+                140,
+            ],
+            X: 670,
+            Y: 141,
+        }, {});
+});
+
+test("math with arrays values", () => {
+    doTest(`
+        Objekt: POTTER
+            Nummer:     42
+            Pos:        23, 199
+            Posoffs:    32-Pos[0], 213-Pos[1]
+    `, {
+            POTTER: {
+                items: {
+                    42: {
+                        Pos: [23, 199],
+                        Posoffs: [9, 14],
+                        nested_objects: {},
+                    },
+                },
+            },
+        },
+        {
+            Nummer: 42,
+            Pos: [23, 199],
+            Posoffs: [9, 14],
+        }, {});
+});
+
 test("json objects", () => {
     doTest(`
         Objekt: BGRUPPE
@@ -90,18 +151,21 @@ test("handles @ sign", () => {
             IDSTART = 42
             @Nummer:    0
             Id:         IDSTART+0
+            Pos:        3, 4
             @Nummer:    +1
             @Id:        +1
+            @Pos:       +2, +3
             @Nummer:    +1
             VARIABLE = Nummer
             @Id:        +1
+            @Pos:       +4, +2
         EndObj;`,
         {
             HELLO: {
                 items: {
-                    0: {Id: 42, nested_objects: {}},
-                    1: {Id: 43, nested_objects: {}},
-                    2: {Id: 44, nested_objects: {}},
+                    0: {Id: 42, Pos: [3, 4], nested_objects: {}},
+                    1: {Id: 43, Pos: [5, 7], nested_objects: {}},
+                    2: {Id: 44, Pos: [9, 9], nested_objects: {}},
                 },
             },
         },
@@ -109,6 +173,7 @@ test("handles @ sign", () => {
             IDSTART: 42,
             VARIABLE: 2,
             Id: 44,
+            Pos: [9, 9],
             Nummer: 2,
         },
         {});
@@ -253,7 +318,7 @@ test("handles ObjFill max", () => {
         {
             HELLO: {
                 items: {
-                    0: {Id: 10, A: 5,         Size: {x: 1, y: 1}, nested_objects: {}},
+                    0: {Id: 10, A: 5, Size: {x: 1, y: 1}, nested_objects: {}},
                     1: {Id: 11, A: 5, B: 6, Size: {x: 1, y: 1}, nested_objects: {}},
                     2: {Id: 12, A: 7, B: 6, Size: {x: 2, y: 3}, nested_objects: {}},
                     3: {Id: 13, A: 5, B: 6, Size: {x: 1, y: 1}, nested_objects: {}},
@@ -267,6 +332,43 @@ test("handles ObjFill max", () => {
             A: 7,
             B: 6,
             Size: {x: 2, y: 3},
+        },
+        {});
+});
+
+test("even more ObJFill", () => {
+    doTest(`
+  Objekt: GEORGE
+    @Nummer:    0
+    Id:         0
+    Blocknr:    7
+    ObjFill:    0,MAXGADGET
+
+    @Nummer:    0
+    Id:         42
+
+    @Nummer:    +1
+    Id:         42
+    `, {
+            GEORGE: {
+                items: {
+                    0: {
+                        Blocknr: 7,
+                        Id: 42,
+                        nested_objects: {},
+                    },
+                    1: {
+                        Blocknr: 7,
+                        Id: 42,
+                        nested_objects: {},
+                    },
+                },
+            },
+        },
+        {
+            Blocknr: 7,
+            Id: 42,
+            Nummer: 1,
         },
         {});
 });

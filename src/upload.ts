@@ -114,6 +114,7 @@ export default class UploadHandler {
         await this.copyMissions(annoRoot);
         await this.decryptCODs(annoRoot);
         await this.parseDATs(annoRoot);
+        await this.parseGADs(annoRoot);
         await this.parseBSHs(annoRoot);
         await this.parseMusic(annoRoot);
 
@@ -164,6 +165,82 @@ export default class UploadHandler {
 
             log.info(`Finished parsing "${inName}".`);
         }));
+    }
+
+    private async parseGADs(annoRoot: JSZip) {
+        await this.fs.mkdir("/screens");
+
+        const files = [
+            ["Anno.gad", ""],
+            ["BASE.GAD", "menu_main"],
+            ["BAU.GAD", ""],
+            ["BAUKONT.GAD", ""],
+            ["BAUSHIP.GAD", ""],
+            ["BERGWERK.GAD", ""],
+            ["BUBBLE01.GAD", ""],
+            ["BUBBLE.GAD", ""],
+            ["CHAT.GAD", ""],
+            ["CLIENT.GAD", ""],
+            ["CTRL.GAD", ""],
+            ["DISK.GAD", ""],
+            // ["ENDE_DEM.GAD", ""],
+            ["ENDE.GAD", "menu_points"],
+            ["FARBWAHL.GAD", "menu_player_selection"],
+            ["HANDEL.GAD", ""],
+            ["HOST.GAD", "menu_missions"],
+            ["INFO.GAD", ""],
+            ["INFRA.GAD", ""],
+            ["KONTOR.GAD", ""],
+            ["LAGER.GAD", ""],
+            ["LEIST.GAD", ""],
+            ["MARKT.GAD", ""],
+            ["MILITAR.GAD", ""],
+            ["MISSION.GAD", "menu_mission_details"],
+            ["MISSZIEL.GAD", ""],
+            ["MKSHIP.GAD", ""],
+            ["MKSOLDAT.GAD", ""],
+            ["MUSIK.GAD", ""],
+            ["OPTION.GAD", ""],
+            ["PIRAT.GAD", ""],
+            ["PIRATORD.GAD", ""],
+            ["PLANTAGE.GAD", ""],
+            ["PROD.GAD", ""],
+            ["ROUTE.GAD", ""],
+            ["SCAPE.GAD", ""],
+            ["SHIP.GAD", ""],
+            ["SHIPLIST.GAD", ""],
+            ["SIEDLER.GAD", ""],
+            ["SKSHIP.GAD", ""],
+            ["SKSOLDAT.GAD", ""],
+            ["STADT.GAD", ""],
+            ["STADTLST.GAD", ""],
+            ["TOOLS.INC", ""],
+            ["TRADE.GAD", ""],
+            ["TRADER.GAD", ""],
+            ["TRANSFER.GAD", ""],
+            ["TRIBUT.GAD", ""],
+            ["TUTOR.GAD", ""],
+            ["VERTRAG.GAD", ""],
+            ["WAITLOAD.GAD", "menu_loading"],
+            ["WERFT.GAD", ""],
+        ];
+
+        for (const r of files) {
+            if (r[1] === "") {
+                r[1] = r[0];
+            }
+            const inName = `GADDATA/${r[0]}`;
+            const outName = `/screens/${r[1]}.json`;
+            log.info(`Started parsing "${inName}".`);
+
+            const parser = new DATParser();
+
+            const gadFile = annoRoot.file(inName);
+            const data = parser.parse(await gadFile.async("text"));
+            await this.fs.write(outName, JSON.stringify(data));
+
+            log.info(`Finished parsing "${inName}".`);
+        }
     }
 
     private async decryptCODs(annoRoot: JSZip) {
@@ -258,6 +335,7 @@ export default class UploadHandler {
 
     private async copyMissions(annoRoot: JSZip) {
         await this.copyFolderFromZip(annoRoot, "Szenes", "/missions-original", ".szm|.szs|.hss");
+        // TODO: Read the foldername "Eigene Szenarien" from the Text.cod file
         await this.copyFolderFromZip(annoRoot, "Eigene Szenarien", "/missions-custom", ".szm|.szs|.hss");
     }
 

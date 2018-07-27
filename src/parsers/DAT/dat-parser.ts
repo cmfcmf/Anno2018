@@ -20,13 +20,26 @@ export default class DATParser {
     }
 
     public parse(content: string) {
+        this.variables = new Map();
+        this.objects = {};
+        this.template = null;
+        this.gfxMap = new Map();
+        this.lastGfxName = null;
+        this.currentObject = null;
+        this.currentNestedObject = null;
+        this.currentItem = null;
+        this.currentNestedItem = 0;
+
         for (let line of content.split("\n")) {
             line = line.split(";")[0].trim();
             if (line.length === 0) {
                 continue;
             }
 
-            if (line.startsWith("Nahrung:") || line.startsWith("Soldat:") || line.startsWith("Turm:")) {
+            if (line.startsWith("Nahrung:")
+                || line.startsWith("Soldat:")
+                || line.startsWith("Turm:")
+                || line.startsWith("Include:")) {
                 // TODO: Skipped for now.
                 continue;
             }
@@ -75,12 +88,10 @@ export default class DATParser {
         const fill = result[1];
         const item = this.objects[this.currentObject].items[this.currentItem];
         if (fill.startsWith("0,MAX")) {
-            assert(this.template == null);
+            assert(this.template === null);
             this.template = item;
         } else {
-            assert(Object.keys(item).length === 1);
             assert(item.hasOwnProperty("nested_objects"));
-            assert(Object.keys(item.nested_objects).length === 0);
 
             const baseItemNum = this.getValue(null, fill, false);
             const baseItem = this.objects[this.currentObject].items[baseItemNum];
@@ -153,25 +164,27 @@ export default class DATParser {
         const value = this.deepCopy(this.getValue(key, valueAsString, isMath));
         this.variables.set(key, value);
 
-        const item = this.objects[this.currentObject].items[this.currentItem];
         if (key === "Nummer") {
             if (this.currentNestedObject === null) {
-                if (this.template !== null) {
-                    const tmp = this.deepCopy(this.template);
-                    this.objects[this.currentObject].items[this.currentItem] = this.deepMerge(tmp, item);
-                }
                 this.currentItem = value;
-                // assert(this.current_item not in this.objects[this.current_object]['items'].keys())
+
                 this.objects[this.currentObject].items[this.currentItem] = {
                     nested_objects: {},
                 };
+                if (this.template !== null) {
+                    const tmp = this.deepCopy(this.template);
+                    this.objects[this.currentObject].items[this.currentItem] =
+                        this.deepMerge(tmp, this.objects[this.currentObject].items[this.currentItem]);
+                }
             } else {
                 this.currentNestedItem = value;
-                item.nested_objects[this.currentNestedObject][this.currentNestedItem] = {};
+                this.objects[this.currentObject].items[this.currentItem]
+                    .nested_objects[this.currentNestedObject][this.currentNestedItem] = {};
             }
 
             return;
         }
+        const item = this.objects[this.currentObject].items[this.currentItem];
 
         if (key === "Gfx" && valueAsString.startsWith("GFX")) {
             this.lastGfxName = valueAsString.split("+")[0];
@@ -193,7 +206,7 @@ export default class DATParser {
         }
     }
 
-    private getValue(key: string, value: string, isMath: boolean): any {
+    private getValue(key: string, value: string, isMath: boolean, arrayElement: number = -1): any {
         let result;
         if (isMath) {
             if (result = value.match(/^([+\-])(\d+)$/)) {
@@ -201,6 +214,14 @@ export default class DATParser {
                 if (oldVal.toString() === "RUINE_KONTOR_1") {
                     // TODO
                     oldVal = 424242;
+                }
+
+                if (arrayElement > -1) {
+                    if (key === "Size") {
+                        oldVal = oldVal[arrayElement === 0 ? "x" : "y"];
+                    } else {
+                        oldVal = oldVal[arrayElement];
+                    }
                 }
 
                 if (result[1] === "+") {
@@ -220,14 +241,20 @@ export default class DATParser {
         if (value.match(/^[\-+]?\d+\.\d+$/)) {
             return parseFloat(value);
         }
-        if (value.match(/^[A-Za-z0-9_]+$/)) {
+        if (result = value.match(/^([A-Za-z0-9_]+)(?:\[(\d+)])?$/)) {
+            const name = result[1];
+            const arrayIdx = result[2];
             // TODO: When is value not in variables
-            return this.variables.has(value) ? this.deepCopy(this.variables.get(value)) : value;
+            const res = this.variables.has(name) ? this.deepCopy(this.variables.get(name)) : name;
+            if (arrayIdx !== undefined) {
+                return res[arrayIdx];
+            }
+            return res;
         }
         if (value.indexOf(",") !== -1) {
             const values = value
                 .split(",")
-                .map((v) => this.getValue(key, v.trim(), false));
+                .map((v, index) => this.getValue(key, v.trim(), isMath, index));
 
             if (key === "Size") {
                 return {
@@ -242,10 +269,11 @@ export default class DATParser {
                 return values;
             }
         }
-        if (result = value.match(/^([A-Z]+|\d+)\+([A-Z]+|\d+)$/)) {
+        if (result = value.match(/^([A-z]+(?:\[\d+])?|\d+)([+\-])([A-z]+(?:\[\d+])?|\d+)$/)) {
+            const op = result[2];
             const val1 = this.getValue(key, result[1], false);
-            const val2 = this.getValue(key, result[2], false);
-            return val1 + val2;
+            const val2 = this.getValue(key, result[3], false);
+            return op === "+" ? val1 + val2 : val1 - val2;
         }
 
         throw new Error("This code should not be reached.");

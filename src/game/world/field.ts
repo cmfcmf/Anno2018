@@ -25,7 +25,8 @@ export default class Field {
         const playerId      = (bits >> 22) & (2 ** 4 - 1);
         const empty         = (bits >> 26) & (2 ** 6 - 1);
         if (empty !== 0) {
-            console.warn(`Expected 0, got ${empty}.`);
+            // empty is sometimes 51.
+            // console.warn(`Expected 0, got ${empty}.`);
         }
 
         return new Field(
