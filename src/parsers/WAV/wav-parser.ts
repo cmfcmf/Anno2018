@@ -5,6 +5,12 @@ interface ADPCMChannelStatus {
     step_index: number;
 }
 
+export interface RawSamples {
+    left: Int16Array;
+    right: Int16Array;
+    sampleRate: number;
+}
+
 /**
  * This code is based on FFmpeg:
  * https://github.com/FFmpeg/FFmpeg/blob/a8ce6fb425e07e60eb06d3f44992fdb91f23aafb/libavcodec/adpcm.c#L180-L204
@@ -29,12 +35,12 @@ export default class WAVParser {
         15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767,
     ];
 
-    public parse(data: Uint8Array): Uint8Array {
+    public decode(data: Uint8Array): RawSamples {
         const wav = new WaveFile(data);
 
-        const bitsPerSample = (wav.fmt as any).bitsPerSample;
-        const sampleRate = (wav.fmt as any).sampleRate;
-        const channels = (wav.fmt as any).numChannels;
+        const bitsPerSample: number = (wav.fmt as any).bitsPerSample;
+        const sampleRate: number = (wav.fmt as any).sampleRate;
+        const channels: number = (wav.fmt as any).numChannels;
 
         if (bitsPerSample !== 4) {
             throw new Error("Can only convert .wav files with 4 bits per sample.");
@@ -53,14 +59,30 @@ export default class WAVParser {
         };
 
         const samples: Buffer = (wav.data as any).samples;
-        const newSamples = new Int16Array(samples.length * 2);
+        const left = new Int16Array(samples.length);
+        const right = new Int16Array(samples.length);
         for (let i = 0; i < samples.length; i++) {
-            newSamples[i * 2 + 0] = this.decodeADPCM_IMA(c1, samples[i] >>> 4);
-            newSamples[i * 2 + 1] = this.decodeADPCM_IMA(c2, samples[i] & 0x0F);
+            left[i] = this.decodeADPCM_IMA(c1, samples[i] >>> 4);
+            right[i] = this.decodeADPCM_IMA(c2, samples[i] & 0x0F);
         }
 
-        wav.fromScratch(channels, sampleRate, "16", newSamples as any);
+        return {
+            left,
+            right,
+            sampleRate,
+        };
+    }
 
+    public encode(rawData: RawSamples) {
+        const numSamples = rawData.left.length;
+        const samples = new Int16Array(numSamples * 2);
+        for (let i = 0; i < numSamples; i++) {
+            samples[i * 2 + 0] = rawData.left[i];
+            samples[i * 2 + 1] = rawData.right[i];
+        }
+
+        const wav = new WaveFile();
+        wav.fromScratch(2, rawData.sampleRate, "16", samples as any);
         return wav.toBuffer();
     }
 

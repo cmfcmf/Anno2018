@@ -15,6 +15,7 @@ export default class MusicPlayer {
             console.log(`Loading music ${file.name}`);
             const data = (await this.fs.openAndGetContentAsUint8Array(file)).buffer as ArrayBuffer;
             this.songs.push(await this.loadSound(data));
+            console.log(`Finished loading music ${file.name}`);
         }
     }
 
@@ -40,20 +41,25 @@ export default class MusicPlayer {
         this.songs[this.currentSongIdx].play(this.playNext.bind(this));
     }
 
-    private loadSound(data: ArrayBuffer) {
+    private loadSound(data: ArrayBuffer, preload: boolean = false) {
         return new Promise<PIXI.sound.Sound>((resolve, reject) => {
-            PIXI.sound.Sound.from({
+            const sound = PIXI.sound.Sound.from({
                 source: data,
-                preload: true,
+                preload: preload,
                 singleInstance: true,
-                loaded: (err: Error, sound: PIXI.sound.Sound) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(sound);
+                loaded: (err: Error, preloadedSound: PIXI.sound.Sound) => {
+                    if (preload) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(preloadedSound);
+                        }
                     }
                 },
             });
+            if (!preload) {
+                resolve(sound);
+            }
         });
     }
 }

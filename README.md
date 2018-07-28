@@ -92,3 +92,6 @@ by Benedikt Freisen, originally licensed under GPLv2 or later.
 
 This project also includes code based on the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project,
 originally licensed under the LGPLv2.1 or later.
+
+This project also includes [LAME](http://lame.sourceforge.net/) as part of the
+[lamejs](https://github.com/zhuker/lamejs) project, licensed under the LGPL.
