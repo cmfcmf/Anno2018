@@ -90,8 +90,11 @@ See the LICENSE file for further information.
 This project includes code based on the [mdcii-engine](https://github.com/roybaer/mdcii-engine) project
 by Benedikt Freisen, originally licensed under GPLv2 or later.
 
-This project also includes code based on the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project,
+This project includes code based on the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project,
 originally licensed under the LGPLv2.1 or later.
 
-This project also includes [LAME](http://lame.sourceforge.net/) as part of the
+This project includes [LAME](http://lame.sourceforge.net/) as part of the
 [lamejs](https://github.com/zhuker/lamejs) project, licensed under the LGPL.
+
+This project includes [FFmpeg](https://www.ffmpeg.org/) and
+[libx264](https://www.videolan.org/developers/x264.html), licensed under GPLv2.

@@ -5,6 +5,7 @@ const GitRevisionPlugin = require("git-revision-webpack-plugin");
 const gitRevisionPlugin = new GitRevisionPlugin({
   // branch: true,
 });
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 /* tslint:disable */
 module.exports = {
@@ -13,7 +14,7 @@ module.exports = {
       "idb.filesystem.js",
       "@babel/polyfill",
       "./src/index.ts",
-    ]
+    ],
   },
   mode: "development",
   devtool: "inline-source-map",
@@ -29,7 +30,11 @@ module.exports = {
       '__VERSION__': JSON.stringify(gitRevisionPlugin.version()),
       // '__COMMITHASH__': JSON.stringify(gitRevisionPlugin.commithash()),
       // '__BRANCH__': JSON.stringify(gitRevisionPlugin.branch()),
-    })
+    }),
+    new CopyWebpackPlugin([
+        { from: "./node_modules/smk2mp4/demo/ffmpeg.js", to: 'ffmpeg.js' },
+        { from: "./node_modules/smk2mp4/demo/ffmpeg.js.mem", to: 'ffmpeg.js.mem' },
+    ]),
   ],
   optimization: {
     minimizer: [

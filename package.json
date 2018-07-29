@@ -20,6 +20,7 @@
     "redux": "^4.0.0",
     "redux-watch": "^1.1.1",
     "rxjs": "^6.2.2",
+    "smk2mp4": "cmfcmf/smk2mp4",
     "upng-js": "^2.1.0",
     "wavefile": "^8.3.2"
   },
@@ -32,6 +33,7 @@
     "@types/pixi.js": "^4.7.5",
     "@types/pngjs": "^3.3.1",
     "babel-loader": "^8.0.0-beta",
+    "copy-webpack-plugin": "^4.5.2",
     "git-revision-webpack-plugin": "^3.0.3",
     "jest": "^23.1.0",
     "patch-package": "^6.0.0-9",
@@ -57,6 +59,7 @@
     "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts",
     "bsh-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/bsh-converter.ts",
     "dat-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/dat-converter.ts",
+    "smk-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/smk-converter.ts",
     "wav-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/wav-converter.ts"
   },
   "jest": {
