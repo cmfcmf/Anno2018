@@ -1,4 +1,3 @@
-
 const escapeStringRegexp = require("escape-string-regexp");
 import * as JSZip from "jszip";
 import {JSZipObject} from "jszip";
@@ -7,6 +6,7 @@ import FileSystem from "./filesystem";
 import BSHParser from "./parsers/BSH/bsh-parser";
 import CODParser from "./parsers/COD/cod-parser";
 import DATParser from "./parsers/DAT/dat-parser";
+import SMKParser from "./parsers/SMK/smk-parser";
 import Stream from "./parsers/stream";
 // import MP3Encoder from "./parsers/WAV/mp3-encoder";
 import WAVParser from "./parsers/WAV/wav-parser";
@@ -118,6 +118,7 @@ export default class UploadHandler {
         await this.parseGADs(annoRoot);
         await this.parseBSHs(annoRoot);
         await this.parseMusic(annoRoot);
+        await this.parseVideos(annoRoot);
 
         return true;
     }
@@ -332,6 +333,29 @@ export default class UploadHandler {
             // );
 
             log.info(`Finished converting song ${name}`);
+        }
+    }
+
+    private async parseVideos(annoRoot: JSZip) {
+        await this.fs.mkdir("/videos");
+
+        if (!annoRoot.folder("VIDEOSMK")) {
+            console.warn("No video files found.");
+            return;
+        }
+
+        const smkParser = new SMKParser();
+
+        const videos = await this.findFilesInZip(annoRoot, "VIDEOSMK", ".smk");
+        for (const video of videos) {
+            const name = video.path.substr(1);
+            log.info(`Converting video ${name}`);
+
+            const videoData = await video.file.async("uint8array");
+            const result = await smkParser.parse(videoData);
+
+            await this.fs.write(`/videos/${name.replace(".smk", ".mp4")}`, result);
+            log.info(`Finished converting video ${name}`);
         }
     }
 

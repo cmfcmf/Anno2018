@@ -1,6 +1,7 @@
 import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";
 import SliderSprite from "./ui/slider-sprite";
+import VideoBaseTexture = PIXI.VideoBaseTexture;
 
 type Callback = () => void;
 
@@ -11,9 +12,12 @@ interface RadioButtonData {
 }
 
 export default class GADRenderer {
+    private videos: PIXI.Sprite[] = [];
+
     constructor(private readonly stage: PIXI.Container, private readonly spriteLoader: SpriteLoader) { }
 
     public async render(data: any, callbacks: Callback[]) {
+        this.destroyVideos();
         this.stage.removeChildren();
 
         const blockNumMapping: Map<number, string> = new Map();
@@ -100,5 +104,41 @@ export default class GADRenderer {
                     console.warn(`Unsupported kind: ${kind}`);
             }
         }
+    }
+
+    public renderVideo(videoSprite: PIXI.Sprite) {
+        // @ts-ignore
+        const videoTexture: VideoBaseTexture = videoSprite.texture.baseTexture;
+        videoTexture.source.addEventListener("ended", () => {
+            this.stage.removeChild(videoSprite);
+        }, {once: true});
+        this.stage.addChild(videoSprite);
+        this.videos.push(videoSprite);
+    }
+
+    public renderVideoFullscreen(videoSprite: PIXI.Sprite, onEnd: () => void) {
+        this.destroyVideos();
+        this.stage.removeChildren();
+
+        // @ts-ignore
+        const videoTexture: VideoBaseTexture = videoSprite.texture.baseTexture;
+        videoTexture.source.addEventListener("ended", () => {
+            this.stage.removeChild(videoSprite);
+            onEnd();
+        }, {once: true});
+
+        videoSprite.scale.set(2, 2);
+
+        // TODO: For some reason, this.stage.width/height are way to small.
+        const x = (/*this.stage.width*/ 1024 / 2) - ((videoSprite.texture.width * videoSprite.scale.x) / 2);
+        const y = (/*this.stage.height*/ 768 / 2) - ((videoSprite.texture.height * videoSprite.scale.y) / 2);
+        videoSprite.position.set(x, y);
+
+        this.stage.addChild(videoSprite);
+    }
+
+    private destroyVideos() {
+        this.videos.forEach((video) => video.destroy({texture: true, baseTexture: true}));
+        this.videos = [];
     }
 }

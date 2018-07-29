@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
-import {uInt8ToBase64} from "./util/util";
+import {textureFromUint8ArrayPNG} from "./util/pixi";
 
 export default class SpriteLoader {
     private textures: Map<string, Map<number, PIXI.Texture>> = new Map();
@@ -26,10 +26,8 @@ export default class SpriteLoader {
                 const spriteSheetData = JSON.parse(await this.fs.openAndGetContentAsText(dataFileName));
 
                 const spriteSheetImageData = await this.fs.openAndGetContentAsUint8Array(file);
-                const tmpImage = new Image();
-                tmpImage.src = `data:image/png;base64,${uInt8ToBase64(spriteSheetImageData)}`;
-
-                const spritesheet = new PIXI.Spritesheet(PIXI.Texture.from(tmpImage).baseTexture, spriteSheetData);
+                const tex = textureFromUint8ArrayPNG(spriteSheetImageData);
+                const spritesheet = new PIXI.Spritesheet(tex.baseTexture, spriteSheetData);
 
                 const textures = await new Promise<{ [key: string]: PIXI.Texture }>((resolve, reject) => {
                     spritesheet.parse((sheet: any, hmm: any) => {

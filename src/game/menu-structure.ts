@@ -1,4 +1,6 @@
+import * as PIXI from "pixi.js";
 import FileSystem from "../filesystem";
+import {textureFromUint8ArrayMP4} from "../util/pixi";
 import GADRenderer from "./gad-renderer";
 
 type Callback = () => void;
@@ -13,8 +15,19 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
             callbacks: [
                 async () => this.renderScreen("menu_missions"),
                 async () => console.log("Multiplayer"),
-                async () => console.log("Credits"),
-                async () => console.log("Intro"),
+                async () => {
+                    // Credits
+                    const videoSprite = await this.loadVideoSprite(10);
+                    videoSprite.width = 453 - 14;
+                    videoSprite.height = 367 - 14;
+                    videoSprite.position.set(500 + 7, 359 + 7);
+                    this.gadRenderer.renderVideo(videoSprite);
+                },
+                async () => {
+                    // Intro
+                    const videoSprite = await this.loadVideoSprite(58);
+                    this.gadRenderer.renderVideoFullscreen(videoSprite, () => this.renderScreen("menu_main"));
+                },
                 async () => console.log("Exit"),
             ],
         },
@@ -60,5 +73,11 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
         const data = JSON.parse(await this.fs.openAndGetContentAsText(`/screens/${screen}.json`));
         console.log(data);
         await this.gadRenderer.render(data, this.structure[screen].callbacks);
+    }
+
+    private async loadVideoSprite(videoNumber: number) {
+        const videoData = await this.fs.openAndGetContentAsUint8Array(`/videos/${videoNumber}.mp4`);
+        const texture = await textureFromUint8ArrayMP4(videoData);
+        return PIXI.Sprite.from(texture);
     }
 }
