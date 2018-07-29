@@ -39,7 +39,7 @@ export default class Menu {
         const gameRenderer = new GameRenderer(world, this.islandRenderer, this.viewport);
         const gameLogic = new Game(gameRenderer, this.configLoader);
         await gameLogic.begin(world);
-        this.musicPlayer.play();
+        this.musicPlayer.playAll();
 
 //      this.viewport.parent.addChild(new PIXI.Text(
 //          `Money: ${world.players.find((player) => player.id === 0).money}`,

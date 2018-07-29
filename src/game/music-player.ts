@@ -4,7 +4,7 @@ import FileSystem from "../filesystem";
 
 export default class MusicPlayer {
     private playing = false;
-    private readonly songs: PIXI.sound.Sound[] = [];
+    private readonly songs: Array<{name: string, sound: PIXI.sound.Sound}> = [];
     private currentSongIdx: number;
 
     constructor(private readonly fs: FileSystem) { }
@@ -14,12 +14,23 @@ export default class MusicPlayer {
         for (const file of files) {
             console.log(`Loading music ${file.name}`);
             const data = (await this.fs.openAndGetContentAsUint8Array(file)).buffer as ArrayBuffer;
-            this.songs.push(await this.loadSound(data));
+            this.songs.push({name: file.name, sound: await this.loadSound(data)});
             console.log(`Finished loading music ${file.name}`);
         }
     }
 
-    public play() {
+    public play(name: string, loop: boolean = false) {
+        const song = this.songs.find((each) => each.name === name + ".wav");
+        if (song === undefined) {
+            console.warn(`Song ${name} not found.`);
+            return;
+        }
+        if (!song.sound.isPlaying) {
+            song.sound.play({loop: loop});
+        }
+    }
+
+    public playAll() {
         if (this.songs.length === 0) {
             console.warn("No music to play found :(");
             return;
@@ -28,9 +39,15 @@ export default class MusicPlayer {
             console.warn("Music is already playing!");
             return;
         }
+        this.stop();
+
         this.playing = true;
         this.currentSongIdx = -1;
         this.playNext();
+    }
+
+    public stop() {
+        this.songs.forEach((song) => song.sound.stop());
     }
 
     private playNext() {
@@ -38,7 +55,7 @@ export default class MusicPlayer {
         if (this.currentSongIdx === this.songs.length) {
             this.currentSongIdx = 0;
         }
-        this.songs[this.currentSongIdx].play(this.playNext.bind(this));
+        this.songs[this.currentSongIdx].sound.play(this.playNext.bind(this));
     }
 
     private loadSound(data: ArrayBuffer, preload: boolean = false) {

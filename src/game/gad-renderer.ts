@@ -106,11 +106,12 @@ export default class GADRenderer {
         }
     }
 
-    public renderVideo(videoSprite: PIXI.Sprite) {
+    public renderVideo(videoSprite: PIXI.Sprite, onEnd: () => void) {
         // @ts-ignore
         const videoTexture: VideoBaseTexture = videoSprite.texture.baseTexture;
         videoTexture.source.addEventListener("ended", () => {
             this.stage.removeChild(videoSprite);
+            onEnd();
         }, {once: true});
         this.stage.addChild(videoSprite);
         this.videos.push(videoSprite);

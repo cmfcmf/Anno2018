@@ -94,7 +94,7 @@ const Viewport = require("pixi-viewport");
     } else {
         // menuViewport.fit(); // TODO: Makes usage of sliders harder
         const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
-        const menuStructure = new MenuStructure(fs, gadRenderer);
+        const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
         menuStructure.on("load-game", async (gameName: string) => {
             await menu.loadByName(gameName);
             menuViewport.visible = false;
