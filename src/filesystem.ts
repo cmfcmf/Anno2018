@@ -36,12 +36,26 @@ export default class FileSystem {
     }
 
     public async exists(entryOrPath: string|WebKitEntry) {
-        try {
-            await this.open(entryOrPath);
-            return true;
-        } catch (e) {
-            return false;
+        let path: string;
+        if ((entryOrPath as WebKitEntry).fullPath) {
+            path = (entryOrPath as WebKitEntry).fullPath;
+        } else {
+            path = entryOrPath as string;
         }
+        if (!path.startsWith("/")) {
+            throw new Error(`exists() only works with absolute paths, "${path}" given.`);
+        }
+        const parts = path.split("/").filter((part) => part !== "");
+        path = "";
+        for (const part of parts) {
+            path += "/";
+            const entries = await this.ls(path);
+            path += part;
+            if (entries.find((entry) => entry.fullPath === path) === undefined) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public async open(entryOrPath: string|WebKitEntry): Promise<File> {

@@ -237,7 +237,8 @@ export default class UploadHandler {
 
             const parser = new DATParser();
 
-            const gadFile = annoRoot.file(inName);
+            const caseInsensitiveFileInName = new RegExp(escapeStringRegexp(inName), "i");
+            const gadFile = annoRoot.file(caseInsensitiveFileInName)[0];
             const data = parser.parse(await gadFile.async("text"));
             await this.fs.write(outName, JSON.stringify(data));
 

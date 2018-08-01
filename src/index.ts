@@ -69,6 +69,7 @@ const Viewport = require("pixi-viewport");
     uploadHandler.render(game);
 
     if (!await uploadHandler.isUploaded()) {
+        console.warn("Anno 1602 files not yet uploaded.");
         return;
     }
 
