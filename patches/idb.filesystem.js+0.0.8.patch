@@ -1,6 +1,30 @@
-patch-package
+diff --git a/node_modules/idb.filesystem.js/src/idb.filesystem.js b/node_modules/idb.filesystem.js/src/idb.filesystem.js
+index 520d523..de65de9 100644
 --- a/node_modules/idb.filesystem.js/src/idb.filesystem.js
 +++ b/node_modules/idb.filesystem.js/src/idb.filesystem.js
+@@ -115,8 +115,8 @@ if (exports.FileError === undefined) {
+ }
+ 
+ if (!FileError.INVALID_MODIFICATION_ERR) {
+-  FileError.INVALID_MODIFICATION_ERR = 9;
+-  FileError.NOT_FOUND_ERR  = 1;
++  FileError.INVALID_MODIFICATION_ERR = 13;
++  FileError.NOT_FOUND_ERR  = 8;
+ }
+ 
+ function MyFileError(obj) {
+@@ -150,9 +150,9 @@ const INVALID_MODIFICATION_ERR = new MyFileError({
+       code: FileError.INVALID_MODIFICATION_ERR,
+       name: 'INVALID_MODIFICATION_ERR'});
+ const NOT_IMPLEMENTED_ERR = new MyFileError({code: 1000,
+-                                             name: 'Not implemented'});
++                                             name: 'NotImplementedError'});
+ const NOT_FOUND_ERR = new MyFileError({code: FileError.NOT_FOUND_ERR,
+-                                       name: 'Not found'});
++                                       name: 'NotFoundError'});
+ 
+ let fs_ = null;
+ 
 @@ -598,7 +598,7 @@ DirectoryEntry.prototype.getDirectory = function(path, options, successCallback,
                                                   opt_errorCallback) {
  
