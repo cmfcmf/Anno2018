@@ -2,20 +2,21 @@ import * as PIXI from "pixi.js";
 import FileSystem from "../filesystem";
 import {textureFromUint8ArrayMP4} from "../util/pixi";
 import GADRenderer from "./gad-renderer";
+import Missions from "./menu/missions";
 import MusicPlayer from "./music-player";
 
-type Callback = () => void;
+type Callback = (stage: PIXI.Container) => void;
 
-interface ScreenConfig {
+export interface ScreenConfig {
     onLoad: Callback;
-    callbacks: Callback[];
+    buttons: Callback[];
 }
 
 export default class MenuStructure extends PIXI.utils.EventEmitter {
     private readonly structure: {[k: string]: ScreenConfig} = {
         menu_main: {
-            onLoad: () => this.playMainMenuMusic(),
-            callbacks: [
+            onLoad: () => this._playMainMenuMusic(),
+            buttons: [
                 async () => this.renderScreen("menu_missions"),
                 async () => console.log("Multiplayer"),
                 async () => {
@@ -25,7 +26,7 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
                     videoSprite.width = 453 - 14;
                     videoSprite.height = 367 - 14;
                     videoSprite.position.set(500 + 7, 359 + 7);
-                    this.gadRenderer.renderVideo(videoSprite, () => this.playMainMenuMusic);
+                    this.gadRenderer.renderVideo(videoSprite, () => this._playMainMenuMusic);
                 },
                 async () => {
                     // Intro
@@ -36,31 +37,18 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
                 async () => console.log("Exit"),
             ],
         },
-        menu_missions: {
-            onLoad: () => this.playMainMenuMusic(),
-            callbacks: [
-                async () => console.log("New Game"),
-                async () => console.log("Load Game"),
-                async () => {
-                    await this.renderScreen("menu_loading");
-                    this.emit("load-game", "lastgame.gam");
-                },
-                async () => this.renderScreen("menu_main"),
-                async () => console.log("move up"),
-                async () => console.log("move down"),
-            ],
-        },
+        menu_missions: new Missions(this.fs, this),
         menu_loading: {
             onLoad: () => {
                 // Nothing to do
             },
-            callbacks: [],
+            buttons: [],
         },
         menu_mission_details: {
             onLoad: () => {
                 // Nothing to do
             },
-            callbacks: [
+            buttons: [
                 async () => console.log("Start Mission"),
                 async () => this.renderScreen("menu_missions"),
                 async () => console.log("Highscores up"),
@@ -86,11 +74,10 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
         const data = JSON.parse(await this.fs.openAndGetContentAsText(`/screens/${screen}.json`));
         console.log(data);
         const config = this.structure[screen];
-        config.onLoad();
-        await this.gadRenderer.render(data, config.callbacks);
+        await this.gadRenderer.render(data, config);
     }
 
-    private playMainMenuMusic() {
+    public _playMainMenuMusic() {
         this.musicPlayer.play("1st Beginning", true);
     }
 

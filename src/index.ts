@@ -2,18 +2,20 @@ import * as log from "loglevel";
 import "pixi-keyboard";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
+import GameLoader from "./game-loader";
 import ConfigLoader from "./game/config-loader";
+import FontLoader from "./game/font-loader";
 import GADRenderer from "./game/gad-renderer";
 import IslandRenderer from "./game/island-renderer";
 import IslandSpriteLoader from "./game/island-sprite-loader";
 import MenuStructure from "./game/menu-structure";
 import MusicPlayer from "./game/music-player";
-import Menu from "./menu";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
 import SpriteLoader from "./sprite-loader";
+import {loadTranslations} from "./translation/translator";
 import UploadHandler from "./upload";
-import {getQueryParameter} from "./util/util";
+import {getQueryParameter, uInt8ToBase64} from "./util/util";
 
 const Viewport = require("pixi-viewport");
 
@@ -21,25 +23,38 @@ const Viewport = require("pixi-viewport");
 (async () => {
     log.enableAll();
 
-    document.getElementById("version").innerText = `Anno 2018, version ${__VERSION__}.`;
+    document.getElementById("version").innerHTML =
+        `Anno 2018, version ${__VERSION__}, made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.`;
 
     const game = document.getElementById("game");
+
+    const fs = new FileSystem();
+    const FS_SIZE_MB = 2000;
+    await fs.init(1024 * 1024 * FS_SIZE_MB);
+    (window as any).fs = fs;
+
+    const uploadHandler = new UploadHandler(fs);
+    await uploadHandler.init();
+    uploadHandler.render(game);
+
+    if (!await uploadHandler.isUploaded()) {
+        console.warn("Anno 1602 files not yet uploaded.");
+        return;
+    }
 
     // PIXI.utils.skipHello();
     const app = new PIXI.Application({
         width: window.innerWidth,
-        height: window.innerHeight - 50,
+        height: window.innerHeight - 120,
         antialias: false,
         transparent: false,
-        // resolution: window.devicePixelRatio,
     });
-    game.appendChild(app.view);
+    game.insertAdjacentElement("afterbegin", app.view);
 
     const viewport = new Viewport({
         screenWidth: app.screen.width,
         screenHeight: app.screen.height,
     });
-
     app.stage.addChild(viewport);
 
     viewport
@@ -57,23 +72,10 @@ const Viewport = require("pixi-viewport");
     });
     app.stage.addChild(menuViewport);
 
-    const fs = new FileSystem();
-    const FS_SIZE_MB = 1000;
-    await fs.init(1024 * 1024 * FS_SIZE_MB);
+    await loadTranslations(fs);
 
-    (window as any).app = app;
-    (window as any).fs = fs;
-
-    const uploadHandler = new UploadHandler(fs);
-    await uploadHandler.init();
-    uploadHandler.render(game);
-
-    if (!await uploadHandler.isUploaded()) {
-        console.warn("Anno 1602 files not yet uploaded.");
-        return;
-    }
-
-    const spriteLoader = new SpriteLoader(fs);
+    const fontLoader = new FontLoader(fs);
+    await fontLoader.load();
 
     const configLoader = new ConfigLoader(fs);
     await configLoader.load();
@@ -81,23 +83,24 @@ const Viewport = require("pixi-viewport");
     const musicPlayer = new MusicPlayer(fs);
     await musicPlayer.load();
 
+    const spriteLoader = new SpriteLoader(fs);
+
     const gamParser = new GAMParser(new IslandLoader(fs));
     const worldFieldBuilder = new IslandSpriteLoader(fs, configLoader, spriteLoader);
     const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
 
-    const menu = new Menu(fs, gamParser, islandRenderer, viewport, configLoader, musicPlayer);
-    await menu.render(game);
+    const gameLoader = new GameLoader(fs, gamParser, islandRenderer, viewport, configLoader, musicPlayer);
 
     const queryGameName = getQueryParameter("load");
     if (queryGameName !== null) {
-        await menu.loadByName(queryGameName);
+        await gameLoader.loadByName(queryGameName);
         menuViewport.visible = false;
     } else {
         // menuViewport.fit(); // TODO: Makes usage of sliders harder
         const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
         const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
-        menuStructure.on("load-game", async (gameName: string) => {
-            await menu.loadByName(gameName);
+        menuStructure.on("load-game", async (mission: string) => {
+            await gameLoader.load(mission);
             menuViewport.visible = false;
         });
         await menuStructure.renderScreen("menu_main");

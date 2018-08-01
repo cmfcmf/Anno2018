@@ -1,6 +1,5 @@
-const escapeStringRegexp = require("escape-string-regexp");
-import * as JSZip from "jszip";
 import {JSZipObject} from "jszip";
+import * as JSZip from "jszip";
 import * as log from "loglevel";
 import FileSystem from "./filesystem";
 import BSHParser from "./parsers/BSH/bsh-parser";
@@ -10,6 +9,10 @@ import SMKParser from "./parsers/SMK/smk-parser";
 import Stream from "./parsers/stream";
 // import MP3Encoder from "./parsers/WAV/mp3-encoder";
 import WAVParser from "./parsers/WAV/wav-parser";
+import BitmapFontGenerator from "./parsers/ZEI/bitmap-font-generator";
+import parseTranslations from "./translation/translation-parser";
+
+const escapeStringRegexp = require("escape-string-regexp");
 
 export default class UploadHandler {
     constructor(private readonly fs: FileSystem) { }
@@ -112,11 +115,13 @@ export default class UploadHandler {
 
         await this.copyIslands(annoRoot);
         await this.copySaves(annoRoot);
-        await this.copyMissions(annoRoot);
+        const customMissionPath = await this.parseTranslations(annoRoot);
+        await this.copyMissions(annoRoot, customMissionPath);
         await this.decryptCODs(annoRoot);
         await this.parseDATs(annoRoot);
         await this.parseGADs(annoRoot);
         await this.parseBSHs(annoRoot);
+        await this.parseZEIs(annoRoot);
         await this.parseMusic(annoRoot);
         await this.parseVideos(annoRoot);
 
@@ -135,7 +140,8 @@ export default class UploadHandler {
         const topFolderNames = [...new Set(
             zip
                 .filter((relativePath, entry) => entry.dir)
-                .map((folder) => folder.name.substring(root.length).split("/")[0])),
+                .map((folder) => folder.name.substring(root.length).split("/")[0])
+                .filter((folderName) => folderName !== "__MACOSX")),
         ];
         if (topFolderNames.length === 1) {
             const newRoot = topFolderNames[0] + "/";
@@ -237,8 +243,7 @@ export default class UploadHandler {
 
             const parser = new DATParser();
 
-            const caseInsensitiveFileInName = new RegExp(escapeStringRegexp(inName), "i");
-            const gadFile = annoRoot.file(caseInsensitiveFileInName)[0];
+            const gadFile = this.findFileCaseInsensitive(annoRoot, inName);
             const data = parser.parse(await gadFile.async("text"));
             await this.fs.write(outName, JSON.stringify(data));
 
@@ -258,7 +263,7 @@ export default class UploadHandler {
 
             log.info(`Started parsing "${inName}".`);
 
-            const codFile = annoRoot.file(inName);
+            const codFile = this.findFileCaseInsensitive(annoRoot, inName);
             const codStream = await Stream.fromZipObject(codFile);
             await this.fs.write(outName, parser.decrypt(codStream));
 
@@ -293,13 +298,57 @@ export default class UploadHandler {
             const outName = r[1];
 
             log.info(`Started parsing "${inName}".`);
-            const caseInsensitiveFileInName = new RegExp(escapeStringRegexp(inName), "i");
-            const bshFile = annoRoot.file(caseInsensitiveFileInName)[0];
-            if (bshFile === undefined) {
-                throw new Error(`Could not find file ${inName}.`);
-            }
-            const images = await parser.parse(await Stream.fromZipObject(bshFile));
-            await parser.createSpriteSheets(images, outName);
+            const bshFile = this.findFileCaseInsensitive(annoRoot, inName);
+            const images = await parser.parseBSH(await Stream.fromZipObject(bshFile));
+            const sheets = parser.createSpriteSheets(images);
+            await parser.saveSpriteSheets(sheets, `/gfx/${outName}`);
+            log.info(`Finished parsing "${inName}".`);
+        }
+    }
+
+    private async parseTranslations(annoRoot: JSZip) {
+        log.info("Started parsing translations.");
+        const translationFile = this.findFileCaseInsensitive(annoRoot, "text.cod");
+        const codParser = new CODParser();
+        const translations = parseTranslations(codParser.decrypt(await Stream.fromZipObject(translationFile)));
+        await this.fs.write("/translations.json", JSON.stringify(translations));
+        log.info("Finished parsing translations.");
+
+        return translations.PATH[0];
+    }
+
+    private async parseZEIs(annoRoot: JSZip) {
+        await this.fs.mkdir("/fonts");
+
+        const parser = new BSHParser(this.fs);
+        const bitmapFontGenerator = new BitmapFontGenerator();
+
+        const files = [
+            "ZEI11A",
+            "ZEI14A",
+            "ZEI14V",
+            "ZEI16G",
+            "ZEI16H",
+            "ZEI16V",
+            "ZEI20H",
+            "ZEI20V",
+            "ZEI24V",
+            "ZEI28V",
+            "ZEI2",
+            "ZEI9A",
+        ];
+        for (const fontName of files) {
+            const inName = `TOOLGFX/${fontName}.ZEI`;
+            log.info(`Started parsing "${inName}".`);
+
+            const zeiFile = this.findFileCaseInsensitive(annoRoot, inName);
+            const images = await parser.parseZEI(await Stream.fromZipObject(zeiFile));
+            const sheets = parser.createSpriteSheets(images);
+            await parser.saveSpriteSheets(sheets, `/fonts/${fontName}`);
+            const font = await bitmapFontGenerator.createBitmapFont(sheets, fontName);
+
+            await this.fs.write(`/fonts/${fontName}/font.xml`, font);
+
             log.info(`Finished parsing "${inName}".`);
         }
     }
@@ -376,10 +425,9 @@ export default class UploadHandler {
         await this.copyFolderFromZip(annoRoot, "SAVEGAME", "/saves", ".gam");
     }
 
-    private async copyMissions(annoRoot: JSZip) {
+    private async copyMissions(annoRoot: JSZip, customMissionPath: string) {
         await this.copyFolderFromZip(annoRoot, "Szenes", "/missions-original", ".szm|.szs|.hss");
-        // TODO: Read the foldername "Eigene Szenarien" from the Text.cod file
-        await this.copyFolderFromZip(annoRoot, "Eigene Szenarien", "/missions-custom", ".szm|.szs|.hss");
+        await this.copyFolderFromZip(annoRoot, customMissionPath, "/missions-custom", ".szm|.szs|.hss");
     }
 
     private async copyFolderFromZip(zip: JSZip, inPath: string, outPath: string, fileExtensions: string,
@@ -423,5 +471,15 @@ export default class UploadHandler {
             }
         });
         return files;
+    }
+
+    private findFileCaseInsensitive(zip: JSZip, path: string): JSZip.JSZipObject {
+        const caseInsensitiveFileInName = new RegExp(escapeStringRegexp(path), "i");
+        const translationFile = zip.file(caseInsensitiveFileInName)[0];
+        if (translationFile === undefined) {
+            throw new Error(`Could not find file ${path}.`);
+        }
+
+        return translationFile;
     }
 }

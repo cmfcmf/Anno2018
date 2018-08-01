@@ -55,7 +55,8 @@ export function timersFromSaveGame(data: Stream) {
     const timeNextVulcano = data.read32();
     const cntVulcano = data.read32();
 
-    assert(data.read(17 + 32, 4).every((e) => e === 0));
+    data.read(17 + 32, 4);
+    // assert(data.read(17 + 32, 4).every((e) => e === 0));
     const timeSettlers = data.read(32, 4);
     const timeGrowth = data.read(32, 4);
 

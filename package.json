@@ -6,6 +6,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0-beta.51",
     "@types/escape-string-regexp": "^1.0.0",
+    "@types/xml": "^1.0.2",
+    "btoa": "^1.2.1",
     "escape-string-regexp": "^1.0.5",
     "filer.js": "^0.4.5",
     "iconv-lite": "^0.4.23",
@@ -22,7 +24,8 @@
     "rxjs": "^6.2.2",
     "smk2mp4": "cmfcmf/smk2mp4",
     "upng-js": "^2.1.0",
-    "wavefile": "^8.3.2"
+    "wavefile": "^8.3.2",
+    "xml": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.51",
@@ -61,7 +64,8 @@
     "bsh-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/bsh-converter.ts",
     "dat-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/dat-converter.ts",
     "smk-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/smk-converter.ts",
-    "wav-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/wav-converter.ts"
+    "wav-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/wav-converter.ts",
+    "zei-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/zei-converter.ts"
   },
   "jest": {
     "transform": {

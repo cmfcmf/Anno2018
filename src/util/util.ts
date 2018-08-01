@@ -9,7 +9,9 @@ export function uInt8ToBase64(arr: Uint8Array): string {
         result += String.fromCharCode.apply(null, slice);
         index += CHUNK_SIZE;
     }
-    return btoa(result);
+
+    // tslint:disable-next-line:no-eval
+    return typeof window !== "undefined" ? btoa(result) : eval("require")("btoa")(result);
 }
 
 /**

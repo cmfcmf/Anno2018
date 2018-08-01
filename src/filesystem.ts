@@ -28,11 +28,19 @@ export default class FileSystem {
         return new Promise((resolve, reject) => this.filer.mkdir(foldername, false, resolve, reject));
     }
 
-    public async ls(directory: string|WebKitEntry): Promise<WebKitEntry[]> {
-        // noinspection TsLint
-        return new Promise((resolve, reject) => {
-            return this.filer.ls(directory, resolve, reject);
-        }) as Promise<WebKitEntry[]>;
+    public async ls(directory: string|WebKitEntry, filterByExtensions?: string): Promise<WebKitEntry[]> {
+        const entries = await (new Promise((resolve, reject) => {
+            this.filer.ls(directory, resolve, reject);
+        }) as Promise<WebKitEntry[]>);
+
+        if (!filterByExtensions) {
+            return entries;
+        }
+
+        const extensions = filterByExtensions.split("|");
+        return entries.filter((entry: WebKitEntry) => {
+            return entry.isFile && extensions.some((extension) => entry.name.endsWith(extension));
+        });
     }
 
     public async exists(entryOrPath: string|WebKitEntry) {

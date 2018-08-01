@@ -1,3 +1,5 @@
+const UPNG = require("upng-js/UPNG.js");
+
 export default class BSHImage {
     public width: number;
     public height: number;
@@ -7,5 +9,9 @@ export default class BSHImage {
         this.width = width;
         this.height = height;
         this.pixels = pixels;
+    }
+
+    public toPNG(): ArrayBuffer {
+        return UPNG.encode([this.pixels.buffer], this.width, this.height);
     }
 }

@@ -4,16 +4,16 @@ import assert from "../../util/assert";
 export default class DATParser {
     private log: log.Logger;
 
-    private variables: Map<string, any> = new Map<string, any>();
-    private objects: any = {};
-    private template: object = null;
-    private gfxMap: Map<string, string> = new Map<string, string>();
+    private variables: Map<string, any>;
+    private objects: any;
+    private template: object;
+    private gfxMap: Map<string, string>;
 
-    private lastGfxName: string = null;
-    private currentObject: string = null;
-    private currentNestedObject: string = null;
-    private currentItem: string = null;
-    private currentNestedItem = 0;
+    private lastGfxName: string;
+    private currentObject: string;
+    private currentNestedObject: string;
+    private currentItem: string;
+    private currentNestedItem: number;
 
     constructor() {
         this.log = log.getLogger("dat-parser");

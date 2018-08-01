@@ -7,35 +7,20 @@ import IslandRenderer from "./game/island-renderer";
 import MusicPlayer from "./game/music-player";
 import GAMParser from "./parsers/GAM/gam-parser";
 
-export default class Menu {
-    private savesAndMissions: WebKitEntry[];
-
+export default class GameLoader {
     constructor(private readonly fs: FileSystem, private readonly gamParser: GAMParser,
                 private readonly islandRenderer: IslandRenderer, private readonly viewport: Viewport,
                 private readonly configLoader: ConfigLoader, private readonly musicPlayer: MusicPlayer) { }
 
-    public async render(game: HTMLElement) {
-        await this.loadSavesAndMissions();
-
-        const menu = game.appendChild(document.createElement("div"));
-
-        for (const saveOrMission of this.savesAndMissions) {
-            const title = document.createElement("p");
-            title.innerText = saveOrMission.name;
-            title.onclick = () => this.load(saveOrMission);
-            menu.appendChild(title);
-        }
-    }
-
     public async loadByName(gameName: string) {
-        const saveGame = this.savesAndMissions
+        const saveGame = (await this.loadSavesAndMissions())
             .find((saveOrMission) => saveOrMission.name === gameName);
         await this.load(saveGame);
     }
 
-    public async load(saveGame: WebKitEntry) {
+    public async load(saveGame: WebKitEntry|string) {
         const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
-        const world = await this.gamParser.parse(saveGameData);
+        const world = await this.gamParser.getWorld(saveGameData);
         const gameRenderer = new GameRenderer(world, this.islandRenderer, this.viewport);
         const gameLogic = new Game(gameRenderer, this.configLoader);
         await gameLogic.begin(world);
@@ -50,24 +35,18 @@ export default class Menu {
     private async loadSavesAndMissions() {
         const saves = [];
         try {
-            saves.push(...await this.fs.ls("/saves"));
+            saves.push(...await this.fs.ls("/saves", ".gam"));
         } catch (e) {
             // Ignore errors
         }
 
         const missions = [];
         try {
-            missions.push(...await this.getMissions("missions-original"));
-            missions.push(...await this.getMissions("missions-custom"));
+            missions.push(...await this.fs.ls("/missions-original", ".szs|.szm"));
+            missions.push(...await this.fs.ls("/missions-custom", ".szs|.szm"));
         } catch (e) {
             // Ignore errors
         }
-        this.savesAndMissions = saves.concat(missions);
-    }
-
-    private async getMissions(folderName: string) {
-        return (await this.fs.ls("/" + folderName)).filter((file) => {
-            return file.isFile && (file.name.endsWith(".szs") || file.name.endsWith(".szm"));
-        });
+        return saves.concat(missions);
     }
 }

@@ -22,7 +22,7 @@ export default class SpriteLoader {
         for (const file of files) {
             const fileExtension = file.name.substr(file.name.lastIndexOf(".") + 1);
             if (fileExtension === "png") {
-                const dataFileName = file.name.substring(0, file.name.lastIndexOf(".")) + ".json";
+                const dataFileName = file.fullPath.substring(0, file.fullPath.lastIndexOf(".")) + ".json";
                 const spriteSheetData = JSON.parse(await this.fs.openAndGetContentAsText(dataFileName));
 
                 const spriteSheetImageData = await this.fs.openAndGetContentAsUint8Array(file);

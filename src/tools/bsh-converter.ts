@@ -2,7 +2,6 @@ import BSHParser from "../parsers/BSH/bsh-parser";
 import Stream from "../parsers/stream";
 
 const fs = require("fs");
-const UPNG = require("upng-js/UPNG.js");
 
 const args = process.argv;
 if (args.length !== 4) {
@@ -30,11 +29,9 @@ console.info(`Converting ${inFilePath}`);
 // tslint:disable-next-line:no-floating-promises
 (async () => {
     const data = new Stream(fs.readFileSync(inFilePath));
-    const images = await new BSHParser(null).parse(data);
+    const images = await new BSHParser(null).parseBSH(data);
     for (let i = 0; i < images.length; i++) {
         const image = images[i];
-        const png: ArrayBuffer = UPNG.encode([image.pixels.buffer], image.width, image.height);
-
-        fs.writeFileSync(`${outDirPath}/${i}.png`, new Buffer(png));
+        fs.writeFileSync(`${outDirPath}/${i}.png`, new Buffer(image.toPNG()));
     }
 })();

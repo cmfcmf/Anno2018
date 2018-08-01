@@ -30,11 +30,10 @@ export default class GAMParser {
         this.worldGenerator = new WorldGenerator(islandLoader);
     }
 
-    public async parse(data: Stream) {
+    public parse(data: Stream) {
         const blocks: Map<string, Block[]> = new Map();
         while (!data.eof()) {
             const block = Block.fromStream(data);
-            console.log(block.type);
             if (block.type !== "INSELHAUS") {
                 if (!blocks.has(block.type)) {
                     blocks.set(block.type, []);
@@ -48,6 +47,11 @@ export default class GAMParser {
                 lastIslandBlock.inselHausBlocks.push(block);
             }
         }
+        return blocks;
+    }
+
+    public async getWorld(data: Stream) {
+        const blocks = this.parse(data);
 
         const {world, worldGenerationSettings} = await this.doParse(blocks);
 

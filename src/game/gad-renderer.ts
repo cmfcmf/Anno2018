@@ -1,9 +1,9 @@
+import VideoBaseTexture = PIXI.VideoBaseTexture;
+import * as PIXI from "pixi.js";
 import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";
+import {ScreenConfig} from "./menu-structure";
 import SliderSprite from "./ui/slider-sprite";
-import VideoBaseTexture = PIXI.VideoBaseTexture;
-
-type Callback = () => void;
 
 interface RadioButtonData {
     sprite: PIXI.Sprite;
@@ -16,7 +16,7 @@ export default class GADRenderer {
 
     constructor(private readonly stage: PIXI.Container, private readonly spriteLoader: SpriteLoader) { }
 
-    public async render(data: any, callbacks: Callback[]) {
+    public async render(data: any, config: ScreenConfig) {
         this.destroyVideos();
         this.stage.removeChildren();
 
@@ -33,11 +33,14 @@ export default class GADRenderer {
         const gadgets = data.objects.GADGET.items;
         for (const num of Object.keys(gadgets)) {
             const gadget = gadgets[num];
-            // const id = gadget.Id;
+            const id = gadget.Id;
             const blockNr = gadget.Blocknr;
             const gfx = gadget.Gfxnr;
             const kind = gadget.Kind;
             const position = new PIXI.Point(gadget.Pos[0], gadget.Pos[1]);
+            if (gadget.Posoffs) {
+                position.set(position.x + gadget.Posoffs[0], position.y + gadget.Posoffs[1]);
+            }
             const size = gadget.Size !== undefined ? new PIXI.Point(gadget.Size.x, gadget.Size.y) : null;
             const selectable = gadget.Noselflg === undefined || gadget.Noselflg === 0;
             const pressOff = gadget.Pressoff;
@@ -60,6 +63,7 @@ export default class GADRenderer {
 
                     const sprite = !isSlider ? new PIXI.Sprite(defaultTexture) : new SliderSprite(defaultTexture);
                     sprite.position.set(position.x, position.y);
+                    sprite.name = `menu-${id}`;
 
                     if (isSlider) {
                         (sprite as SliderSprite).setSliderData(size.y, sliderOffset[1], sliderSize[1]);
@@ -68,7 +72,7 @@ export default class GADRenderer {
                     if (selectable) {
                         sprite.buttonMode = true;
                         sprite.interactive = true;
-                        const callback = callbacks[selectableCount];
+                        const callback = config.buttons[selectableCount];
 
                         if (isRadioButton) {
                             if (radioButtons.length === 0) {
@@ -88,7 +92,7 @@ export default class GADRenderer {
                                     }
                                 }
                             }
-                            callback();
+                            callback(this.stage);
                         });
 
                         if (!isRadioButton) {
@@ -100,10 +104,27 @@ export default class GADRenderer {
                     }
                     this.stage.addChild(sprite);
                     break;
+                case "GAD_TEXTL":
+                // case "GAD_TEXTR":
+                // case "GAD_TEXTFL":
+                // case "GAD_TEXTZ":
+                    const fontSize = 24;
+                    const text = new PIXI.extras.BitmapText(
+                        "Here goes text!",
+                        { font: {name: "ZEI20V", size: fontSize}},
+                    );
+                    text.position.set(position.x, position.y);
+                    text.pivot.set(0, fontSize);
+                    text.name = `menu-${id}`;
+                    text.hitArea = new PIXI.Rectangle(0, 0, size.x, size.y);
+                    this.stage.addChild(text);
+                    break;
                 default:
                     console.warn(`Unsupported kind: ${kind}`);
             }
         }
+
+        await config.onLoad(this.stage);
     }
 
     public renderVideo(videoSprite: PIXI.Sprite, onEnd: () => void) {
