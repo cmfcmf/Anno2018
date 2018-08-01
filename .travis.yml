@@ -15,7 +15,7 @@ script:
   - yarn run lint
 
 before_deploy:
-  - yarn run webpack --mode production
+  - yarn run build
 
 deploy:
   provider: pages
