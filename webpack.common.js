@@ -16,6 +16,22 @@ module.exports = {
             "./src/index.ts",
         ],
     },
+    // Extract webpack and vendor code into separate files
+    // https://webpack.js.org/guides/caching/#extracting-boilerplate
+    optimization: {
+        // Move webpack runtime data into separate file
+        runtimeChunk: 'single',
+        // Move all vendor code into separate file
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'vendors',
+                    chunks: 'all'
+                }
+            }
+        }
+    },
     plugins: [
         gitRevisionPlugin,
         new webpack.DefinePlugin({
