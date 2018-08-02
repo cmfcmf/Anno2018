@@ -5,12 +5,13 @@ const gitRevisionPlugin = new GitRevisionPlugin({
     // branch: true,
 });
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 /* tslint:disable */
 module.exports = {
     entry: {
         app: [
-           "idb.filesystem.js",
+            "idb.filesystem.js",
             "@babel/polyfill",
             "./src/index.ts",
         ],
@@ -26,6 +27,13 @@ module.exports = {
             {from: "./node_modules/smk2mp4/demo/ffmpeg.js", to: 'ffmpeg.js'},
             {from: "./node_modules/smk2mp4/demo/ffmpeg.js.mem", to: 'ffmpeg.js.mem'},
         ]),
+        new HtmlWebpackPlugin({
+            title: "Anno 2018",
+            meta: {
+                viewport: "initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height",
+                "apple-mobile-web-app-capable": "yes",
+            }
+        }),
     ],
     module: {
         rules: [

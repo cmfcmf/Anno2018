@@ -15,7 +15,7 @@ import IslandLoader from "./parsers/GAM/island-loader";
 import SpriteLoader from "./sprite-loader";
 import {loadTranslations} from "./translation/translator";
 import UploadHandler from "./upload";
-import {getQueryParameter, uInt8ToBase64} from "./util/util";
+import {getQueryParameter} from "./util/util";
 
 const Viewport = require("pixi-viewport");
 
@@ -23,10 +23,21 @@ const Viewport = require("pixi-viewport");
 (async () => {
     log.enableAll();
 
-    document.getElementById("version").innerHTML =
-        `Anno 2018, version ${__VERSION__}, made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.`;
+    const style = document.createElement("style");
+    style.innerText = `
+        body, html {
+            margin: 0;
+        }
+    `;
+    const game = document.createElement("div");
+    game.id = "game";
+    const version = document.createElement("p");
+    version.innerHTML = `Anno 2018, version ${__VERSION__},
+                         made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.`;
 
-    const game = document.getElementById("game");
+    document.head.appendChild(style);
+    document.body.appendChild(game);
+    document.body.appendChild(version);
 
     const fs = new FileSystem();
     const FS_SIZE_MB = 2000;

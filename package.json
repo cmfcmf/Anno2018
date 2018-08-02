@@ -38,6 +38,7 @@
     "babel-loader": "^8.0.0-beta",
     "copy-webpack-plugin": "^4.5.2",
     "git-revision-webpack-plugin": "^3.0.3",
+    "html-webpack-plugin": "^3.2.0",
     "jest": "^23.1.0",
     "patch-package": "^6.0.0-9",
     "postinstall-prepare": "^1.0.1",
