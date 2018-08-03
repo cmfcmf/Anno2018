@@ -33,7 +33,8 @@ const Viewport = require("pixi-viewport");
     game.id = "game";
     const version = document.createElement("p");
     version.innerHTML = `Anno 2018, version ${__VERSION__},
-                         made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.`;
+                         made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.
+                         The source can be found at <a href="https://github.com/cmfcmf/Anno2018-js">GitHub</a>`;
 
     document.head.appendChild(style);
     document.body.appendChild(game);
