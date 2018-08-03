@@ -53,7 +53,7 @@ export default class Missions implements ScreenConfig {
         for (let i = 0; i < this.ROWS; i++) {
             const bitmapText = stage.getChildByName(`menu-${31021 + i}`) as BitmapText;
 
-            bitmapText.off("clicked");
+            bitmapText.off("click");
             bitmapText.visible = false;
             bitmapText.interactive = false;
             bitmapText.buttonMode = false;
