@@ -11,6 +11,7 @@ import Stream from "./parsers/stream";
 import WAVParser from "./parsers/WAV/wav-parser";
 import BitmapFontGenerator from "./parsers/ZEI/bitmap-font-generator";
 import parseTranslations from "./translation/translation-parser";
+import {findRootInZip} from "./util/util";
 
 const escapeStringRegexp = require("escape-string-regexp");
 
@@ -106,7 +107,7 @@ export default class UploadHandler {
 
         let annoRoot;
         try {
-            annoRoot = this.findRootInZip(zip);
+            annoRoot = findRootInZip(zip);
         } catch (e) {
             this.error("", e);
             return false;
@@ -134,24 +135,6 @@ export default class UploadHandler {
         } else {
             await this.fs.write(`/missions-custom/${file.name}`, file);
         }
-    }
-
-    private findRootInZip(zip: JSZip, root: string = ""): JSZip {
-        const topFolderNames = [...new Set(
-            zip
-                .filter((relativePath, entry) => entry.dir)
-                .map((folder) => folder.name.substring(root.length).split("/")[0])
-                .filter((folderName) => folderName !== "__MACOSX")),
-        ];
-        if (topFolderNames.length === 1) {
-            const newRoot = topFolderNames[0] + "/";
-            return this.findRootInZip(zip.folder(newRoot), newRoot);
-        }
-        if (topFolderNames.find((name) => name === "GFX") !== undefined) {
-            return zip;
-        }
-
-        throw new Error("Your ZIP file does not have the expected structure.");
     }
 
     private error(msg: string, error: Error) {

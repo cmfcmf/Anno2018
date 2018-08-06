@@ -1,4 +1,6 @@
 // https://stackoverflow.com/a/12713326/2560557
+import * as JSZip from "jszip";
+
 export function uInt8ToBase64(arr: Uint8Array): string {
     const CHUNK_SIZE = 0x8000; // arbitrary number
     let index = 0;
@@ -31,4 +33,12 @@ export function getQueryParameter(name: string): string {
         return "";
     }
     return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+export function findRootInZip(zip: JSZip): JSZip {
+    const gfxFolder = zip.filter((relativePath) => ("/" + relativePath).endsWith("/GFX/"));
+    if (gfxFolder.length === 1) {
+        return zip.folder(gfxFolder[0].name.replace("GFX/", ""));
+    }
+    throw new Error("Your ZIP file does not have the expected structure.");
 }
