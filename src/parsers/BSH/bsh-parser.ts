@@ -1,9 +1,10 @@
 import * as log from "loglevel";
+import {SmartBuffer, SmartBufferOptions} from "smart-buffer";
 import FileSystem from "../../filesystem";
 import assert from "../../util/assert";
 import Stream from "../stream";
 import BinPacker from "./bin-packer";
-import colorPalette from "./bsh-color-palette";
+import colorPalette, {colorsToIdx} from "./bsh-color-palette";
 import BSHImage from "./bsh-image";
 
 const UPNG = require("upng-js/UPNG.js");
@@ -42,18 +43,20 @@ export interface SpriteSheetConfig {
 export default class BSHParser {
     private readonly SPRITESHEET_SIZE = 2048;
 
+    private readonly HEADER_SIZE = 20;
+
     private log: log.Logger;
 
-    constructor(private readonly fileSystem: FileSystem) {
+    constructor() {
         this.log = log.getLogger("bsh-parser");
     }
 
-    public async parseBSH(data: Stream) {
-        return this.parse(data, "BSH", 0);
+    public async decodeBSH(data: Stream) {
+        return this.decode(data, "BSH");
     }
 
-    public async parseZEI(data: Stream) {
-        return this.parse(data, "ZEI", 3);
+    public async decodeZEI(data: Stream) {
+        return this.decode(data, "ZEI");
     }
 
     public createSpriteSheets(images: BSHImage[]): SpriteSheetConfig[] {
@@ -126,11 +129,29 @@ export default class BSHParser {
         return sheets;
     }
 
-    public async saveSpriteSheets(sheets: SpriteSheetConfig[], outName: string) {
-        await this.fileSystem.mkdir(outName);
+    public async saveSpriteSheets(fs: FileSystem, sheets: SpriteSheetConfig[], outName: string) {
+        await fs.mkdir(outName);
         for (let i = 0; i < sheets.length; i++) {
-            await this.saveSpriteSheet(sheets[i], i, outName);
+            await this.saveSpriteSheet(fs, sheets[i], i, outName);
         }
+    }
+
+    public encodeBSH(images: BSHImage[]): Buffer {
+        const data = new SmartBuffer();
+        data.writeString("BSH".padEnd(16, "\0"), "ascii");
+        data.writeUInt32LE(42);
+
+        images.forEach(() => data.writeUInt32LE(42));
+
+        images.forEach((image, i) => {
+            const imageBuffer = this.encodeImage(image).toBuffer();
+            data.writeUInt32LE(data.writeOffset - this.HEADER_SIZE, 20 + i * 4);
+            data.writeBuffer(imageBuffer);
+        });
+
+        data.writeUInt32LE(data.length - this.HEADER_SIZE, 16);
+
+        return data.toBuffer();
     }
 
     /**
@@ -138,14 +159,12 @@ export default class BSHParser {
      * project by Benedikt Freisen released under GPLv2+.
      * https://github.com/roybaer/mdcii-engine
      */
-    private async parse(data: Stream, extension: string, extraColumns: number) {
-        const HEADER_SIZE = 20;
-
+    private async decode(data: Stream, extension: string) {
         const fileType = data.readString(16);
         assert(fileType === extension);
 
         const fileLength = data.read32();
-        assert(HEADER_SIZE + fileLength === data.length);
+        assert(this.HEADER_SIZE + fileLength === data.length);
 
         const imageOffsets: number[] = [];
         imageOffsets.push(data.read32());
@@ -157,8 +176,8 @@ export default class BSHParser {
         const images: BSHImage[] = [];
 
         for (let i = 0; i < numImages; i++) {
-            data.seek(imageOffsets[i] + HEADER_SIZE);
-            const bshImage = this.parseImage(data, extraColumns);
+            data.seek(imageOffsets[i] + this.HEADER_SIZE);
+            const bshImage = this.decodeImage(data);
             if (bshImage !== null) {
                 images.push(bshImage);
             }
@@ -167,8 +186,7 @@ export default class BSHParser {
         return images;
     }
 
-    private parseImage(data: Stream, extraColumns: number): BSHImage|null {
-        // const startPosition = data.position();
+    private decodeImage(data: Stream): BSHImage|null {
         const width = data.read32();
         const height = data.read32();
         const type = data.read32();
@@ -176,9 +194,6 @@ export default class BSHParser {
 
         assert(width > 0);
         assert(height > 0);
-        if (width <= 1 || height <= 1) {
-            return null;
-        }
 
         const BYTES_PER_PIXEL = 4;
         const pixels = new Uint8Array(width * height * BYTES_PER_PIXEL);
@@ -189,7 +204,7 @@ export default class BSHParser {
         let targetIdx = 0;
 
         while (true) {
-            let ch = data.read8();
+            const ch = data.read8();
             if (ch === 0xFF) {
                 break;
             }
@@ -199,11 +214,12 @@ export default class BSHParser {
                 targetIdx = rowIdx * width * BYTES_PER_PIXEL;
             } else {
                 // New row. First check how many pixels are empty and increase targetIdx by that amount
-                targetIdx += ch * BYTES_PER_PIXEL;
+                const emptyPixels = ch;
+                targetIdx += emptyPixels * BYTES_PER_PIXEL;
 
                 // How many pixels are colored
-                ch = data.read8();
-                while (ch--) {
+                const coloredPixels = data.read8();
+                for (let i = 0; i < coloredPixels; i++) {
                     const idx = data.read8() * 3;
 
                     pixels[targetIdx++] = colorPalette[idx];
@@ -213,16 +229,106 @@ export default class BSHParser {
                 }
             }
         }
-
-        // const remainingImageData = data.read(length - (data.position() - startPosition));
-        // assert(remainingImageData.every((e) => e === 0xFE || e === 0));
-        // console.log(height, rowIdx, remainingImageData.length, remainingImageData);
-
         return new BSHImage(width, height, pixels);
     }
 
-    private async saveSpriteSheet(sheet: SpriteSheetConfig, spritesheetIndex: number, outName: string) {
-        await this.fileSystem.write(`${outName}/sprite-sheet-${spritesheetIndex}.png`, sheet.png);
-        await this.fileSystem.write(`${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(sheet.config));
+    private encodeImage(image: BSHImage) {
+        const data = new SmartBuffer();
+        data
+            .writeUInt32LE(image.width)
+            .writeUInt32LE(image.height)
+            .writeUInt32LE(1)
+            .writeUInt32LE(42); // This is overwritten later on
+
+        let FEs = 0;
+        for (let y = 0; y < image.height; y++) {
+            let skipPixelsEmpty = 0;
+            let coloredPixels: number[] = [];
+            let state: "empty"|"colored" = "empty";
+            for (let x = 0; x < image.width; x++) {
+                const color =
+                    (image.pixels[(y * image.width + x) * 4 + 0] << 24) +
+                    (image.pixels[(y * image.width + x) * 4 + 1] << 16) +
+                    (image.pixels[(y * image.width + x) * 4 + 2] << 8) +
+                    (image.pixels[(y * image.width + x) * 4 + 3] << 0);
+
+                if (color === 0x00000000) {
+                    // Transparent pixel
+                    if (state === "empty") {
+                        skipPixelsEmpty++;
+                    } else if (state === "colored") {
+                        while (FEs > 0) {
+                            data.writeUInt8(0xFE);
+                            FEs--;
+                        }
+
+                        while (skipPixelsEmpty > 0xFD) {
+                            data.writeUInt8(0xFD);
+                            data.writeUInt8(0);
+                            skipPixelsEmpty -= 0xFD;
+                        }
+                        data.writeUInt8(skipPixelsEmpty);
+
+                        for (let i = 0; i < coloredPixels.length; i += 0xFF) {
+                            const coloredPixelsSlice = coloredPixels.slice(i, i + 0xFF);
+                            if (i > 0) {
+                                data.writeUInt8(0x00);
+                            }
+                            data.writeUInt8(coloredPixelsSlice.length);
+                            coloredPixelsSlice.forEach((pixel) => {
+                                const colorIdx = colorsToIdx[pixel];
+                                data.writeUInt8(colorIdx);
+                            });
+                        }
+                        skipPixelsEmpty = 1;
+                        coloredPixels = [];
+                    }
+                    state = "empty";
+                } else {
+                    // Non-transparent pixel
+                    state = "colored";
+                    coloredPixels.push(color);
+                }
+            }
+
+            if (state === "colored") {
+                while (FEs > 0) {
+                    data.writeUInt8(0xFE);
+                    FEs--;
+                }
+
+                while (skipPixelsEmpty > 0xFD) {
+                    data.writeUInt8(0xFD);
+                    data.writeUInt8(0);
+                    skipPixelsEmpty -= 0xFD;
+                }
+                data.writeUInt8(skipPixelsEmpty);
+                for (let i = 0; i < coloredPixels.length; i += 0xFF) {
+                    const coloredPixelsSlice = coloredPixels.slice(i, i + 0xFF);
+                    if (i > 0) {
+                        data.writeUInt8(0x00);
+                    }
+                    data.writeUInt8(coloredPixelsSlice.length);
+                    coloredPixelsSlice.forEach((pixel) => {
+                        data.writeUInt8(colorsToIdx[pixel.toString()]);
+                    });
+                }
+            }
+            FEs++;
+        }
+        data.writeUInt8(0xFF);
+
+        const padding = (4 - data.length % 4) % 4; // How many bytes left to make it dividable by 4?
+        for (let i = 0; i < padding; i++) {
+            data.writeUInt8(0x00);
+        }
+        data.writeUInt32LE(data.length, 12);
+
+        return data;
+    }
+
+    private async saveSpriteSheet(fs: FileSystem, sheet: SpriteSheetConfig, spritesheetIndex: number, outName: string) {
+        await fs.write(`${outName}/sprite-sheet-${spritesheetIndex}.png`, sheet.png);
+        await fs.write(`${outName}/sprite-sheet-${spritesheetIndex}.json`, JSON.stringify(sheet.config));
     }
 }

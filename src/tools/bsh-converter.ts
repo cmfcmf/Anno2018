@@ -29,7 +29,8 @@ console.info(`Converting ${inFilePath}`);
 // tslint:disable-next-line:no-floating-promises
 (async () => {
     const data = new Stream(fs.readFileSync(inFilePath));
-    const images = await new BSHParser(null).parseBSH(data);
+    const bshParser = new BSHParser();
+    const images = await bshParser.decodeBSH(data);
     for (let i = 0; i < images.length; i++) {
         const image = images[i];
         fs.writeFileSync(`${outDirPath}/${i}.png`, new Buffer(image.toPNG()));

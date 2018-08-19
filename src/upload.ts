@@ -119,7 +119,7 @@ export default class UploadHandler {
         const customMissionPath = await this.parseTranslations(annoRoot);
         await this.copyMissions(annoRoot, customMissionPath);
         await this.decryptCODs(annoRoot);
-        await this.parseDATs(annoRoot);
+        await this.parseDATs();
         await this.parseGADs(annoRoot);
         await this.parseBSHs(annoRoot);
         await this.parseZEIs(annoRoot);
@@ -141,7 +141,7 @@ export default class UploadHandler {
         alert(msg + "\n" + error.message);
     }
 
-    private async parseDATs(annoRoot: JSZip) {
+    private async parseDATs() {
         return Promise.all([
             ["/fields.dat", "/fields.json"],
             ["/animations.dat", "/animations.json"],
@@ -255,7 +255,7 @@ export default class UploadHandler {
     }
 
     private async parseBSHs(annoRoot: JSZip) {
-        const parser = new BSHParser(this.fs);
+        const parser = new BSHParser();
 
         const files = [
             ["GFX/NUMBERS",   "NUMBERS"],
@@ -282,9 +282,9 @@ export default class UploadHandler {
 
             log.info(`Started parsing "${inName}".`);
             const bshFile = this.findFileCaseInsensitive(annoRoot, inName);
-            const images = await parser.parseBSH(await Stream.fromZipObject(bshFile));
+            const images = await parser.decodeBSH(await Stream.fromZipObject(bshFile));
             const sheets = parser.createSpriteSheets(images);
-            await parser.saveSpriteSheets(sheets, `/gfx/${outName}`);
+            await parser.saveSpriteSheets(this.fs, sheets, `/gfx/${outName}`);
             log.info(`Finished parsing "${inName}".`);
         }
     }
@@ -303,7 +303,7 @@ export default class UploadHandler {
     private async parseZEIs(annoRoot: JSZip) {
         await this.fs.mkdir("/fonts");
 
-        const parser = new BSHParser(this.fs);
+        const parser = new BSHParser();
         const bitmapFontGenerator = new BitmapFontGenerator();
 
         const files = [
@@ -325,9 +325,9 @@ export default class UploadHandler {
             log.info(`Started parsing "${inName}".`);
 
             const zeiFile = this.findFileCaseInsensitive(annoRoot, inName);
-            const images = await parser.parseZEI(await Stream.fromZipObject(zeiFile));
+            const images = await parser.decodeZEI(await Stream.fromZipObject(zeiFile));
             const sheets = parser.createSpriteSheets(images);
-            await parser.saveSpriteSheets(sheets, `/fonts/${fontName}`);
+            await parser.saveSpriteSheets(this.fs, sheets, `/fonts/${fontName}`);
             const font = await bitmapFontGenerator.createBitmapFont(sheets, fontName);
 
             await this.fs.write(`/fonts/${fontName}/font.xml`, font);

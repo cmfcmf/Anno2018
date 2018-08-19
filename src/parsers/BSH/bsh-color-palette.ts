@@ -1,4 +1,4 @@
-export default new Uint8Array([
+const idxToColors = new Uint8Array([
     0x00, 0x00, 0x00,
     0x80, 0x00, 0x00,
     0x00, 0x80, 0x00,
@@ -256,3 +256,18 @@ export default new Uint8Array([
     0x00, 0xff, 0xff,
     0xff, 0xff, 0xff,
 ]);
+
+export default idxToColors;
+
+const colorsToIdxInner: Record<string, number> = {};
+
+for (let i = 0; i < idxToColors.length / 3; i++) {
+    const color =
+        (idxToColors[i * 3 + 0] << 24) +
+        (idxToColors[i * 3 + 1] << 16) +
+        (idxToColors[i * 3 + 2] << 8) +
+        0xFF;
+    colorsToIdxInner[color.toString()] = i;
+}
+
+export const colorsToIdx = colorsToIdxInner;

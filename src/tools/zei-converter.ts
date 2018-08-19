@@ -33,10 +33,10 @@ console.info(`Converting ${inFilePath}`);
     const data = new Stream(fs.readFileSync(inFilePath));
     const fontName = path.basename(inFilePath, path.extname(inFilePath));
 
-    const bshParser = new BSHParser(null);
+    const bshParser = new BSHParser();
     const bitmapFontGenerator = new BitmapFontGenerator();
 
-    const images = await bshParser.parseZEI(data);
+    const images = await bshParser.decodeZEI(data);
     const sheets = bshParser.createSpriteSheets(images);
 
     const font = await bitmapFontGenerator.createBitmapFont(sheets, fontName);
