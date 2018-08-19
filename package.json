@@ -6,6 +6,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0-beta.51",
     "@types/escape-string-regexp": "^1.0.0",
+    "@types/react": "^16.4.11",
+    "@types/react-dom": "^16.0.7",
     "@types/xml": "^1.0.2",
     "btoa": "^1.2.1",
     "escape-string-regexp": "^1.0.5",
@@ -19,6 +21,8 @@
     "pixi-sound": "^2.0.2",
     "pixi-viewport": "^2.7.0",
     "pixi.js": "^4.8.1",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
     "redux": "^4.0.0",
     "redux-watch": "^1.1.1",
     "rxjs": "^6.2.2",

@@ -9,6 +9,7 @@
       "es2017",
       "dom"
     ],
+    "jsx": "react",
     "moduleResolution": "Node",
     "noImplicitAny": true,
     "noImplicitThis": true,
