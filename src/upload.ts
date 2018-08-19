@@ -392,17 +392,14 @@ export default class UploadHandler {
 
         await this.fs.mkdir(outPath);
 
-        const results = [];
         for (const fileAndPath of files) {
             const relativePath = makeLowerCase ? fileAndPath.path.toLowerCase() : fileAndPath.path;
             const file = fileAndPath.file;
 
             const targetPath = `${outPath}/${relativePath}`;
             this.logger.info(`Copying '${relativePath}' to '${targetPath}'.`);
-            results.push(this.fs.write(targetPath, await file.async("blob")));
+            await this.fs.write(targetPath, await file.async("blob"));
         }
-
-        return Promise.all(results);
     }
 
     private findFilesInZip(zip: JSZip, inPath: string, fileExtensions: string) {

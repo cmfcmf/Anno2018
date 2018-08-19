@@ -70,9 +70,10 @@ export default class UploadInfo extends React.Component<Props, State> implements
                         Should anything go wrong, take a look at the error message. It might tell
                         you what to do. If it doesn't, make sure you're using a recent version of
                         Chrome or Firefox.
-                        If it is not working still, <a href="https://reddit.com/u/cmfcmf">
+                        If it is still not working, <a href="https://reddit.com/u/cmfcmf">
                             drop me a note at reddit
-                        </a> or <a href="https://github.com/cmfcmf/Anno2018-js">
+                        </a>, <a href="https://twitter.com/christianmflach">twitter</a>,
+                        or <a href="https://github.com/cmfcmf/Anno2018-js">
                             create an issue at GitHub
                         </a>. Make sure to include the upload progress output.
                     </p>
