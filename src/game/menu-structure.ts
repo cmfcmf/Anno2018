@@ -95,7 +95,7 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
     const videoData = await this.fs.openAndGetContentAsUint8Array(
       `/videos/${videoNumber}.mp4`
     );
-    const texture = textureFromUint8ArrayMP4(videoData);
-    return new PIXI.Sprite(texture);
+    const texture = await textureFromUint8ArrayMP4(videoData);
+    return PIXI.Sprite.from(texture);
   }
 }
