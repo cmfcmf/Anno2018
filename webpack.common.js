@@ -6,6 +6,7 @@ const gitRevisionPlugin = new GitRevisionPlugin({
 });
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 /* tslint:disable */
 module.exports = {
@@ -50,6 +51,7 @@ module.exports = {
                 "apple-mobile-web-app-capable": "yes",
             }
         }),
+        new ForkTsCheckerWebpackPlugin(),
     ],
     module: {
         rules: [
@@ -64,6 +66,9 @@ module.exports = {
                     },
                     {
                         loader: "ts-loader",
+                        options: {
+                            transpileOnly: true,
+                        },
                     },
                 ],
                 exclude: /node_modules/,
