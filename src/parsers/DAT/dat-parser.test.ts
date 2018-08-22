@@ -1,17 +1,23 @@
 import DATParser from "./dat-parser";
 
-function doTest(input: string, objects: object, variables: object, gfxMap: object) {
-    const parser = new DATParser();
+function doTest(
+  input: string,
+  objects: object,
+  variables: object,
+  gfxMap: object
+) {
+  const parser = new DATParser();
 
-    expect(parser.parse(input)).toEqual({
-        objects: objects,
-        variables: variables,
-        gfx_category_map: gfxMap,
-    });
+  expect(parser.parse(input)).toEqual({
+    objects: objects,
+    variables: variables,
+    gfx_category_map: gfxMap
+  });
 }
 
 test("comments and constants", () => {
-    doTest(`
+  doTest(
+    `
         ; This is a comment
         ;======;
         ;;;  ;;; ;$% ;&/%; %;§; ;/ ; /&
@@ -21,20 +27,21 @@ test("comments and constants", () => {
            Nahrung:    1.3
         KOST_BEDARF_3_SLP = 38
           ; Another comment`,
-        {},
-        {
-            IDSTRAND: 100,
-            GFXBODEN: 300,
-            GFXHANG: 800,
-            // TODO: Nahrung
-            KOST_BEDARF_3_SLP: 38,
-        },
-        {},
-    );
+    {},
+    {
+      IDSTRAND: 100,
+      GFXBODEN: 300,
+      GFXHANG: 800,
+      // TODO: Nahrung
+      KOST_BEDARF_3_SLP: 38
+    },
+    {}
+  );
 });
 
 test("math within arrays", () => {
-    doTest(`
+  doTest(
+    `
         X = 670
         Y = 141
         IDHAUPT = 5
@@ -43,59 +50,61 @@ test("math within arrays", () => {
             Nummer:     7
             Id:         IDHAUPT+10
             Pos:        X-120, Y-1
-    `, {
-            HARRY: {
-                items: {
-                    7: {
-                        Id: 15,
-                        Pos: [
-                            550,
-                            140,
-                        ],
-                        nested_objects: {},
-                    },
-                },
-            },
-        },
-        {
-            IDHAUPT: 5,
+    `,
+    {
+      HARRY: {
+        items: {
+          7: {
             Id: 15,
-            Nummer: 7,
-            Pos: [
-                550,
-                140,
-            ],
-            X: 670,
-            Y: 141,
-        }, {});
+            Pos: [550, 140],
+            nested_objects: {}
+          }
+        }
+      }
+    },
+    {
+      IDHAUPT: 5,
+      Id: 15,
+      Nummer: 7,
+      Pos: [550, 140],
+      X: 670,
+      Y: 141
+    },
+    {}
+  );
 });
 
 test("math with arrays values", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: POTTER
             Nummer:     42
             Pos:        23, 199
             Posoffs:    32-Pos[0], 213-Pos[1]
-    `, {
-            POTTER: {
-                items: {
-                    42: {
-                        Pos: [23, 199],
-                        Posoffs: [9, 14],
-                        nested_objects: {},
-                    },
-                },
-            },
-        },
-        {
-            Nummer: 42,
+    `,
+    {
+      POTTER: {
+        items: {
+          42: {
             Pos: [23, 199],
             Posoffs: [9, 14],
-        }, {});
+            nested_objects: {}
+          }
+        }
+      }
+    },
+    {
+      Nummer: 42,
+      Pos: [23, 199],
+      Posoffs: [9, 14]
+    },
+    {}
+  );
 });
 
 test("json objects", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: BGRUPPE
 
             Nummer:     0
@@ -110,43 +119,46 @@ test("json objects", () => {
               Ware:       STOFFE, 0.6       ; ORG/SUN  1.0 / 0.4
               Ware:       ALKOHOL, 0.5      ; ORG/SUN  0.8 / 0.4
             EndObj;`,
-        {
-            BGRUPPE: {
-                items: {
-                    0: {
-                        Maxwohn: 2,
-                        Steuer: 1.4,
-                        nested_objects: {},
-                    },
-                    1: {
-                        Maxwohn: 6,
-                        Steuer: 1.6,
-                        nested_objects: {
-                            BGRUPPE_WARE: {
-                                0: {
-                                    Foo: "bar",
-                                    Ware: {
-                                        STOFFE: 0.6,
-                                        ALKOHOL: 0.5,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        }, {
-            Foo: "bar",
+    {
+      BGRUPPE: {
+        items: {
+          0: {
+            Maxwohn: 2,
+            Steuer: 1.4,
+            nested_objects: {}
+          },
+          1: {
             Maxwohn: 6,
-            Nummer: 1,
             Steuer: 1.6,
-            Ware: {ALKOHOL: 0.5},
-        },
-        {});
+            nested_objects: {
+              BGRUPPE_WARE: {
+                0: {
+                  Foo: "bar",
+                  Ware: {
+                    STOFFE: 0.6,
+                    ALKOHOL: 0.5
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      Foo: "bar",
+      Maxwohn: 6,
+      Nummer: 1,
+      Steuer: 1.6,
+      Ware: { ALKOHOL: 0.5 }
+    },
+    {}
+  );
 });
 
 test("handles @ sign", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: HELLO
             IDSTART = 42
             @Nummer:    0
@@ -160,49 +172,53 @@ test("handles @ sign", () => {
             @Id:        +1
             @Pos:       +4, +2
         EndObj;`,
-        {
-            HELLO: {
-                items: {
-                    0: {Id: 42, Pos: [3, 4], nested_objects: {}},
-                    1: {Id: 43, Pos: [5, 7], nested_objects: {}},
-                    2: {Id: 44, Pos: [9, 9], nested_objects: {}},
-                },
-            },
-        },
-        {
-            IDSTART: 42,
-            VARIABLE: 2,
-            Id: 44,
-            Pos: [9, 9],
-            Nummer: 2,
-        },
-        {});
+    {
+      HELLO: {
+        items: {
+          0: { Id: 42, Pos: [3, 4], nested_objects: {} },
+          1: { Id: 43, Pos: [5, 7], nested_objects: {} },
+          2: { Id: 44, Pos: [9, 9], nested_objects: {} }
+        }
+      }
+    },
+    {
+      IDSTART: 42,
+      VARIABLE: 2,
+      Id: 44,
+      Pos: [9, 9],
+      Nummer: 2
+    },
+    {}
+  );
 });
 
 test("handles size property", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: HELLO
             Nummer:    1
             Id:        1
             Size:      2, 3
         EndObj;`,
-        {
-            HELLO: {
-                items: {
-                    1: {Id: 1, Size: {x: 2, y: 3}, nested_objects: {}},
-                },
-            },
-        },
-        {
-            Nummer: 1,
-            Id: 1,
-            Size: {x: 2, y: 3},
-        },
-        {});
+    {
+      HELLO: {
+        items: {
+          1: { Id: 1, Size: { x: 2, y: 3 }, nested_objects: {} }
+        }
+      }
+    },
+    {
+      Nummer: 1,
+      Id: 1,
+      Size: { x: 2, y: 3 }
+    },
+    {}
+  );
 });
 
 test("handles ObjFill", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: HELLO
             @Nummer:    0
             NUMMERBASE = Nummer
@@ -222,28 +238,30 @@ test("handles ObjFill", () => {
 
         EndObj;
     `,
-        {
-            HELLO: {
-                items: {
-                    0: {Id: 10, A: 5, B: 6, nested_objects: {}},
-                    1: {Id: 11, A: 5, B: 6, nested_objects: {}},
-                    2: {Id: 12, A: 7, B: 6, nested_objects: {}},
-                    3: {Id: 13, A: 5, B: 6, nested_objects: {}},
-                },
-            },
-        },
-        {
-            NUMMERBASE: 0,
-            Id: 13,
-            Nummer: 3,
-            A: 7,
-            B: 6,
-        },
-        {});
+    {
+      HELLO: {
+        items: {
+          0: { Id: 10, A: 5, B: 6, nested_objects: {} },
+          1: { Id: 11, A: 5, B: 6, nested_objects: {} },
+          2: { Id: 12, A: 7, B: 6, nested_objects: {} },
+          3: { Id: 13, A: 5, B: 6, nested_objects: {} }
+        }
+      }
+    },
+    {
+      NUMMERBASE: 0,
+      Id: 13,
+      Nummer: 3,
+      A: 7,
+      B: 6
+    },
+    {}
+  );
 });
 
 test("handles ObjFill with nested properties", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: HELLO
             @Nummer:    0
             BASE =      Nummer
@@ -258,43 +276,45 @@ test("handles ObjFill with nested properties", () => {
               Bauinfra:	  INFRA_KONTOR_2
             EndObj;
         EndObj;`,
-        {
-            HELLO: {
-                items: {
-                    0: {
-                        nested_objects: {
-                            HAUS_PRODTYP: {
-                                0: {
-                                    Bauinfra: "INFRA_KONTOR_1",
-                                    Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
-                                },
-                            },
-                        },
-                    },
-                    1: {
-                        nested_objects: {
-                            HAUS_PRODTYP: {
-                                0: {
-                                    Bauinfra: "INFRA_KONTOR_2",
-                                    Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-        {
-            BASE: 0,
-            Bauinfra: "INFRA_KONTOR_2",
-            Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
-            Nummer: 1,
-        },
-        {});
+    {
+      HELLO: {
+        items: {
+          0: {
+            nested_objects: {
+              HAUS_PRODTYP: {
+                0: {
+                  Bauinfra: "INFRA_KONTOR_1",
+                  Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"]
+                }
+              }
+            }
+          },
+          1: {
+            nested_objects: {
+              HAUS_PRODTYP: {
+                0: {
+                  Bauinfra: "INFRA_KONTOR_2",
+                  Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      BASE: 0,
+      Bauinfra: "INFRA_KONTOR_2",
+      Kosten: ["KOST_KONTOR_1", "KOST_KONTOR_1"],
+      Nummer: 1
+    },
+    {}
+  );
 });
 
 test("handles ObjFill max", () => {
-    doTest(`
+  doTest(
+    `
         Objekt: HELLO
             @Nummer:    0
             A:          5
@@ -315,29 +335,31 @@ test("handles ObjFill max", () => {
             @Id:        +1
 
         EndObj;`,
-        {
-            HELLO: {
-                items: {
-                    0: {Id: 10, A: 5, Size: {x: 1, y: 1}, nested_objects: {}},
-                    1: {Id: 11, A: 5, B: 6, Size: {x: 1, y: 1}, nested_objects: {}},
-                    2: {Id: 12, A: 7, B: 6, Size: {x: 2, y: 3}, nested_objects: {}},
-                    3: {Id: 13, A: 5, B: 6, Size: {x: 1, y: 1}, nested_objects: {}},
-                },
-            },
-        },
-        {
-            NUMMERBASE: 1,
-            Id: 13,
-            Nummer: 3,
-            A: 7,
-            B: 6,
-            Size: {x: 2, y: 3},
-        },
-        {});
+    {
+      HELLO: {
+        items: {
+          0: { Id: 10, A: 5, Size: { x: 1, y: 1 }, nested_objects: {} },
+          1: { Id: 11, A: 5, B: 6, Size: { x: 1, y: 1 }, nested_objects: {} },
+          2: { Id: 12, A: 7, B: 6, Size: { x: 2, y: 3 }, nested_objects: {} },
+          3: { Id: 13, A: 5, B: 6, Size: { x: 1, y: 1 }, nested_objects: {} }
+        }
+      }
+    },
+    {
+      NUMMERBASE: 1,
+      Id: 13,
+      Nummer: 3,
+      A: 7,
+      B: 6,
+      Size: { x: 2, y: 3 }
+    },
+    {}
+  );
 });
 
 test("even more ObJFill", () => {
-    doTest(`
+  doTest(
+    `
   Objekt: GEORGE
     @Nummer:    0
     Id:         0
@@ -349,26 +371,28 @@ test("even more ObJFill", () => {
 
     @Nummer:    +1
     Id:         42
-    `, {
-            GEORGE: {
-                items: {
-                    0: {
-                        Blocknr: 7,
-                        Id: 42,
-                        nested_objects: {},
-                    },
-                    1: {
-                        Blocknr: 7,
-                        Id: 42,
-                        nested_objects: {},
-                    },
-                },
-            },
-        },
-        {
+    `,
+    {
+      GEORGE: {
+        items: {
+          0: {
             Blocknr: 7,
             Id: 42,
-            Nummer: 1,
-        },
-        {});
+            nested_objects: {}
+          },
+          1: {
+            Blocknr: 7,
+            Id: 42,
+            nested_objects: {}
+          }
+        }
+      }
+    },
+    {
+      Blocknr: 7,
+      Id: 42,
+      Nummer: 1
+    },
+    {}
+  );
 });

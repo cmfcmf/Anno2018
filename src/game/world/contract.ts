@@ -7,22 +7,22 @@
 import Stream from "../../parsers/stream";
 
 export enum ContractState {
-    Inactive = 0,
-    OfferedByMe = 1,
-    OfferedByOther = 2,
-    Active = 3,
+  Inactive = 0,
+  OfferedByMe = 1,
+  OfferedByOther = 2,
+  Active = 3
 }
 
 export default class Contract {
-    public static fromSaveGame(data: Stream) {
-        const state = data.read32();
-        const time = data.read32(); // unsure
+  public static fromSaveGame(data: Stream) {
+    const state = data.read32();
+    const time = data.read32(); // unsure
 
-        return new Contract(
-            state,
-            time,
-        );
-    }
+    return new Contract(state, time);
+  }
 
-    constructor(public readonly state: ContractState, public readonly time: number) { }
+  constructor(
+    public readonly state: ContractState,
+    public readonly time: number
+  ) {}
 }

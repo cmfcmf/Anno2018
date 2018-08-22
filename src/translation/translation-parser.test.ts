@@ -1,11 +1,13 @@
 import parseTranslations from "./translation-parser";
 
 test("parses empty file", () => {
-    expect(parseTranslations("")).toEqual({});
+  expect(parseTranslations("")).toEqual({});
 });
 
 test("parses correctly", () => {
-    expect(parseTranslations(`
+  expect(
+    parseTranslations(
+      `
 ------
 [FOO]
 a
@@ -18,8 +20,10 @@ d
 e
 f
 [END]
-    `.replace(/\n/g, "\r\n"))).toEqual({
-        FOO: ["a", "b", "c"],
-        BAR: ["d", "e", "f"],
-    });
+    `.replace(/\n/g, "\r\n")
+    )
+  ).toEqual({
+    FOO: ["a", "b", "c"],
+    BAR: ["d", "e", "f"]
+  });
 });

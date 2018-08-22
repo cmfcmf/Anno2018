@@ -24,6 +24,7 @@
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "redux": "^4.0.0",
+    "redux-devtools-extension": "^2.13.5",
     "redux-watch": "^1.1.1",
     "rxjs": "^6.2.2",
     "smart-buffer": "^4.0.1",
@@ -46,14 +47,18 @@
     "fork-ts-checker-webpack-plugin": "^0.4.9",
     "git-revision-webpack-plugin": "^3.0.3",
     "html-webpack-plugin": "^3.2.0",
+    "husky": "^1.0.0-rc.13",
     "jest": "^23.1.0",
     "patch-package": "^6.0.0-9",
     "postinstall-prepare": "^1.0.1",
-    "redux-devtools-extension": "^2.13.5",
+    "prettier": "1.14.2",
     "ts-jest": "^22.4.6",
     "ts-loader": "^4.4.1",
     "ts-node": "^7.0.0",
     "tslint": "^5.10.0",
+    "tslint-config-prettier": "^1.15.0",
+    "tslint-plugin-prettier": "^1.3.0",
+    "tslint-react": "^3.6.0",
     "typescript": "^2.9.1",
     "uglifyjs-webpack-plugin": "^1.2.6",
     "webpack": "^4.12.0",
@@ -65,6 +70,7 @@
     "start": "webpack-dev-server --host 0.0.0.0 --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
     "lint": "tslint --project .",
+    "lint-fix": "tslint --project . --fix",
     "test": "jest",
     "test-watch": "jest --notify --watchAll",
     "prepare": "patch-package",
@@ -92,5 +98,10 @@
   "browserslist": "last 2 versions, ie 10",
   "types": [
     "./types"
-  ]
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint-fix"
+    }
+  }
 }

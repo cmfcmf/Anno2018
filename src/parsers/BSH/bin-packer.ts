@@ -41,52 +41,51 @@
  ******************************************************************************/
 
 interface Rect {
-    w: number;
-    h: number;
-    fit?: Node;
+  w: number;
+  h: number;
+  fit?: Node;
 }
 
 interface Node {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    used?: boolean;
-    down?: Node;
-    right?: Node;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  used?: boolean;
+  down?: Node;
+  right?: Node;
 }
 
 export default class BinPacker {
-    private readonly root: Node;
+  private readonly root: Node;
 
-    constructor(w: number, h: number) {
-        this.root = { x: 0, y: 0, w: w, h: h };
+  constructor(w: number, h: number) {
+    this.root = { x: 0, y: 0, w: w, h: h };
+  }
+
+  public addBlock(block: Rect) {
+    const node = this.findNode(this.root, block.w, block.h);
+    if (node) {
+      return this.splitNode(node, block.w, block.h);
+    } else {
+      return false;
     }
+  }
 
-    public addBlock(block: Rect) {
-        const node = this.findNode(this.root, block.w, block.h);
-        if (node) {
-            return this.splitNode(node, block.w, block.h);
-        } else {
-            return false;
-        }
+  private findNode(root: Node, w: number, h: number): Node | null {
+    if (root.used) {
+      return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
+    } else if (w <= root.w && h <= root.h) {
+      return root;
+    } else {
+      return null;
     }
+  }
 
-    private findNode(root: Node, w: number, h: number): Node|null {
-        if (root.used) {
-            return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
-        } else if ((w <= root.w) && (h <= root.h)) {
-            return root;
-             } else {
-            return null;
-             }
-    }
-
-    private splitNode(node: Node, w: number, h: number) {
-        node.used = true;
-        node.down  = { x: node.x,     y: node.y + h, w: node.w,     h: node.h - h };
-        node.right = { x: node.x + w, y: node.y,     w: node.w - w, h: h          };
-        return node;
-    }
-
+  private splitNode(node: Node, w: number, h: number) {
+    node.used = true;
+    node.down = { x: node.x, y: node.y + h, w: node.w, h: node.h - h };
+    node.right = { x: node.x + w, y: node.y, w: node.w - w, h: h };
+    return node;
+  }
 }
