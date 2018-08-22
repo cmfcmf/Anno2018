@@ -34,3 +34,18 @@ index 520d523..de65de9 100644
  
    idb_.get(path, function(folderEntry) {
      if (!options) {
+diff --git a/node_modules/idb.filesystem.js/tests/tests.js b/node_modules/idb.filesystem.js/tests/tests.js
+index 4f76c47..d02532e 100644
+--- a/node_modules/idb.filesystem.js/tests/tests.js
++++ b/node_modules/idb.filesystem.js/tests/tests.js
+@@ -57,8 +57,8 @@ test('resolveToFullPath_', 23, function() {
+   equal(resolveToFullPath_('/', '.'), '/');
+   equal(resolveToFullPath_('/asdf', '.'), '/asdf');
+   equal(resolveToFullPath_('/', './'), '/');
+-  equal(resolveToFullPath_('/', '../'), '/');
+-  equal(resolveToFullPath_('/', '..'), '/');
++  throws(function() {resolveToFullPath_('/', '../')}, 'Invalid path');
++  throws(function() {resolveToFullPath_('/', '..')}, 'Invalid path');
+   equal(resolveToFullPath_('/asdf', '../'), '/');
+ 
+   equal(resolveToFullPath_('/', 'test.mp3'), '/test.mp3');

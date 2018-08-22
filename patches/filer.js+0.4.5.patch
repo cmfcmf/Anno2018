@@ -1,16 +1,16 @@
 diff --git a/node_modules/filer.js/src/filer.js b/node_modules/filer.js/src/filer.js
-index dca5cd4..eb013d7 100755
+index dca5cd4..d52aa3d 100644
 --- a/node_modules/filer.js/src/filer.js
 +++ b/node_modules/filer.js/src/filer.js
 @@ -38,7 +38,7 @@ self.BlobBuilder = self.BlobBuilder || self.MozBlobBuilder ||
- 
+
  // Prevent errors in browsers that don't support FileError.
  if (self.FileError === undefined) {
 -  var FileError = function() {};
 +  self.FileError = function() {};
    FileError.prototype.prototype = Error.prototype;
  }
- 
+
 @@ -294,36 +294,48 @@ var Filer = new function() {
     *     to this method.
     * @param {...string} var_args 1-2 paths to lookup and return entries for.
@@ -23,19 +23,19 @@ index dca5cd4..eb013d7 100755
 -    var destStr = arguments[2];
 +    var errorCallback;
 +    var destStr;
-+
+
+-    var onError = function(e) {
+-      if (e.code == FileError.NOT_FOUND_ERR) {
+-        if (destStr) {
+-          throw new Error('"' + srcStr + '" or "' + destStr +
+-                          '" does not exist.');
 +    if (typeof arguments[2] == "string") {
 +      destStr = arguments[2];
 +      errorCallback = arguments[3];
 +    } else {
 +      errorCallback = arguments[2];
 +    }
- 
--    var onError = function(e) {
--      if (e.code == FileError.NOT_FOUND_ERR) {
--        if (destStr) {
--          throw new Error('"' + srcStr + '" or "' + destStr +
--                          '" does not exist.');
++
 +    if (!errorCallback) {
 +      errorCallback = function(e) {
 +        if (e.code == FileError.NOT_FOUND_ERR || e.name == "NotFoundError") {
@@ -55,10 +55,10 @@ index dca5cd4..eb013d7 100755
 -    };
 +      };
 +    }
- 
+
      // Build a filesystem: URL manually if we need to.
      var src = pathToFsURL_(srcStr);
- 
+
 -    if (arguments.length == 3) {
 +    if ((typeof srcStr == "string") && (typeof destStr == "string")) {
        var dest = pathToFsURL_(destStr);
@@ -74,25 +74,43 @@ index dca5cd4..eb013d7 100755
 +      self.resolveLocalFileSystemURL(src, callback, errorCallback);
      }
    };
- 
+
+@@ -370,7 +382,7 @@ var Filer = new function() {
+         } else {
+           srcEntry.copyTo(destDir, newName, opt_successCallback, opt_errorHandler);
+         }
+-      }, src, dest);
++      }, src, dest, opt_errorHandler);
+     }
+   }
+
 @@ -477,13 +489,15 @@ var Filer = new function() {
- 
+
      var callback = function(dirEntry) {
- 
+
 -      cwd_ = dirEntry;
 +      // Don't set cwd_ here
 +      // https://github.com/ebidel/filer.js/pull/20/files
 +      // cwd_ = ;
- 
+
        // Read contents of current working directory. According to spec, need to
        // keep calling readEntries() until length of result array is 0. We're
        // guarenteed the same entry won't be returned again.
        var entries_ = [];
 -      var reader = cwd_.createReader();
 +      var reader = dirEntry.createReader();
- 
+
        var readEntries = function() {
          reader.readEntries(function(results) {
+@@ -506,7 +520,7 @@ var Filer = new function() {
+     if (dirEntryOrPath.isDirectory) { // passed a DirectoryEntry.
+       callback(dirEntryOrPath);
+     } else if (isFsURL_(dirEntryOrPath)) { // passed a filesystem URL.
+-      getEntry_(callback, dirEntryOrPath);
++      getEntry_(callback, dirEntryOrPath, opt_errorHandler);
+     } else { // Passed a path. Look up DirectoryEntry and proceeed.
+       // TODO: Find way to use getEntry_(callback, dirEntryOrPath); with cwd_.
+       cwd_.getDirectory(dirEntryOrPath, {}, callback, opt_errorHandler);
 @@ -595,7 +609,7 @@ var Filer = new function() {
      } else {
        getEntry_(function(fileEntry) {
@@ -101,4 +119,44 @@ index dca5cd4..eb013d7 100755
 +      }, pathToFsURL_(entryOrPath), opt_errorHandler);
      }
    };
- 
+
+@@ -679,7 +693,7 @@ var Filer = new function() {
+     if (entryOrPath.isFile || entryOrPath.isDirectory) {
+       removeIt(entryOrPath);
+     } else {
+-      getEntry_(removeIt, entryOrPath);
++      getEntry_(removeIt, entryOrPath, opt_errorHandler);
+     }
+   };
+
+@@ -718,7 +732,7 @@ var Filer = new function() {
+             throw e;
+           }
+         }
+-      }, dirEntryOrPath);
++      }, dirEntryOrPath, opt_errorHandler);
+     }
+   };
+
+@@ -800,7 +814,7 @@ var Filer = new function() {
+     if (entryOrPath.isFile) {
+       writeFile_(entryOrPath);
+     } else if (isFsURL_(entryOrPath)) {
+-      getEntry_(writeFile_, entryOrPath);
++      getEntry_(writeFile_, entryOrPath, opt_errorHandler);
+     } else {
+       cwd_.getFile(entryOrPath, {create: true, exclusive: false}, writeFile_,
+                    opt_errorHandler);
+diff --git a/node_modules/filer.js/tests/filerTests.js b/node_modules/filer.js/tests/filerTests.js
+index d1098ab..c7bc3b8 100644
+--- a/node_modules/filer.js/tests/filerTests.js
++++ b/node_modules/filer.js/tests/filerTests.js
+@@ -154,7 +154,7 @@ test('pathToFilesystemURL()', 8, function() {
+   equal(filer.pathToFilesystemURL('./'), fsURL + './', './ as arg');
+   equal(filer.pathToFilesystemURL('./' + path), fsURL + './' + path, './ as arg');
+   //equal(filer.pathToFilesystemURL('..'), fsURL + '../', '.. as arg');
+-  equal(filer.pathToFilesystemURL('../'), fsURL + '/../', '../ as arg');
++  equal(filer.pathToFilesystemURL('../'), fsURL + '../', '../ as arg');
+   equal(filer.pathToFilesystemURL('../' + path), fsURL + '../' + path, '../ as arg');
+   //equal(filer.pathToFilesystemURL(path), fsURL + path, 'relative path as arg');
+ });
