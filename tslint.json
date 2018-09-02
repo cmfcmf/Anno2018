@@ -13,6 +13,5 @@
     "no-submodule-imports": false,
     "no-duplicate-imports": false,
     "prefer-conditional-expression": false
-  },
-  "defaultSeverity": "warning"
+  }
 }
