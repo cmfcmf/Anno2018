@@ -19,8 +19,11 @@ export default class DATParser {
     this.log = log.getLogger("dat-parser");
   }
 
-  public parse(content: string) {
-    this.variables = new Map();
+  public parse(
+    content: string,
+    initialVariables: Map<string, any> = new Map()
+  ) {
+    this.variables = initialVariables;
     this.objects = {};
     this.template = null;
     this.gfxMap = new Map();
@@ -39,10 +42,14 @@ export default class DATParser {
       if (
         line.startsWith("Nahrung:") ||
         line.startsWith("Soldat:") ||
-        line.startsWith("Turm:") ||
-        line.startsWith("Include:")
+        line.startsWith("Turm:")
       ) {
         // TODO: Skipped for now.
+        continue;
+      }
+
+      if (line === 'Include: "TOOLS.INC"') {
+        assert(initialVariables.size > 0);
         continue;
       }
 

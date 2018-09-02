@@ -139,6 +139,15 @@ export default class UploadHandler {
   private async parseGADs(annoRoot: JSZip) {
     await this.fs.mkdir("/screens");
 
+    const parser = new DATParser();
+
+    const toolsIncPath = "GADDATA/TOOLS.INC";
+    this.logger.info(`Started parsing "${toolsIncPath}".`);
+    const toolsIncFile = this.findFileCaseInsensitive(annoRoot, toolsIncPath);
+    const toolsIncData = parser.parse(await toolsIncFile.async("text"));
+    const initialVariables = new Map(Object.entries(toolsIncData.variables));
+    this.logger.info(`Finished parsing "${toolsIncPath}".`);
+
     const files = [
       ["Anno.gad", ""],
       ["BASE.GAD", "menu_main"],
@@ -183,7 +192,7 @@ export default class UploadHandler {
       ["SKSOLDAT.GAD", ""],
       ["STADT.GAD", ""],
       ["STADTLST.GAD", ""],
-      ["TOOLS.INC", ""],
+      // ["TOOLS.INC", ""],
       ["TRADE.GAD", ""],
       ["TRADER.GAD", ""],
       ["TRANSFER.GAD", ""],
@@ -202,10 +211,8 @@ export default class UploadHandler {
       const outName = `/screens/${r[1]}.json`;
       this.logger.info(`Started parsing "${inName}".`);
 
-      const parser = new DATParser();
-
       const gadFile = this.findFileCaseInsensitive(annoRoot, inName);
-      const data = parser.parse(await gadFile.async("text"));
+      const data = parser.parse(await gadFile.async("text"), initialVariables);
       await this.fs.write(outName, JSON.stringify(data));
 
       this.logger.info(`Finished parsing "${inName}".`);

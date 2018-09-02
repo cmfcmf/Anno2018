@@ -88,9 +88,11 @@ const Viewport = require("pixi-viewport");
 
   const configLoader = new ConfigLoader(fs);
   await configLoader.load();
+  console.log(`Finished loading config.`);
 
   const musicPlayer = new MusicPlayer(fs);
   await musicPlayer.load();
+  console.log(`Finished loading music.`);
 
   const spriteLoader = new SpriteLoader(fs);
 
@@ -112,9 +114,15 @@ const Viewport = require("pixi-viewport");
   );
 
   const queryGameName = getQueryParameter("load");
+  const gad = getQueryParameter("gad");
   if (queryGameName !== null) {
     await gameLoader.loadByName(queryGameName);
     menuViewport.visible = false;
+  } else if (gad !== null) {
+    console.info(`Rendering "${gad}" screen.`);
+    const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
+    const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
+    await menuStructure.renderScreen(gad);
   } else {
     // menuViewport.fit(); // TODO: Makes usage of sliders harder
     const gadRenderer = new GADRenderer(menuViewport, spriteLoader);

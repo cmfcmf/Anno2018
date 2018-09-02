@@ -39,7 +39,10 @@ export default class GADRenderer {
       const id = gadget.Id;
       const blockNr = gadget.Blocknr;
       const gfx = gadget.Gfxnr;
-      const kind = gadget.Kind;
+      const kind: string = gadget.Kind;
+      if (kind === "GAD_UNUSED") {
+        continue;
+      }
       const position = new PIXI.Point(gadget.Pos[0], gadget.Pos[1]);
       if (gadget.Posoffs) {
         position.set(
@@ -122,9 +125,9 @@ export default class GADRenderer {
           this.stage.addChild(sprite);
           break;
         case "GAD_TEXTL":
-          // case "GAD_TEXTR":
+        case "GAD_TEXTZ":
+        case "GAD_TEXTR":
           // case "GAD_TEXTFL":
-          // case "GAD_TEXTZ":
           const fontSize = 24;
           const text = new PIXI.extras.BitmapText("Here goes text!", {
             font: { name: "ZEI20V", size: fontSize }
@@ -133,6 +136,12 @@ export default class GADRenderer {
           text.pivot.set(0, fontSize);
           text.name = `menu-${id}`;
           text.hitArea = new PIXI.Rectangle(0, 0, size.x, size.y);
+          if (kind.endsWith("Z")) {
+            // Center text
+            text.pivot.set(text.x / 2, text.pivot.y);
+          } else if (kind.endsWith("R")) {
+            // text.pivot.set(text.x, text.pivot.y);
+          }
           this.stage.addChild(text);
           break;
         default:
