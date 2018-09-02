@@ -112,8 +112,8 @@ export default class FileSystem {
     return new Promise<string>((resolve, reject) => {
       const fileReader = new FileReader();
       fileReader.onload = event => {
-        if (event.target !== null) {
-          resolve(event.target.result);
+        if (fileReader.result !== null) {
+          resolve(fileReader.result as string);
         } else {
           reject();
         }
@@ -129,8 +129,8 @@ export default class FileSystem {
     return new Promise<Uint8Array>((resolve, reject) => {
       const fileReader = new FileReader();
       fileReader.onload = event => {
-        if (event.target !== null) {
-          resolve(new Uint8Array(event.target.result));
+        if (fileReader.result !== null) {
+          resolve(new Uint8Array(fileReader.result as ArrayBuffer));
         } else {
           reject();
         }
