@@ -9,10 +9,6 @@ export default class FileSystem {
     this.filer = new Filer();
   }
 
-  public root() {
-    return this.filer.fs.root;
-  }
-
   public async init(size: number) {
     return new Promise((resolve, reject) =>
       this.filer.init(
@@ -166,7 +162,7 @@ export default class FileSystem {
 
   public async rmRoot() {
     const entries = await this.ls("/");
-    return Promise.all(entries.map(entry => this.rm(entry)));
+    return Promise.all(entries.map(entry => this.rm(entry.fullPath)));
   }
 
   public async download(pathOrEntry: string | WebKitEntry) {
