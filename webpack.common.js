@@ -19,12 +19,6 @@ module.exports = {
         test: /\.tsx?$/,
         use: [
           {
-            loader: "babel-loader",
-            options: {
-              presets: ["@babel/preset-env"]
-            }
-          },
-          {
             loader: "ts-loader",
             options: {
               transpileOnly: true
