@@ -172,7 +172,10 @@ export default class Game {
             clearInterval(this.timerId);
           }
           if (speed !== SimulationSpeed.Paused) {
-            this.timerId = setInterval(this.tick.bind(this), 1000 / speed);
+            this.timerId = window.setInterval(
+              this.tick.bind(this),
+              1000 / speed
+            );
           }
         }
       )
