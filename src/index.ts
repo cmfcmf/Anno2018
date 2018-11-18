@@ -108,6 +108,7 @@ const Viewport = require("pixi-viewport");
     fs,
     gamParser,
     islandRenderer,
+    app,
     viewport,
     configLoader,
     musicPlayer

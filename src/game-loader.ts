@@ -12,6 +12,7 @@ export default class GameLoader {
     private readonly fs: FileSystem,
     private readonly gamParser: GAMParser,
     private readonly islandRenderer: IslandRenderer,
+    private readonly app: PIXI.Application,
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
     private readonly musicPlayer: MusicPlayer
@@ -27,19 +28,18 @@ export default class GameLoader {
   public async load(saveGame: WebKitEntry | string) {
     const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
     const world = await this.gamParser.getWorld(saveGameData);
+
     const gameRenderer = new GameRenderer(
       world,
       this.islandRenderer,
+      this.app,
       this.viewport
     );
+
     const gameLogic = new Game(gameRenderer, this.configLoader);
     await gameLogic.begin(world);
-    this.musicPlayer.playAll();
 
-    //      this.viewport.parent.addChild(new PIXI.Text(
-    //          `Money: ${world.players.find((player) => player.id === 0).money}`,
-    //          {fontFamily : "Arial", fontSize: 24, fill : 0xff1010},
-    //      ));
+    this.musicPlayer.playAll();
   }
 
   private async loadSavesAndMissions() {

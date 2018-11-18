@@ -7,15 +7,15 @@ export default class SpriteLoader {
 
   constructor(private readonly fs: FileSystem) {}
 
-  public async getTextures(directory: string) {
+  public getTextures = async (directory: string) => {
     directory = `/gfx/${directory}`;
     if (!this.textures.has(directory)) {
       await this.loadTextures(directory);
     }
     return this.textures.get(directory);
-  }
+  };
 
-  private async loadTextures(directory: string) {
+  private loadTextures = async (directory: string) => {
     const textureMap = new Map();
 
     const files = await this.fs.ls(directory);
@@ -53,5 +53,5 @@ export default class SpriteLoader {
       }
     }
     this.textures.set(directory, textureMap);
-  }
+  };
 }

@@ -5,7 +5,8 @@ import { SpriteWithPositionAndLayer } from "./island-sprite-loader";
 import { Island } from "./world/island";
 
 export const TILE_WIDTH = 64;
-export const TILE_HEIGHT = 31;
+export const TILE_HEIGHT = 32;
+export const LAND_OFFSET = -20;
 
 export default class IslandRenderer {
   constructor(
@@ -14,33 +15,40 @@ export default class IslandRenderer {
     private spriteLoader: IslandSpriteLoader
   ) {}
 
-  public async render(islands: Island[]) {
-    const sprites = await this.spriteLoader.getIslandSprites(islands);
-    console.log("Map sprites loaded.");
-    sprites.sort(
-      (a: SpriteWithPositionAndLayer, b: SpriteWithPositionAndLayer) => {
-        if (a.layer === b.layer) {
-          const ra = a.position.x + a.position.y;
-          const rb = b.position.x + b.position.y;
-          if (ra === rb) {
-            return 0;
-          } else if (ra < rb) {
-            return -1;
-          } else {
-            return 1;
+  public render = async (islands: Island[]) => {
+    await this.spriteLoader.init();
+    const islandSprites = await Promise.all(
+      islands.map(async island => {
+        const sprites = await this.spriteLoader.getIslandSprites(island);
+        console.log("Map sprites loaded.");
+        sprites.sort(
+          (a: SpriteWithPositionAndLayer, b: SpriteWithPositionAndLayer) => {
+            if (a.layer === b.layer) {
+              const ra = a.position.x + a.position.y;
+              const rb = b.position.x + b.position.y;
+              if (ra === rb) {
+                return 0;
+              } else if (ra < rb) {
+                return -1;
+              } else {
+                return 1;
+              }
+            } else if (a.layer === "land") {
+              return -1;
+            } else {
+              return 1;
+            }
           }
-        } else if (a.layer === "land") {
-          return -1;
-        } else {
-          return 1;
-        }
-      }
+        );
+        return sprites;
+      })
     );
-    console.log("Map sprites sorted.");
 
-    sprites.forEach((sprite: SpriteWithPositionAndLayer) =>
-      this.world.addChild(sprite.sprite)
+    islandSprites.forEach((sprites: SpriteWithPositionAndLayer[]) =>
+      sprites.forEach(sprite => this.world.addChild(sprite.sprite))
     );
     console.log("Map sprites drawn.");
-  }
+
+    return islandSprites;
+  };
 }

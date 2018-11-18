@@ -24,3 +24,8 @@ test("Correctly encrypts", async () => {
     new Buffer(encryptedBytes)
   );
 });
+
+test("handles 0 correctly", async () => {
+  expect(codParser.decrypt(new Stream(new Uint8Array([0x00])))).toBe("\0");
+  expect(codParser.encrypt("\0")).toEqual(new Buffer([0x00]));
+});

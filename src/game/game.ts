@@ -119,6 +119,9 @@ export default class Game {
 
     this.watchSimulationSpeed();
     this.watchTicksForUpkeep();
+    this.store.subscribe(() => {
+      this.gameRenderer.setMoney(this.store.getState().players[0].money);
+    });
 
     this.store.dispatch(createSetSimulationSpeed(SimulationSpeed.Default));
 
@@ -128,6 +131,28 @@ export default class Game {
 
     // this.gameRenderer.onMove(viewport => )
   }
+
+  public getFieldAt = (globalPos: PIXI.PointLike) => {
+    const island = Object.values(this.store.getState().islands).find(each =>
+      each.positionRect.contains(globalPos.x, globalPos.y)
+    );
+    if (!island) {
+      return {
+        base: null,
+        top: null
+      };
+    }
+
+    const islandPos = new PIXI.Point(
+      globalPos.x - island.position.x,
+      globalPos.y - island.position.y
+    );
+
+    return {
+      base: island.baseFields[islandPos.x][islandPos.y],
+      top: island.topFields[islandPos.x][islandPos.y]
+    };
+  };
 
   private mapArrayById<T extends { id: number }>(arr: T[]) {
     return arr.reduce((objectMap: { [k: string]: T }, obj: T) => {

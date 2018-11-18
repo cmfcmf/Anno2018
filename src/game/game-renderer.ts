@@ -1,5 +1,9 @@
 import * as Viewport from "pixi-viewport";
-import IslandRenderer, { TILE_HEIGHT, TILE_WIDTH } from "./island-renderer";
+import IslandRenderer, {
+  LAND_OFFSET,
+  TILE_HEIGHT,
+  TILE_WIDTH
+} from "./island-renderer";
 import World from "./world/world";
 
 export default class GameRenderer {
@@ -7,21 +11,74 @@ export default class GameRenderer {
     const xx = fieldPos.x;
     const yy = fieldPos.y;
     const worldX = (xx - yy) * (TILE_WIDTH / 2);
-    const worldY = (xx + yy) * Math.floor(TILE_HEIGHT / 2);
+    const worldY = (xx + yy) * (TILE_HEIGHT / 2);
     return new PIXI.Point(worldX, worldY);
   }
 
+  /**
+   * Converts PIXI world coordinates to isometric coordinates.
+   * Please note that these are *sea-level* coordinates. Use
+   * worldPosToFieldPosLand for *land-level* coordinates.
+   */
+  public static worldPosToFieldPos(worldPos: PIXI.PointLike) {
+    const x =
+      (worldPos.x / (TILE_WIDTH / 2) + worldPos.y / (TILE_HEIGHT / 2)) / 2;
+    const y =
+      (worldPos.y / (TILE_HEIGHT / 2) - worldPos.x / (TILE_WIDTH / 2)) / 2;
+
+    return new PIXI.Point(Math.round(x), Math.round(y) + 1);
+  }
+
+  public static worldPosToFieldPosLand(worldPos: PIXI.PointLike) {
+    const adjustedWorldPos = new PIXI.Point();
+    adjustedWorldPos.copy(worldPos);
+    adjustedWorldPos.y -= LAND_OFFSET;
+
+    return this.worldPosToFieldPos(adjustedWorldPos);
+  }
+
+  private money: PIXI.Text;
+
   constructor(
-    private world: World,
-    private islandRenderer: IslandRenderer,
-    private viewport: Viewport
-  ) {}
+    private readonly world: World,
+    private readonly islandRenderer: IslandRenderer,
+    private readonly app: PIXI.Application,
+    private readonly viewport: Viewport
+  ) {
+    this.money = new PIXI.Text("", {
+      fontFamily: "Arial",
+      fontSize: 24,
+      fill: 0xff1010
+    });
+  }
 
   public async begin(myPlayerId: number) {
+    this.debugControls();
+
     this.viewport.removeChildren();
 
     // Render islands
-    await this.islandRenderer.render(this.world.islands);
+    const spritesPerIsland = await this.islandRenderer.render(
+      this.world.islands
+    );
+
+    // spritesPerIsland.forEach((sprites, idx) => {
+    //   if (idx !== 4) {
+    //     sprites.forEach(sprite => (sprite.sprite.visible = false));
+    //   }
+    // });
+    /*
+    let i = 0;
+    setInterval(() => {
+      spritesPerIsland[i].forEach(sprite => sprite.sprite.visible = false);
+      i++;
+      if (i === spritesPerIsland.length) {
+        i = 0;
+      }
+      console.log(`Rendering island ${i}.`);
+      spritesPerIsland[i].forEach(sprite => sprite.sprite.visible = true);
+    }, 1000);
+    */
 
     // Render ships
     // ...
@@ -45,6 +102,57 @@ export default class GameRenderer {
   //         debounceTime(1000),
   //     ).subscribe(listener);
   // }
+
+  public setMoney = (money: number) => {
+    this.money.text = `Money: ${money}`;
+  };
+
+  private debugControls() {
+    const debugContainer = new PIXI.Container();
+
+    debugContainer.addChild(this.money);
+    const coordinates = new PIXI.Text("", {
+      fontFamily: "Arial",
+      fontSize: 24,
+      fill: 0xff1010
+    });
+    coordinates.y = 30;
+
+    const islandNumber = new PIXI.Text("", {
+      fontFamily: "Arial",
+      fontSize: 24,
+      fill: 0xff1010
+    });
+    islandNumber.y = 2 * 30;
+
+    const interactionManager: PIXI.interaction.InteractionManager = this.app
+      .renderer.plugins.interaction;
+
+    const updatePosition = () => {
+      const pos = GameRenderer.worldPosToFieldPosLand(
+        this.viewport.toWorld(interactionManager.mouse.global)
+      );
+      coordinates.text = `x: ${pos.x}, y: ${pos.y}`;
+
+      const island = this.world.islands.find(each => {
+        return each.positionRect.contains(pos.x, pos.y);
+      });
+      if (island) {
+        islandNumber.text = `Island id: ${island.id}, x: ${pos.x -
+          island.position.x} y: ${pos.y - island.position.y}`;
+      } else {
+        islandNumber.text = `Island id: ?`;
+      }
+    };
+    updatePosition();
+    this.viewport.on("moved", updatePosition);
+    this.viewport.on("wheel-scroll", updatePosition);
+    interactionManager.on("pointermove", updatePosition);
+
+    debugContainer.addChild(coordinates);
+    debugContainer.addChild(islandNumber);
+    this.viewport.parent.addChild(debugContainer);
+  }
 
   private moveCameraToStartPosition(myPlayerId: number) {
     const myKontor = this.world.kontors.find(

@@ -27,52 +27,55 @@ export default class IslandSpriteLoader {
     private readonly spriteLoader: SpriteLoader
   ) {}
 
-  public async getIslandSprites(islands: Island[]) {
+  public init = async () => {
     if (!this.inited) {
       this.textures = await this.spriteLoader.getTextures("STADTFLD");
       this.fields = this.configLoader.getFieldData();
       this.inited = true;
     }
+  };
+
+  public getIslandSprites = async (island: Island) => {
+    await this.init();
 
     const sprites: SpriteWithPositionAndLayer[] = [];
 
-    islands.forEach(island => {
-      for (let x = 0; x < island.size.x; x++) {
-        for (let y = 0; y < island.size.y; y++) {
-          this.handleField(
-            island.baseFields[x][y],
-            island,
-            x,
-            y,
-            sprites,
-            "land"
-          );
-        }
+    for (let x = 0; x < island.size.x; x++) {
+      for (let y = 0; y < island.size.y; y++) {
+        this.handleField(
+          island.baseFields[x][y],
+          island,
+          x,
+          y,
+          sprites,
+          "land"
+        );
       }
-      for (let x = 0; x < island.size.x; x++) {
-        for (let y = 0; y < island.size.y; y++) {
-          this.handleField(
-            island.topFields[x][y],
-            island,
-            x,
-            y,
-            sprites,
-            "building"
-          );
-        }
+    }
+    for (let x = 0; x < island.size.x; x++) {
+      for (let y = 0; y < island.size.y; y++) {
+        this.handleField(
+          island.topFields[x][y],
+          island,
+          x,
+          y,
+          sprites,
+          "building"
+        );
       }
-    });
-    return sprites;
-  }
+    }
 
-  private handleField(
+    return sprites;
+  };
+
+  private handleField = (
     field: Field | null,
     island: Island,
     x: number,
     y: number,
     sprites: SpriteWithPositionAndLayer[],
     layer: WorldLayer
-  ) {
+  ) => {
     if (field === null) {
       return;
     }
@@ -90,5 +93,5 @@ export default class IslandSpriteLoader {
       layer
     );
     sprites.push(...newSprites);
-  }
+  };
 }
