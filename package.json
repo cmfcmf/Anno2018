@@ -74,12 +74,12 @@
     "test": "jest",
     "test-watch": "jest --notify --watchAll",
     "prepare": "patch-package",
-    "cod-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/cod-converter.ts",
-    "bsh-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/bsh-converter.ts",
-    "dat-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/dat-converter.ts",
-    "smk-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/smk-converter.ts",
-    "wav-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/wav-converter.ts",
-    "zei-converter": "ts-node -O '{\"module\":\"commonjs\"}' src/tools/zei-converter.ts"
+    "cod-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/cod-converter.ts",
+    "bsh-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/bsh-converter.ts",
+    "dat-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/dat-converter.ts",
+    "smk-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/smk-converter.ts",
+    "wav-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/wav-converter.ts",
+    "zei-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/zei-converter.ts"
   },
   "jest": {
     "transform": {
