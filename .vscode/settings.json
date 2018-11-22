@@ -1,0 +1,9 @@
+{
+    "editor.tabSize": 2,
+    "prettier.tslintIntegration": true,
+    "tslint.autoFixOnSave": true,
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "search.exclude": {
+        "/dist": true
+    }
+}
