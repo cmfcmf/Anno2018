@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import * as PIXI from "pixi.js";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 
