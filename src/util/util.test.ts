@@ -1,4 +1,4 @@
-import * as JSZip from "jszip";
+import JSZip from "jszip";
 import { findRootInZip } from "./util";
 
 test("finds root in simple zip", () => {

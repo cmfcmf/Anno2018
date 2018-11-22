@@ -1,5 +1,5 @@
 // https://stackoverflow.com/a/12713326/2560557
-import * as JSZip from "jszip";
+import JSZip from "jszip";
 
 export function uInt8ToBase64(arr: Uint8Array): string {
   const CHUNK_SIZE = 0x8000; // arbitrary number

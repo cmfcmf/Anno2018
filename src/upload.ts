@@ -1,4 +1,4 @@
-import * as JSZip from "jszip";
+import JSZip from "jszip";
 import { JSZipObject } from "jszip";
 import * as log from "loglevel";
 import * as React from "react";
