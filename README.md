@@ -18,7 +18,7 @@ This would have never been possible without the work of countless Anno enthusias
 
 ## Getting Started
 
-1. Go to http://cmfcmf.github.io/Anno2018-js/
+1. Go to http://cmfcmf.github.io/Anno2018/
 2. Upload your zipped Anno files
 3. Grab a coffee
 4. Click on a savegame to start it.

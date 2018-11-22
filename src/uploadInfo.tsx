@@ -91,7 +91,7 @@ export default class UploadInfo extends React.Component<Props, State>
               not working,{" "}
               <a href="https://reddit.com/u/cmfcmf">drop me a note at reddit</a>
               , <a href="https://twitter.com/christianmflach">twitter</a>, or{" "}
-              <a href="https://github.com/cmfcmf/Anno2018-js">
+              <a href="https://github.com/cmfcmf/Anno2018">
                 create an issue at GitHub
               </a>
               . Make sure to include the upload progress output.
