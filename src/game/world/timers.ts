@@ -26,7 +26,7 @@ export function timersFromSaveGame(data: Stream) {
   const timeProduction = data.read32();
   const timeGoodToolsCnt = data.read32();
   const timeGoodToolsMax = data.read32();
-  const timeGame = data.read32();
+  const timeGame = data.read32(); // Incremented every 100ms
 
   const noErzOutFlg = data.read8();
   const tutorFlg = data.read8();
@@ -61,11 +61,38 @@ export function timersFromSaveGame(data: Stream) {
   const timeGrowth = data.read(32, 4);
 
   const timers = {
+    /**
+     * Range: 0 to 7
+     * Update: Every 10 ticks (100 game time)
+     * Influence: ???
+     */
     cntCity,
+    /**
+     * Range: 0 to 7
+     * Update: Every 30 ticks (300 game time)
+     * Influence: ???
+     */
     cntIsland,
+    /**
+     * Range: 0 to 7
+     * Updaste: Every tick (10 game time)
+     * Influence: ???
+     */
     cntShipyard,
+    /**
+     * Range: 0 to 7
+     * Updaste: Every tick (10 game time)
+     * Influence: ???
+     */
     cntMilitary,
+    /**
+     * Range: 0 to 7
+     * Update: Every tick (10 game time)
+     * Influence: Whenever the timer reaches 0, all production buildings which are currently not producing
+     *            but active check if enough input goods have arrived in the meantime.
+     */
     cntProduction,
+
     cntSettlers,
     cntGrowth,
     timeCity,

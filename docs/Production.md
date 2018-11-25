@@ -30,7 +30,7 @@ Let's take the woodcutter as an example. Here's the building config:
       Rohmenge:   1                           ; number of wood harvested per tree (or number of trees required for 1 wood?)
       Radius:     3                           ; area within which trees are harvested
       Interval:   8                           ; time it takes to convert a harvested tree into wood
-      Maxlager:   10                          ; max capacity
+      Maxlager:   10                          ; max stock capacity
       LagAniFlg:  1                           ; animate the building based on its capacity
     EndObj;
     Objekt:     HAUS_BAUKOST

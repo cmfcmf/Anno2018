@@ -4,6 +4,7 @@ import IslandRenderer, {
   TILE_HEIGHT,
   TILE_WIDTH
 } from "./island-renderer";
+import { Island } from "./world/island";
 import World from "./world/world";
 
 export default class GameRenderer {
@@ -106,6 +107,28 @@ export default class GameRenderer {
   public setMoney = (money: number) => {
     this.money.text = `Money: ${money}`;
   };
+
+  public onProduced(island: Island, position: PIXI.Point, stock: number) {
+    console.log(
+      `Producer at island ${island.id} (${position.x}, ${
+        position.y
+      }) has now stock: ${stock}.`
+    );
+    const text = new PIXI.Text(`Lager: ${stock}`, {
+      fontFamily: "Arial",
+      fontSize: 24,
+      fill: 0xff1010
+    });
+
+    const pos = GameRenderer.fieldPosToWorldPos(
+      new PIXI.Point(
+        island.position.x + position.x,
+        island.position.y + position.y
+      )
+    );
+    text.position.set(pos.x, pos.y);
+    this.viewport.addChild(text);
+  }
 
   private debugControls() {
     const debugContainer = new PIXI.Container();

@@ -1,13 +1,25 @@
 import "pixi-keyboard";
 import * as PIXI from "pixi.js";
 import { Action, combineReducers, createStore, Store } from "redux";
-import { composeWithDevTools } from "redux-devtools-extension";
-import watch from "redux-watch";
+import { devToolsEnhancer } from "redux-devtools-extension";
 import { Observable } from "rxjs/internal/Observable";
-import { filter } from "rxjs/operators";
+import { distinctUntilChanged, filter, map } from "rxjs/operators";
 import assert from "../util/assert";
 import ConfigLoader from "./config-loader";
 import GameRenderer from "./game-renderer";
+import {
+  createAddMoney,
+  createSetSimulationSpeed,
+  createTick,
+  createUpdateProducer
+} from "./logic/action-creators";
+import * as actionCreators from "./logic/action-creators";
+import {
+  playerReducer,
+  producerReducer,
+  TICK,
+  timerReducer
+} from "./logic/reducers";
 import Keys = PIXI.keyboard.Keys;
 import { City } from "./world/city";
 import { Island } from "./world/island";
@@ -18,64 +30,28 @@ import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
 
-const TICK = "TICK";
-const DONATE_MONEY = "DONATE_MONEY";
-const SET_SIMULATION_SPEED = "SET_SIMULATION_SPEED";
-const PAY_UPKEEP = "PAY_UPKEEP";
-
-function createTick() {
-  return {
-    type: TICK
-  };
-}
-
-function createDonateMoney(
-  fromPlayer: number,
-  toPlayer: number,
-  amount: number
-) {
-  return {
-    type: DONATE_MONEY,
-    payload: {
-      fromPlayer,
-      toPlayer,
-      amount
-    }
-  };
-}
-
-function createSetSimulationSpeed(newSpeed: SimulationSpeed) {
-  return {
-    type: SET_SIMULATION_SPEED,
-    payload: newSpeed
-  };
-}
-
-function createPayUpkeep(playerId: number, upkeep: number) {
-  return {
-    type: PAY_UPKEEP,
-    payload: {
-      playerId,
-      upkeep
-    }
-  };
-}
-
 interface MapById<T> {
   [k: string]: T;
 }
 
-interface GameState {
+export interface GameState {
   players: MapById<Player>;
   islands: MapById<Island>;
   tasks: MapById<Task>;
   cities: City[];
   kontors: Kontor[];
-  producers: Producer[];
+  producers: MapById<Producer>;
   timers: Timers & { simulationSpeed: SimulationSpeed };
 }
 
-const takeEveryNth = (n: number) => filter((value, index) => index % n === 0);
+function getState$<T>(store: Store<T>) {
+  return new Observable<T>(observer => {
+    observer.next(store.getState());
+    return store.subscribe(() => {
+      observer.next(store.getState());
+    });
+  });
+}
 
 export default class Game {
   private store: Store<GameState>;
@@ -93,44 +69,60 @@ export default class Game {
   }
 
   public async begin(world: World) {
+    const producers: MapById<Producer> = {};
+    world.producers.forEach((producer, idx) => {
+      producers[idx] = producer;
+    });
+
     const initialState: GameState = {
       players: this.mapArrayById(world.players),
       islands: this.mapArrayById(world.islands),
       tasks: this.mapArrayById(world.tasks),
       cities: world.cities,
       kontors: world.kontors,
-      producers: world.producers,
+      producers: producers,
       timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused }
     };
 
     this.store = createStore<GameState, Action<string>, any, never>(
       combineReducers({
-        players: this.playerReducer,
-        islands: (state: GameState["islands"] = null, action: any) => state,
-        timers: this.timerReducer,
-        tasks: (state: GameState["tasks"] = null, action: any) => state,
-        cities: (state: GameState["cities"] = null, action: any) => state,
-        kontors: (state: GameState["kontors"] = null, action: any) => state,
-        producers: (state: GameState["producers"] = null, action: any) => state
+        players: playerReducer,
+        islands: (state: GameState["islands"] = null) => state,
+        timers: timerReducer,
+        tasks: (state: GameState["tasks"] = null) => state,
+        cities: (state: GameState["cities"] = null) => state,
+        kontors: (state: GameState["kontors"] = null) => state,
+        producers: producerReducer
       }),
       initialState,
-      composeWithDevTools()
+      devToolsEnhancer({ actionsBlacklist: [TICK], actionCreators })
     );
 
     this.watchSimulationSpeed();
     this.watchTicksForUpkeep();
-    this.store.subscribe(() => {
-      this.gameRenderer.setMoney(this.store.getState().players[0].money);
-    });
+    this.watchTicksForProducing();
+    getState$(this.store)
+      .pipe(
+        map(state => state.players[0].money),
+        distinctUntilChanged()
+      )
+      .subscribe(money => {
+        this.gameRenderer.setMoney(money);
+      });
 
     this.store.dispatch(createSetSimulationSpeed(SimulationSpeed.Default));
 
     this.keyboardManager.enable();
 
     await this.gameRenderer.begin(this.myPlayerId);
-
-    // this.gameRenderer.onMove(viewport => )
   }
+
+  public getFieldAtIsland = (island: Island, islandPos: PIXI.PointLike) => {
+    return {
+      base: island.baseFields[islandPos.x][islandPos.y],
+      top: island.topFields[islandPos.x][islandPos.y]
+    };
+  };
 
   public getFieldAt = (globalPos: PIXI.PointLike) => {
     const island = Object.values(this.store.getState().islands).find(each =>
@@ -142,16 +134,12 @@ export default class Game {
         top: null
       };
     }
-
     const islandPos = new PIXI.Point(
       globalPos.x - island.position.x,
       globalPos.y - island.position.y
     );
 
-    return {
-      base: island.baseFields[islandPos.x][islandPos.y],
-      top: island.topFields[islandPos.x][islandPos.y]
-    };
+    return this.getFieldAtIsland(island, islandPos);
   };
 
   private mapArrayById<T extends { id: number }>(arr: T[]) {
@@ -162,49 +150,114 @@ export default class Game {
   }
 
   private watchSimulationSpeed() {
-    const simulationSpeedWatcher = watch<
-      GameState["timers"]["simulationSpeed"]
-    >(this.store.getState, "timers.simulationSpeed");
-    this.store.subscribe(
-      simulationSpeedWatcher(
-        (speed: GameState["timers"]["simulationSpeed"]) => {
-          if (this.timerId !== null) {
-            clearInterval(this.timerId);
-          }
-          if (speed !== SimulationSpeed.Paused) {
-            this.timerId = window.setInterval(
-              this.tick.bind(this),
-              1000 / speed
-            );
-          }
-        }
+    getState$(this.store)
+      .pipe(
+        map(state => state.timers.simulationSpeed),
+        distinctUntilChanged()
       )
-    );
+      .subscribe(speed => {
+        if (this.timerId) {
+          clearInterval(this.timerId);
+        }
+        if (speed !== SimulationSpeed.Paused) {
+          this.timerId = window.setInterval(this.tick, 100 / speed);
+        }
+      });
   }
 
   private watchTicksForUpkeep() {
-    const tickWatcher = watch<GameState["timers"]["timeGame"]>(
-      this.store.getState,
-      "timers.timeGame"
-    );
-
-    new Observable(observer => {
-      this.store.subscribe(
-        tickWatcher((tick: GameState["timers"]["timeGame"]) => {
-          observer.next(tick);
-        })
-      );
-    })
-      .pipe(takeEveryNth(10))
+    getState$(this.store)
+      .pipe(
+        map(state => state.timers.timeGame),
+        filter(time => time % 100 === 0),
+        distinctUntilChanged()
+      )
       .subscribe(() => {
+        // console.profile("upkeep");
+        console.log("upkeep calculation");
         const upkeeps = this.calculateUpkeeps();
         for (const playerId of Object.keys(upkeeps)) {
           // This is how Anno 1602 does it, see
           // https://www.annozone.de/Charlie/Cod/numerik.html
           const upkeep = Math.floor(upkeeps[playerId] / 6);
-
-          this.store.dispatch(createPayUpkeep(+playerId, upkeep));
+          this.store.dispatch(createAddMoney(parseInt(playerId, 10), -upkeep));
         }
+        // console.profileEnd("upkeep");
+      });
+  }
+
+  private watchTicksForProducing() {
+    getState$(this.store)
+      .pipe(
+        filter(state => state.timers.timeGame % 10 === 0),
+        distinctUntilChanged((a, b) => a.timers.timeGame === b.timers.timeGame)
+      )
+      .subscribe(state => {
+        console.log("update producers");
+        // console.profile("producing");
+        const fieldData = this.configLoader.getFieldData();
+        Object.values(state.producers).forEach((producer, id) => {
+          if (!producer.active) {
+            return;
+          }
+          const island = state.islands[producer.islandId];
+          const buildingId = this.getFieldAtIsland(island, producer.position)
+            .top.fieldId;
+          const fieldConfig = fieldData.get(buildingId);
+          assert(fieldConfig);
+
+          if (producer.producedGood === 128 && producer.timer === 1) {
+            // We have finished producing!
+            const canProduceEvenMore =
+              producer.firstGoodStock >= 2 * fieldConfig.production.amount1 &&
+              producer.secondGoodStock >= 2 * fieldConfig.production.amount2 &&
+              producer.stock < fieldConfig.production.maxStock - 1;
+            const newStock = producer.stock + 1;
+
+            this.store.dispatch(
+              createUpdateProducer(id, {
+                stock: newStock,
+                timer: canProduceEvenMore
+                  ? fieldConfig.production.interval
+                  : 11,
+                firstGoodStock:
+                  producer.firstGoodStock - fieldConfig.production.amount1,
+                secondGoodStock:
+                  producer.secondGoodStock - fieldConfig.production.amount2,
+                producedGood: canProduceEvenMore ? 128 : 0
+              })
+            );
+            this.gameRenderer.onProduced(island, producer.position, newStock);
+          } else if (
+            producer.producedGood === 0 &&
+            (producer.timer === 1 || state.timers.cntProduction === 0)
+          ) {
+            // We are not currently producing something but should now check
+            // whether we can start producing something new.
+            const canProduce =
+              producer.firstGoodStock >= fieldConfig.production.amount1 &&
+              producer.secondGoodStock >= fieldConfig.production.amount2 &&
+              producer.stock < fieldConfig.production.maxStock;
+            this.store.dispatch(
+              createUpdateProducer(id, {
+                timer: canProduce
+                  ? fieldConfig.production.interval
+                  : producer.timer <= 1
+                    ? 11
+                    : producer.timer - 1,
+                producedGood: canProduce ? 128 : 0
+              })
+            );
+          } else {
+            this.store.dispatch(
+              createUpdateProducer(id, {
+                // The timer never reaches 0.
+                timer: producer.timer <= 1 ? 11 : producer.timer - 1
+              })
+            );
+          }
+        });
+        // console.profileEnd("producing");
       });
   }
 
@@ -219,8 +272,7 @@ export default class Game {
     );
 
     const islands = state.islands;
-    const producers = state.producers;
-    for (const producer of producers) {
+    for (const producer of Object.values(state.producers)) {
       const island = islands[producer.islandId];
       const field = island.topFields[producer.position.x][producer.position.y];
       const buildingId = field.fieldId;
@@ -277,48 +329,7 @@ export default class Game {
     }
   }
 
-  private tick() {
+  private tick = () => {
     this.store.dispatch(createTick());
-  }
-
-  private timerReducer(state: GameState["timers"] = null, action: any) {
-    switch (action.type) {
-      case TICK:
-        return { ...state, gameTime: ++state.timeGame };
-      case SET_SIMULATION_SPEED:
-        return { ...state, simulationSpeed: action.payload };
-      default:
-        return state;
-    }
-  }
-
-  private playerReducer(state: GameState["players"] = null, action: any) {
-    switch (action.type) {
-      case DONATE_MONEY:
-        const payload = action.payload;
-        return {
-          ...state,
-          [payload.fromPlayer]: {
-            ...state[payload.fromPlayer],
-            money: state[payload.fromPlayer].money - payload.amount
-          },
-          [payload.toPlayer]: {
-            ...state[payload.toPlayer],
-            money: state[payload.toPlayer].money + payload.amount
-          }
-        };
-      case PAY_UPKEEP:
-        const playerId = action.payload.playerId;
-        const upkeep = action.payload.upkeep;
-        return {
-          ...state,
-          [playerId]: {
-            ...state[playerId],
-            money: state[playerId].money - upkeep
-          }
-        };
-      default:
-        return state;
-    }
-  }
+  };
 }

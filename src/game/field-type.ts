@@ -60,6 +60,13 @@ export default class FieldType {
       active: number;
       inactive: number;
     };
+    good1: string;
+    good2: string;
+    amount1: number;
+    amount2: number;
+    radius: number;
+    interval: number;
+    maxStock: number;
   };
 
   constructor(config: any) {
@@ -87,7 +94,17 @@ export default class FieldType {
     }
     this.production = {
       good: productionConfig.Ware,
-      upkeep
+      upkeep,
+      good1: productionConfig.Rohstoff,
+      good2: productionConfig.Workstoff,
+      amount1: productionConfig.Rohmenge,
+      amount2:
+        productionConfig.Workmenge !== undefined
+          ? productionConfig.Workmenge
+          : 0,
+      radius: productionConfig.Radius,
+      interval: productionConfig.Interval,
+      maxStock: productionConfig.Maxlager
     };
   }
 
