@@ -7,6 +7,7 @@ interface FileInfo {
 
 export default class SMKParser {
   private ffmpeg: any;
+  private memory = 100_000_000;
 
   public async parse(data: Uint8Array): Promise<Uint8Array> {
     this.ffmpeg = await loadFFmpeg();
@@ -84,7 +85,8 @@ export default class SMKParser {
         stdin: () => {
           // Do nothing. This prevents the browser from "prompt"ing the user for input.
         },
-        TOTAL_MEMORY: 100_000_000,
+        TOTAL_MEMORY: this.memory,
+        noExitRuntime: false,
         returnCallback: (files: FileInfo[]) => {
           if (
             output.includes(

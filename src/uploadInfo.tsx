@@ -168,7 +168,12 @@ export default class UploadInfo extends React.Component<Props, State>
     this.setState((prevState: State) => {
       return {
         ...prevState,
-        messages: [{ msg, type }, ...prevState.messages]
+        messages: [
+          { msg, type },
+          ...prevState.messages.filter(
+            (message, i) => message.type !== "info" || i < 50
+          )
+        ]
       };
     });
   };
