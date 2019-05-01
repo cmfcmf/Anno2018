@@ -1,0 +1,13 @@
+diff --git a/node_modules/wavefile/package.json b/node_modules/wavefile/package.json
+index 854f1ab..3a155e7 100644
+--- a/node_modules/wavefile/package.json
++++ b/node_modules/wavefile/package.json
+@@ -7,7 +7,7 @@
+   "license": "MIT",
+   "module": "./index.js",
+   "main": "./dist/wavefile.cjs.js",
+-  "browser": "./dist/wavefile.min.js",
++  "browser": "./index.js",
+   "bin": "./bin/wavefile.js",
+   "engines": {
+     "node": ">=8"
