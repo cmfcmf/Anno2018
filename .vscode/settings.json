@@ -1,9 +1,17 @@
 {
     "editor.tabSize": 2,
     "prettier.tslintIntegration": true,
-    "tslint.autoFixOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.tslint": true
+    },
     "typescript.tsdk": "./node_modules/typescript/lib",
     "search.exclude": {
         "/dist": true
-    }
+    },
+    "editor.rulers": [
+        80
+    ],
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.preferences.quoteStyle": "double",
+    "browser-preview.startUrl": "http://localhost:8080"
 }
