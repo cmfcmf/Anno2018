@@ -3,6 +3,7 @@ import "pixi-keyboard";
 import * as PIXI from "pixi.js";
 import FileSystem from "./filesystem";
 import GameLoader from "./game-loader";
+import AnimationRenderer from "./game/animation-renderer";
 import ConfigLoader from "./game/config-loader";
 import FontLoader from "./game/font-loader";
 import GADRenderer from "./game/gad-renderer";
@@ -55,6 +56,11 @@ const Viewport = require("pixi-viewport");
   }
 
   // PIXI.utils.skipHello();
+  PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+  PIXI.settings.MIPMAP_TEXTURES = false;
+  // PIXI.settings.RENDER_OPTIONS.antialias = false;
+  PIXI.settings.RENDER_OPTIONS.roundPixels = true;
+
   const app = new PIXI.Application({
     width: window.innerWidth,
     height: window.innerHeight - 120,
@@ -116,6 +122,7 @@ const Viewport = require("pixi-viewport");
 
   const queryGameName = getQueryParameter("load");
   const gad = getQueryParameter("gad");
+  const animationName = getQueryParameter("animation");
   if (queryGameName !== null) {
     await gameLoader.loadByName(queryGameName);
     menuViewport.visible = false;
@@ -124,6 +131,37 @@ const Viewport = require("pixi-viewport");
     const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
     const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
     await menuStructure.renderScreen(gad);
+  } else if (animationName !== null) {
+    console.log(`Rendering animation "${animationName}".`);
+    const animationData = JSON.parse(
+      await fs.openAndGetContentAsText("/animations.json")
+    );
+    const animationRenderer = new AnimationRenderer(
+      animationData,
+      spriteLoader
+    );
+    // await animationRenderer.renderAnimation(animation, viewport);
+    const animation = await animationRenderer.getAnimation(animationName);
+
+    const animIdx = 0;
+    const rotation = 1;
+
+    const sprite = animation[animIdx].sprites[rotation];
+    const config = animation[animIdx].config;
+    sprite.loop = true;
+    if (config.Kind !== "ENDLESS") {
+      let cnt = 0;
+      sprite.onLoop = () => {
+        cnt++;
+        console.log(cnt, config.AnimRept);
+        if (cnt === config.AnimRept) {
+          sprite.loop = false;
+        }
+      };
+    }
+
+    viewport.addChild(sprite);
+    sprite.play();
   } else {
     // menuViewport.fit(); // TODO: Makes usage of sliders harder
     const gadRenderer = new GADRenderer(menuViewport, spriteLoader);

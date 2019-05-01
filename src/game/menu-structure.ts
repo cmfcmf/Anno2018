@@ -83,7 +83,12 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
       await this.fs.openAndGetContentAsText(`/screens/${screen}.json`)
     );
     console.log(data);
-    const config = this.structure[screen];
+    const config = this.structure[screen] || {
+      onLoad: () => {
+        /* Nothing to do */
+      },
+      buttons: []
+    };
     await this.gadRenderer.render(data, config);
   }
 

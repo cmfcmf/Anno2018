@@ -8,7 +8,6 @@ export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 32;
 export const LAND_OFFSET = -20;
 
-
 export default class IslandRenderer {
   constructor(
     private world: PIXI.Container,

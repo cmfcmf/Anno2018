@@ -97,3 +97,12 @@ the building and brings home `Rohmenge` trees. Now he starts producing the `Ware
 time. After that, the produced good is waiting for pickup.
 
 The `LagAniFlg` denotes that the building's stock is animated, i.e. multiple sprites exist depending on the stock level.
+
+## Animation
+
+1. Walking with goods
+2. Walking without goods
+3. Harvesting goods
+4. Idle Animation
+
+AnimNr = 0 + Kind = ENDLESS -> Animation ended
