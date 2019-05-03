@@ -2,18 +2,18 @@ workflow "CI" {
   on = "push"
   resolves = [
     "lint",
-    "new-action",
+    "Filters for GitHub Actions-1",
   ]
 }
 
 action "test" {
   uses = "Borales/actions-yarn@1.1.0"
-  runs = "run test"
+  args = "run test"
 }
 
 action "lint" {
   uses = "Borales/actions-yarn@1.1.0"
-  runs = "run lint"
+  args = "run lint"
 }
 
 action "Filters for GitHub Actions" {
@@ -25,9 +25,4 @@ action "Filters for GitHub Actions-1" {
   uses = "actions/bin/filter@3c0b4f0e63ea54ea5df2914b4fabf383368cd0da"
   needs = ["test", "lint"]
   args = "branch master"
-}
-
-action "new-action" {
-  uses = "owner/repo/path@ref"
-  needs = ["Filters for GitHub Actions-1"]
 }
