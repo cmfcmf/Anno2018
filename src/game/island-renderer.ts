@@ -24,8 +24,8 @@ export default class IslandRenderer {
         sprites.sort(
           (a: SpriteWithPositionAndLayer, b: SpriteWithPositionAndLayer) => {
             if (a.layer === b.layer) {
-              const ra = a.mapPosition.x + a.mapPosition.y;
-              const rb = b.mapPosition.x + b.mapPosition.y;
+              const ra = a.pixelPosition.x + a.pixelPosition.y;
+              const rb = b.pixelPosition.x + b.pixelPosition.y;
               if (ra === rb) {
                 return 0;
               } else if (ra < rb) {
