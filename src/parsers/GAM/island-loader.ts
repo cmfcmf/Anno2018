@@ -1,4 +1,5 @@
 import FileSystem from "../../filesystem";
+import FieldType from "../../game/field-type";
 import Field from "../../game/world/field";
 import { Island } from "../../game/world/island";
 import assert from "../../util/assert";
@@ -41,7 +42,10 @@ export default class IslandLoader {
     }
   ];
 
-  constructor(private fs: FileSystem) {}
+  constructor(
+    private fs: FileSystem,
+    private fieldData: ReadonlyMap<number, FieldType>
+  ) {}
 
   public async loadIslandFile(island: Island) {
     const climate = island.isSouth ? "south" : "north";
@@ -55,6 +59,10 @@ export default class IslandLoader {
     }
 
     throw new Error("Could not load island");
+  }
+
+  public async loadIslandFileByName(name: string) {
+    return this.fs.openAndGetContentAsStream(`/islands/${name}.scp`);
   }
 
   public async loadRandomIslandFile(
@@ -90,7 +98,52 @@ export default class IslandLoader {
     };
   }
 
-  public parseIslandBuildings(
+  public setIslandFields(island: Island, blocks: Block[]) {
+    island.baseFields = [];
+    island.topFields = [];
+    for (let x = 0; x < island.size.x; x++) {
+      island.baseFields.push(new Array(island.size.y).fill(null));
+      island.topFields.push(new Array(island.size.y).fill(null));
+    }
+    for (const block of blocks) {
+      const parsedFields = this.parseIslandFields(island, block);
+      for (let x = 0; x < island.size.x; x++) {
+        for (let y = 0; y < island.size.y; y++) {
+          const parsedField = parsedFields[x][y];
+          if (parsedField === null) {
+            continue;
+          }
+          const config = this.fieldData.get(parsedField.fieldId);
+          if (
+            [
+              "BODEN",
+              "FLUSS",
+              "FLUSSECK",
+              "HANG",
+              "HANGQUELL",
+              "HANGECK",
+              "STRAND",
+              "STRANDMUND",
+              "STRANDECKI",
+              "STRANDVARI",
+              "STRANDECKA",
+              "BRANDUNG",
+              "BRANDECK",
+              "MEER",
+              "FELS",
+              "MUENDUNG"
+            ].includes(config.kind)
+          ) {
+            island.baseFields[x][y] = parsedField;
+          } else {
+            island.topFields[x][y] = parsedField;
+          }
+        }
+      }
+    }
+  }
+
+  private parseIslandFields(
     island: Island,
     block: Block
   ): Array<Array<Field | null>> {

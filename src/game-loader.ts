@@ -19,9 +19,17 @@ export default class GameLoader {
   ) {}
 
   public async loadByName(gameName: string) {
-    const saveGame = (await this.loadSavesAndMissions()).find(
+    const games = await this.loadSavesAndMissions();
+    const saveGame = games.find(
       saveOrMission => saveOrMission.name === gameName
     );
+    if (!saveGame) {
+      throw new Error(
+        `Could not find ${gameName}. The following files are available: ${games
+          .map(game => game.name)
+          .join(", ")}`
+      );
+    }
     await this.load(saveGame);
   }
 

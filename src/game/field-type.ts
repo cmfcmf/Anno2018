@@ -4,7 +4,7 @@ import { SpriteWithPositionAndLayer } from "./island-sprite-loader";
 import { WorldLayer } from "./island-sprite-loader";
 import { Rotation4 } from "./world/world";
 
-export type LandFieldType =
+export type GroundFieldType =
   | "BODEN"
   | "FLUSS"
   | "FLUSSECK"
@@ -13,20 +13,23 @@ export type LandFieldType =
   | "HANGECK"
   | "STRAND"
   | "STRANDMUND"
-  | "STRANDRUINE"
   | "STRANDECKI"
   | "STRANDECKA"
   | "STRANDVARI"
   | "BRANDUNG"
   | "BRANDECK"
-  | "PIER"
   | "MEER"
+  | "FELS"
+  | "MUENDUNG";
+
+export type LandFieldType =
+  | GroundFieldType
+  | "STRANDRUINE"
+  | "PIER"
   | "WALD"
   | "RUINE"
   | "STRANDHAUS"
-  | "HAFEN"
-  | "FELS"
-  | "MUENDUNG";
+  | "HAFEN";
 
 export type BuildingFieldType =
   | "GEBAEUDE"
@@ -155,7 +158,8 @@ export default class FieldType {
         sprite.y = worldY + this.yOffset;
         sprites.push({
           sprite: sprite,
-          position: new PIXI.Point(xx, yy),
+          pixelPosition: new PIXI.Point(xx, yy),
+          mapPosition: new PIXI.Point(x, y),
           layer: layer
         });
       }

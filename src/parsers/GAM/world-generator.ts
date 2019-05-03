@@ -87,14 +87,7 @@ export default class WorldGenerator {
           throw new Error("This code cannot be reached.");
       }
 
-      newIsland.baseFields = this.islandLoader.parseIslandBuildings(
-        newIsland,
-        inselHausBlock
-      );
-      newIsland.topFields = this.islandLoader.parseIslandBuildings(
-        newIsland,
-        Block.empty("INSELHAUS")
-      );
+      this.islandLoader.setIslandFields(newIsland, [inselHausBlock]);
 
       world.islands.push(newIsland);
     }

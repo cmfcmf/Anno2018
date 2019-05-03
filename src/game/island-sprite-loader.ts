@@ -10,7 +10,8 @@ export type WorldLayer = "land" | "building";
 
 export interface SpriteWithPositionAndLayer {
   sprite: PIXI.Sprite;
-  position: PIXI.Point;
+  pixelPosition: PIXI.Point;
+  mapPosition: PIXI.Point;
   layer: WorldLayer;
 }
 

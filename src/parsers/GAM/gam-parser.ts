@@ -62,7 +62,7 @@ export default class GAMParser {
     return world;
   }
 
-  private async doParse(blocks: Map<string, Block[]>) {
+  public async doParse(blocks: Map<string, Block[]>) {
     // console.log([...blocks.keys()].map(key => [key, blocks.get(key).length]));
     console.log(
       [...blocks.keys()]
@@ -152,6 +152,10 @@ export default class GAMParser {
 
   private async parseIslands(islandBlocks: IslandBlock[]) {
     const islands: Island[] = [];
+    if (!this.islandLoader) {
+      return islands;
+    }
+
     for (const islandBlock of islandBlocks) {
       const island = islandFromSaveGame(islandBlock.data);
       const islandBuildingBlocks =
@@ -167,10 +171,15 @@ export default class GAMParser {
         }
 
         const islandFile = await this.islandLoader.loadIslandFile(island);
-        // TODO: Why do we ignore this block
+
+        // The basis block contains the same information already present in
+        // the island block of the savegame. We can safely skip over it.
         const islandBasisBlock = Block.fromStream(islandFile);
-        // TODO: Are there more blocks?
+        assert(islandBasisBlock.type === "INSEL5");
+
         islandBottomBlock = Block.fromStream(islandFile);
+        assert(islandBottomBlock.type === "INSELHAUS");
+        // TODO: There are some more HIRSCH blocks we ignore.
       } else {
         assert(
           islandBuildingBlocks.length >= 1 && islandBuildingBlocks.length <= 2
@@ -180,15 +189,10 @@ export default class GAMParser {
           islandTopBlock = islandBuildingBlocks[1];
         }
       }
-      island.baseFields = this.islandLoader.parseIslandBuildings(
-        island,
-        islandBottomBlock
-      );
-
-      island.topFields = this.islandLoader.parseIslandBuildings(
-        island,
+      this.islandLoader.setIslandFields(island, [
+        // islandBottomBlock,
         islandTopBlock
-      );
+      ]);
 
       islands.push(island);
     }

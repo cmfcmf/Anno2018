@@ -11,6 +11,8 @@ import IslandRenderer from "./game/island-renderer";
 import IslandSpriteLoader from "./game/island-sprite-loader";
 import MenuStructure from "./game/menu-structure";
 import MusicPlayer from "./game/music-player";
+import { islandFromSaveGame } from "./game/world/island";
+import { Block } from "./parsers/GAM/block";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
 import SpriteLoader from "./sprite-loader";
@@ -101,8 +103,9 @@ const Viewport = require("pixi-viewport");
   console.log(`Finished loading music.`);
 
   const spriteLoader = new SpriteLoader(fs);
+  const islandLoader = new IslandLoader(fs, configLoader.getFieldData());
 
-  const gamParser = new GAMParser(new IslandLoader(fs));
+  const gamParser = new GAMParser(islandLoader);
   const worldFieldBuilder = new IslandSpriteLoader(
     fs,
     configLoader,
@@ -123,6 +126,7 @@ const Viewport = require("pixi-viewport");
   const queryGameName = getQueryParameter("load");
   const gad = getQueryParameter("gad");
   const animationName = getQueryParameter("animation");
+  const islandName = getQueryParameter("island");
   if (queryGameName !== null) {
     await gameLoader.loadByName(queryGameName);
     menuViewport.visible = false;
@@ -162,6 +166,26 @@ const Viewport = require("pixi-viewport");
 
     viewport.addChild(sprite);
     sprite.play();
+  } else if (islandName !== null) {
+    console.info(`Rendering island "${islandName}".`);
+    const islandFile = await islandLoader.loadIslandFileByName(islandName);
+
+    const blocks: Block[] = [];
+    while (!islandFile.eof()) {
+      blocks.push(Block.fromStream(islandFile));
+    }
+    console.table(blocks);
+
+    const island = islandFromSaveGame(
+      blocks.find(block => ["INSEL5", "INSEL4", "INSEL3"].includes(block.type))
+        .data
+    );
+    islandLoader.setIslandFields(island, [
+      blocks.find(block => block.type === "INSELHAUS")
+    ]);
+
+    menuViewport.visible = false;
+    await islandRenderer.render([island]);
   } else {
     // menuViewport.fit(); // TODO: Makes usage of sliders harder
     const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
