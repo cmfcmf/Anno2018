@@ -1,6 +1,8 @@
-type InteractionEvent = PIXI.interaction.InteractionEvent;
+import { interaction, Sprite } from "pixi.js";
 
-export default class SliderSprite extends PIXI.Sprite {
+type InteractionEvent = interaction.InteractionEvent;
+
+export default class SliderSprite extends Sprite {
   private dragging = false;
   private topY: number;
 

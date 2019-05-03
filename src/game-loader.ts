@@ -1,4 +1,5 @@
-import * as Viewport from "pixi-viewport";
+import Viewport from "pixi-viewport";
+import { Application } from "pixi.js";
 import FileSystem from "./filesystem";
 import ConfigLoader from "./game/config-loader";
 import Game from "./game/game";
@@ -12,7 +13,7 @@ export default class GameLoader {
     private readonly fs: FileSystem,
     private readonly gamParser: GAMParser,
     private readonly islandRenderer: IslandRenderer,
-    private readonly app: PIXI.Application,
+    private readonly app: Application,
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
     private readonly musicPlayer: MusicPlayer

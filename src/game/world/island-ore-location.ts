@@ -4,7 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
-import * as PIXI from "pixi.js";
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 
@@ -21,7 +21,7 @@ export enum OreLocationSize {
 export class OreLocation {
   public static fromSaveGame(data: Stream) {
     const kind = data.read8();
-    const position = new PIXI.Point(data.read8(), data.read8());
+    const position = new Point(data.read8(), data.read8());
     const discoveredBy = data.read8(); // unsure
     const size = data.read8();
     assert(data.read8() === 0);
@@ -34,7 +34,7 @@ export class OreLocation {
     public kind: OreLocationKind,
     public size: OreLocationSize,
     public amount: number,
-    public position: PIXI.Point,
+    public position: Point,
     public discoveredBy: number
   ) {}
 }

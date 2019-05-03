@@ -1,9 +1,9 @@
-import * as PIXI from "pixi.js";
+import { Spritesheet, Texture } from "pixi.js";
 import FileSystem from "./filesystem";
 import { textureFromUint8ArrayPNG } from "./util/pixi";
 
 export default class SpriteLoader {
-  private textures: Map<string, Map<number, PIXI.Texture>> = new Map();
+  private textures: Map<string, Map<number, Texture>> = new Map();
 
   constructor(private readonly fs: FileSystem) {}
 
@@ -32,16 +32,13 @@ export default class SpriteLoader {
           file
         );
         const tex = textureFromUint8ArrayPNG(spriteSheetImageData);
-        const spritesheet = new PIXI.Spritesheet(
-          tex.baseTexture,
-          spriteSheetData
-        );
+        const spritesheet = new Spritesheet(tex.baseTexture, spriteSheetData);
 
-        const textures = await new Promise<{ [key: string]: PIXI.Texture }>(
+        const textures = await new Promise<{ [key: string]: Texture }>(
           (resolve, reject) => {
             spritesheet.parse((sheet: any, hmm: any) => {
               // This appears to be a bug.
-              resolve(sheet as { [key: string]: PIXI.Texture });
+              resolve(sheet as { [key: string]: Texture });
             });
           }
         );

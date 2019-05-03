@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import { SoldierType } from "./soldier";
 
@@ -29,7 +30,7 @@ export type Castle = ReturnType<typeof castleFromSaveGame>;
 
 export function castleFromSaveGame(data: Stream) {
   const islandId = data.read8();
-  const position = new PIXI.Point(data.read8(), data.read8());
+  const position = new Point(data.read8(), data.read8());
   data.read8();
   data.read32();
   const numSwords = data.read16();

@@ -1,19 +1,19 @@
-import * as PIXI from "pixi.js";
+import { Texture } from "pixi.js";
 import { uInt8ToBase64 } from "./util";
 
 export function textureFromUint8ArrayPNG(data: Uint8Array) {
-  return PIXI.Texture.fromImage(`data:image/png;base64,${uInt8ToBase64(data)}`);
+  return Texture.from(`data:image/png;base64,${uInt8ToBase64(data)}`);
 }
 
 export async function textureFromUint8ArrayMP4(
   data: Uint8Array
-): Promise<PIXI.VideoBaseTexture> {
+): Promise<Texture> {
   const tmpVideo = document.createElement("video");
   tmpVideo.src = `data:video/mp4;base64,${uInt8ToBase64(data)}`;
-  const texture = PIXI.VideoBaseTexture.fromVideo(tmpVideo);
-
-  return new Promise<PIXI.VideoBaseTexture>((resolve, reject) => {
-    texture.on("loaded", () => resolve(texture));
-    texture.on("error", reject);
+  const texture = Texture.from(tmpVideo);
+  await new Promise((resolve, reject) => {
+    texture.baseTexture.addListener("loaded", resolve);
+    texture.baseTexture.addListener("error", reject);
   });
+  return texture;
 }

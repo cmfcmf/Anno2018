@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 
@@ -11,7 +12,7 @@ export type Producer = Readonly<ReturnType<typeof producerFromSaveGame>>;
 
 export function producerFromSaveGame(data: Stream) {
   const islandId = data.read8();
-  const position = new PIXI.Point(data.read8(), data.read8());
+  const position = new Point(data.read8(), data.read8());
   const speed = data.read8();
   const speedCount = data.read8();
   const stock = data.read16() / 32;

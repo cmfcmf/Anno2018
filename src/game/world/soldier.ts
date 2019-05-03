@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import { Rotation8 } from "./world";
 
@@ -18,7 +19,7 @@ export enum SoldierType {
 export type Soldier = ReturnType<typeof soldierFromSaveGame>;
 
 export function soldierFromSaveGame(data: Stream) {
-  const position = new PIXI.Point(data.read16() / 2, data.read16() / 2);
+  const position = new Point(data.read16() / 2, data.read16() / 2);
   const hp = data.read16();
   const type = data.read16();
   const id = data.read16();

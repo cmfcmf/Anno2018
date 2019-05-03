@@ -1,12 +1,9 @@
-import * as PIXI from "pixi.js";
+import { BitmapText, Container, Sprite } from "pixi.js";
 import FileSystem from "../../filesystem";
 import GAMParser from "../../parsers/GAM/gam-parser";
 import t from "../../translation/translator";
 import assert from "../../util/assert";
 import MenuStructure, { ScreenConfig } from "../menu-structure";
-
-type BitmapText = PIXI.extras.BitmapText;
-type Sprite = PIXI.Sprite;
 
 export default class Missions implements ScreenConfig {
   public buttons = [
@@ -17,11 +14,11 @@ export default class Missions implements ScreenConfig {
       this.menuStructure.emit("load-game", "/saves/lastgame.gam");
     },
     async () => this.menuStructure.renderScreen("menu_main"),
-    async (stage: PIXI.Container) => {
+    async (stage: Container) => {
       this.currentPage = Math.max(0, this.currentPage - 1);
       await this.renderNewGame(stage);
     },
-    async (stage: PIXI.Container) => {
+    async (stage: Container) => {
       this.currentPage = Math.min(
         Math.ceil(this.newGameLines.length / this.ROWS) - 1,
         this.currentPage + 1
@@ -51,14 +48,14 @@ export default class Missions implements ScreenConfig {
     this.gamParser = new GAMParser(null);
   }
 
-  public async onLoad(stage: PIXI.Container) {
+  public async onLoad(stage: Container) {
     await this.getNewGameLines();
 
     await this.renderNewGame(stage);
     await this.menuStructure._playMainMenuMusic();
   }
 
-  public async renderNewGame(stage: PIXI.Container) {
+  public async renderNewGame(stage: Container) {
     const currentTopItem = this.currentPage * this.ROWS;
 
     for (let i = 0; i < this.ROWS; i++) {
@@ -100,7 +97,7 @@ export default class Missions implements ScreenConfig {
     stage.getChildByName(this.SCROLL_DOWN).visible = true;
   }
 
-  public async renderLoadGame(stage: PIXI.Container) {
+  public async renderLoadGame(stage: Container) {
     const saves = (await this.fs.ls("/saves", ".gam")).filter(
       save => save.name !== "lastgame.gam"
     );

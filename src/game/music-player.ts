@@ -1,10 +1,10 @@
-import "pixi-sound";
-import * as PIXI from "pixi.js";
+import pixiSound from "pixi-sound";
 import FileSystem from "../filesystem";
+const Sound = pixiSound.Sound;
 
 export default class MusicPlayer {
   private playing = false;
-  private readonly songs: Array<{ name: string; sound: PIXI.sound.Sound }> = [];
+  private readonly songs: Array<{ name: string; sound: pixiSound.Sound }> = [];
   private currentSongIdx: number;
 
   constructor(private readonly fs: FileSystem) {}
@@ -60,12 +60,12 @@ export default class MusicPlayer {
   }
 
   private loadSound(data: ArrayBuffer, preload: boolean = false) {
-    return new Promise<PIXI.sound.Sound>((resolve, reject) => {
-      const sound = PIXI.sound.Sound.from({
+    return new Promise<pixiSound.Sound>((resolve, reject) => {
+      const sound = Sound.from({
         source: data,
         preload: preload,
         singleInstance: true,
-        loaded: (err: Error, preloadedSound: PIXI.sound.Sound) => {
+        loaded: (err: Error, preloadedSound: pixiSound.Sound) => {
           if (preload) {
             if (err) {
               reject(err);

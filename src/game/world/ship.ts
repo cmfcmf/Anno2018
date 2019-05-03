@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import { ShipCourse } from "./ship-course";
 import { Rotation8 } from "./world";
@@ -26,7 +27,7 @@ export type Ship = ReturnType<typeof shipFromSaveGame>;
 
 export function shipFromSaveGame(data: Stream) {
   const name = data.readString(28);
-  const position = new PIXI.Point(data.read16(), data.read16());
+  const position = new Point(data.read16(), data.read16());
   const _1 = data.read(3 * 4);
 
   const courseFrom = ShipCourse.fromSaveGame(data);

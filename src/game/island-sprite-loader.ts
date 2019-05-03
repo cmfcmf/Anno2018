@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Point, Sprite, Texture } from "pixi.js";
 import FileSystem from "../filesystem";
 import SpriteLoader from "../sprite-loader";
 import ConfigLoader from "./config-loader";
@@ -9,9 +9,9 @@ import { Island } from "./world/island";
 export type WorldLayer = "land" | "building";
 
 export interface SpriteWithPositionAndLayer {
-  sprite: PIXI.Sprite;
-  pixelPosition: PIXI.Point;
-  mapPosition: PIXI.Point;
+  sprite: Sprite;
+  pixelPosition: Point;
+  mapPosition: Point;
   layer: WorldLayer;
 }
 
@@ -20,7 +20,7 @@ export default class IslandSpriteLoader {
 
   private fields: ReadonlyMap<number, FieldX> = new Map();
 
-  private textures: Map<number, PIXI.Texture> = new Map();
+  private textures: Map<number, Texture> = new Map();
 
   constructor(
     private readonly fs: FileSystem,
@@ -84,7 +84,7 @@ export default class IslandSpriteLoader {
     if (fieldConfig === undefined) {
       throw new Error(`Could not load config for ${field.fieldId}.`);
     }
-    const origin = new PIXI.Point(island.position.x + x, island.position.y + y);
+    const origin = new Point(island.position.x + x, island.position.y + y);
 
     const newSprites = fieldConfig.getSprites(
       origin,

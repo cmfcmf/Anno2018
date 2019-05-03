@@ -1,7 +1,7 @@
 import { Map as ImmutableMap, Record } from "immutable";
-import "pixi-keyboard";
-import * as PIXI from "pixi.js";
-import { Action, createStore, Store } from "redux";
+import { Key, KeyboardManager } from "pixi-keyboard";
+import { Point } from "pixi.js";
+import { createStore, Store } from "redux";
 import { batchActions, enableBatching } from "redux-batched-actions";
 import { devToolsEnhancer } from "redux-devtools-extension";
 import { combineReducers } from "redux-immutable";
@@ -31,8 +31,6 @@ import { Producer } from "./world/producer";
 import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
-
-type Keys = PIXI.keyboard.Keys;
 
 interface MapById<T> {
   [k: string]: T;
@@ -108,13 +106,14 @@ export default class Game {
 
   private timerId: number = null;
   private readonly myPlayerId: number = 0;
-  private readonly keyboardManager: PIXI.keyboard.KeyboardManager;
+  private readonly keyboardManager: KeyboardManager;
 
   constructor(
     private readonly gameRenderer: GameRenderer,
     private readonly configLoader: ConfigLoader
   ) {
-    this.keyboardManager = PIXI.keyboardManager;
+    this.keyboardManager = new KeyboardManager();
+    this.keyboardManager.enable();
     this.setupHotKeys();
   }
 
@@ -168,14 +167,14 @@ export default class Game {
     await this.gameRenderer.begin(this.myPlayerId);
   }
 
-  public getFieldAtIsland = (island: Island, islandPos: PIXI.PointLike) => {
+  public getFieldAtIsland = (island: Island, islandPos: Point) => {
     return {
       base: island.baseFields[islandPos.x][islandPos.y],
       top: island.topFields[islandPos.x][islandPos.y]
     };
   };
 
-  public getFieldAt = (globalPos: PIXI.PointLike) => {
+  public getFieldAt = (globalPos: Point) => {
     const island = Object.values(this.store.getState().islands).find(each =>
       each.positionRect.contains(globalPos.x, globalPos.y)
     );
@@ -185,7 +184,7 @@ export default class Game {
         top: null
       };
     }
-    const islandPos = new PIXI.Point(
+    const islandPos = new Point(
       globalPos.x - island.position.x,
       globalPos.y - island.position.y
     );
@@ -340,9 +339,7 @@ export default class Game {
   }
 
   private setupHotKeys() {
-    const keys = PIXI.keyboard.Key;
-
-    const showTaskKey = keys.F1;
+    const showTaskKey = Key.F1;
     this.keyboardManager.onKeyPressedWithPreventDefault(showTaskKey, () => {
       const state = this.store.getState();
       const player = state.players[this.myPlayerId];
@@ -354,10 +351,10 @@ export default class Game {
       }
     });
 
-    const zoomKeys: Array<{ key: Keys; zoom: 1 | 2 | 3 }> = [
-      { key: keys.F2, zoom: 1 },
-      { key: keys.F3, zoom: 2 },
-      { key: keys.F4, zoom: 3 }
+    const zoomKeys: Array<{ key: number; zoom: 1 | 2 | 3 }> = [
+      { key: Key.F2, zoom: 1 },
+      { key: Key.F3, zoom: 2 },
+      { key: Key.F4, zoom: 3 }
     ];
     for (const zoomKey of zoomKeys) {
       this.keyboardManager.onKeyPressedWithPreventDefault(zoomKey.key, () =>
@@ -366,11 +363,11 @@ export default class Game {
     }
 
     const speedKeys = [
-      { keys: [keys.PAUSE], speed: SimulationSpeed.Paused },
-      { keys: [keys.F5], speed: SimulationSpeed.Slow },
-      { keys: [keys.F6], speed: SimulationSpeed.Medium },
-      { keys: [keys.F7], speed: SimulationSpeed.Fast },
-      { keys: [keys.SHIFT, keys.F8], speed: SimulationSpeed.SuperFast }
+      { keys: [Key.PAUSE], speed: SimulationSpeed.Paused },
+      { keys: [Key.F5], speed: SimulationSpeed.Slow },
+      { keys: [Key.F6], speed: SimulationSpeed.Medium },
+      { keys: [Key.F7], speed: SimulationSpeed.Fast },
+      { keys: [Key.SHIFT, Key.F8], speed: SimulationSpeed.SuperFast }
     ];
     for (const speedKey of speedKeys) {
       this.keyboardManager.onKeysPressedWithPreventDefault(speedKey.keys, () =>

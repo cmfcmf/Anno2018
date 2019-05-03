@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Loader } from "pixi.js";
 import FileSystem from "../filesystem";
 import { uInt8ToBase64 } from "../util/util";
 
@@ -16,7 +16,7 @@ export default class FontLoader {
         `/fonts/${fontName}/font.xml`
       );
       await new Promise(resolve => {
-        PIXI.loader
+        Loader.shared
           .add(fontName, `data:application/xml;base64,${uInt8ToBase64(font)}`)
           .load(resolve);
       });

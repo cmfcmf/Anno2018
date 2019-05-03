@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Container } from "pixi.js";
 import FileSystem from "../filesystem";
 import IslandSpriteLoader from "./island-sprite-loader";
 import { SpriteWithPositionAndLayer } from "./island-sprite-loader";
@@ -10,7 +10,7 @@ export const LAND_OFFSET = -20;
 
 export default class IslandRenderer {
   constructor(
-    private world: PIXI.Container,
+    private world: Container,
     private fs: FileSystem,
     private spriteLoader: IslandSpriteLoader
   ) {}

@@ -1,6 +1,6 @@
 import * as log from "loglevel";
-import "pixi-keyboard";
-import * as PIXI from "pixi.js";
+import Viewport from "pixi-viewport";
+import { Application, MIPMAP_MODES, SCALE_MODES, settings } from "pixi.js";
 import FileSystem from "./filesystem";
 import GameLoader from "./game-loader";
 import AnimationRenderer from "./game/animation-renderer";
@@ -19,8 +19,6 @@ import SpriteLoader from "./sprite-loader";
 import { loadTranslations } from "./translation/translator";
 import UploadHandler from "./upload";
 import { getQueryParameter } from "./util/util";
-
-const Viewport = require("pixi-viewport");
 
 // tslint:disable-next-line:no-floating-promises
 (async () => {
@@ -57,13 +55,12 @@ const Viewport = require("pixi-viewport");
     return;
   }
 
-  // PIXI.utils.skipHello();
-  PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-  PIXI.settings.MIPMAP_TEXTURES = false;
-  // PIXI.settings.RENDER_OPTIONS.antialias = false;
-  PIXI.settings.RENDER_OPTIONS.roundPixels = true;
+  // utils.skipHello();
+  settings.SCALE_MODE = SCALE_MODES.NEAREST;
+  settings.MIPMAP_TEXTURES = MIPMAP_MODES.OFF;
+  // settings.RENDER_OPTIONS.antialias = false;
 
-  const app = new PIXI.Application({
+  const app = new Application({
     width: window.innerWidth,
     height: window.innerHeight - 120,
     antialias: false,
@@ -73,13 +70,15 @@ const Viewport = require("pixi-viewport");
 
   const viewport = new Viewport({
     screenWidth: app.screen.width,
-    screenHeight: app.screen.height
+    screenHeight: app.screen.height,
+    passiveWheel: false
   });
   app.stage.addChild(viewport);
 
-  viewport.drag({ direction: "all", wheel: false }).wheel();
-  //    .mouseEdges({distance: 1000})
-  //    .clamp({direction: "all"})
+  viewport
+    .drag({ direction: "all", wheel: false })
+    .wheel()
+    .mouseEdges({ distance: 20, speed: 15 });
 
   const menuViewport = new Viewport({
     screenWidth: app.screen.width,

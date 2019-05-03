@@ -1,4 +1,5 @@
 import * as Viewport from "pixi-viewport";
+import { AnimatedSprite, Texture } from "pixi.js";
 import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";
 
@@ -62,13 +63,13 @@ export default class AnimationRenderer {
 
     const animatedSprites: {
       [k: string]: {
-        sprites: PIXI.extras.AnimatedSprite[];
+        sprites: AnimatedSprite[];
         config: AnimationConfig;
       };
     } = {};
 
     for (const animIdx of Object.keys(animationData.nested_objects.ANIM)) {
-      const animatedSpritesForAnim: PIXI.extras.AnimatedSprite[] = [];
+      const animatedSpritesForAnim: AnimatedSprite[] = [];
 
       const animation = animationData.nested_objects.ANIM[animIdx];
 
@@ -84,14 +85,14 @@ export default class AnimationRenderer {
         let gfx =
           baseGfx + animation.AnimOffs + rotationIdx * framesPerRotation;
 
-        const frames: PIXI.Texture[] = [];
+        const frames: Texture[] = [];
 
         for (let step = 0; step < numSteps; step++) {
           frames.push(textures.get(gfx));
           gfx += gfxPerStep;
         }
 
-        const animatedSprite = new PIXI.extras.AnimatedSprite(frames);
+        const animatedSprite = new AnimatedSprite(frames);
         animatedSprite.loop = animation.Kind === "ENDLESS";
         animatedSprite.animationSpeed = speed;
 

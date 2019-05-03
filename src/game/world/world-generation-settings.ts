@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import { IslandSizeId } from "../../parsers/GAM/island-loader";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
@@ -11,7 +12,7 @@ import assert from "../../util/assert";
 export interface IslandTemplate {
   num: number;
   size: 0 | 1 | 2 | 3 | 4;
-  position: PIXI.Point;
+  position: Point;
   climate: "NORTH" | "SOUTH" | "ANY";
 }
 
@@ -51,7 +52,7 @@ export default class WorldGenerationSettings {
       assert(data.read8() === 0x0000);
       const num = data.read8();
       const fileNr = data.read32(); // Largely uninteresting, mostly 0x0000FFFF, sometimes 0x00000000
-      const position = new PIXI.Point(data.read32(), data.read32());
+      const position = new Point(data.read32(), data.read32());
       islandTemplates.push({
         num,
         size: islandSize as IslandSizeId,

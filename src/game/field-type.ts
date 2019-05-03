@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { AnimatedSprite, Point, Sprite, Texture } from "pixi.js";
 import GameRenderer from "./game-renderer";
 import { SpriteWithPositionAndLayer } from "./island-sprite-loader";
 import { WorldLayer } from "./island-sprite-loader";
@@ -51,7 +51,7 @@ export default class FieldType {
   public readonly id: number;
   public readonly gfxId: number;
   public readonly kind: FieldKind;
-  public readonly size: PIXI.Point;
+  public readonly size: Point;
   public readonly rotate: number;
   public readonly animAdd: number;
   public readonly yOffset: number;
@@ -76,7 +76,7 @@ export default class FieldType {
     this.id = config.Id;
     this.gfxId = config.Gfx;
     this.kind = config.Kind;
-    this.size = new PIXI.Point(config.Size.x, config.Size.y);
+    this.size = new Point(config.Size.x, config.Size.y);
     this.rotate = config.Rotate;
     this.animAdd = config.AnimAdd;
     this.animAnz = config.AnimAnz;
@@ -112,10 +112,10 @@ export default class FieldType {
   }
 
   public getSprites(
-    fieldPos: PIXI.Point,
+    fieldPos: Point,
     rotation: Rotation4,
     animationStep: number,
-    textures: Map<number, PIXI.Texture>,
+    textures: Map<number, Texture>,
     layer: WorldLayer
   ) {
     const sprites: SpriteWithPositionAndLayer[] = [];
@@ -126,10 +126,10 @@ export default class FieldType {
         const xx = fieldPos.x + x;
         const yy = fieldPos.y + y;
         const { x: worldX, y: worldY } = GameRenderer.fieldPosToWorldPos(
-          new PIXI.Point(xx, yy)
+          new Point(xx, yy)
         );
 
-        let sprite: PIXI.Sprite | PIXI.extras.AnimatedSprite;
+        let sprite: Sprite | AnimatedSprite;
         if (this.animAdd === 0 || this.animTime === -1) {
           const texture = this.getTexture(
             x,
@@ -138,15 +138,13 @@ export default class FieldType {
             animationStep,
             textures
           );
-          sprite = new PIXI.Sprite(texture);
+          sprite = new Sprite(texture);
         } else {
           const animatedTextures = [];
           for (let i = 0; i < this.animAnz; i++) {
             animatedTextures.push(this.getTexture(x, y, rotation, i, textures));
           }
-          const animatedSprite = new PIXI.extras.AnimatedSprite(
-            animatedTextures
-          );
+          const animatedSprite = new AnimatedSprite(animatedTextures);
           animatedSprite.animationSpeed =
             (1.0 / 60.0) * (1000.0 / this.animTime);
           animatedSprite.play();
@@ -158,8 +156,8 @@ export default class FieldType {
         sprite.y = worldY + this.yOffset;
         sprites.push({
           sprite: sprite,
-          pixelPosition: new PIXI.Point(xx, yy),
-          mapPosition: new PIXI.Point(x, y),
+          pixelPosition: new Point(xx, yy),
+          mapPosition: new Point(x, y),
           layer: layer
         });
       }
@@ -173,8 +171,8 @@ export default class FieldType {
     y: number,
     rotation: Rotation4,
     animationStep: number,
-    textures: Map<number, PIXI.Texture>
-  ): PIXI.Texture {
+    textures: Map<number, Texture>
+  ): Texture {
     let tileId = this.gfxId;
     if (this.rotate > 0) {
       tileId += rotation * this.size.x * this.size.y;

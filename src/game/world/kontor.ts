@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import Good from "./good";
 
@@ -11,7 +12,7 @@ export type Kontor = ReturnType<typeof kontorFromSaveGame>;
 
 export function kontorFromSaveGame(data: Stream) {
   const islandId = data.read8();
-  const position = new PIXI.Point(data.read8(), data.read8());
+  const position = new Point(data.read8(), data.read8());
   const playerId = data.read8();
   const goods = parseGoods(data);
 

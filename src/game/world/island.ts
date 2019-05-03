@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point, Rectangle } from "pixi.js";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 import Field from "./field";
@@ -31,19 +32,19 @@ export type Island = ReturnType<typeof islandFromSaveGame>;
 
 export function islandFromIsland3File(
   id: number,
-  position: PIXI.Point,
+  position: Point,
   isSouth: boolean,
   numBaseIsland: number,
   data: Stream
 ): Island {
   data.read8(); // Ignore id
-  const size = new PIXI.Point(data.read8(), data.read8());
+  const size = new Point(data.read8(), data.read8());
 
   return {
     id,
     position,
     size,
-    positionRect: new PIXI.Rectangle(position.x, position.y, size.x, size.y),
+    positionRect: new Rectangle(position.x, position.y, size.x, size.y),
     numBaseIsland,
     numOreLocations: 0,
     oreLocations: [],
@@ -65,7 +66,7 @@ export function islandFromIsland3File(
 
 export function islandFromIsland4File(
   id: number,
-  position: PIXI.Point,
+  position: Point,
   isSouth: boolean,
   numBaseIsland: number,
   data: Stream
@@ -75,7 +76,7 @@ export function islandFromIsland4File(
 
 export function islandFromIsland5File(
   id: number,
-  position: PIXI.Point,
+  position: Point,
   isSouth: boolean,
   numBaseIsland: number,
   data: Stream
@@ -145,9 +146,9 @@ export function islandFromSaveGame(data: Stream) {
 
   return {
     id,
-    position: new PIXI.Point(x, y),
-    size: new PIXI.Point(width, height),
-    positionRect: new PIXI.Rectangle(x, y, width, height),
+    position: new Point(x, y),
+    size: new Point(width, height),
+    positionRect: new Rectangle(x, y, width, height),
     numBaseIsland,
     numOreLocations,
     oreLocations,

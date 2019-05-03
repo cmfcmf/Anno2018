@@ -4,6 +4,7 @@
  * https://github.com/roybaer/mdcii-engine
  */
 
+import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 
@@ -27,7 +28,7 @@ export class ShipCourse {
     const state: CourseState = byte1;
     assert(state in CourseState);
 
-    const position = new PIXI.Point(
+    const position = new Point(
       byte4 + ((byte2 & 0b00001111) << 8),
       byte3 + ((byte2 & 0b11110000) << 4)
     );
@@ -36,7 +37,7 @@ export class ShipCourse {
   }
 
   constructor(
-    public readonly position: PIXI.Point,
+    public readonly position: Point,
     public readonly state: CourseState
   ) {}
 }

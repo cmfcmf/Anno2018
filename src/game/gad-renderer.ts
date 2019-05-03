@@ -1,22 +1,28 @@
-import * as PIXI from "pixi.js";
+import {
+  BitmapText,
+  Container,
+  Point,
+  Rectangle,
+  resources,
+  Sprite,
+  Texture
+} from "pixi.js";
 import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";
 import { ScreenConfig } from "./menu-structure";
 import SliderSprite from "./ui/slider-sprite";
 
-type VideoBaseTexture = PIXI.VideoBaseTexture;
-
 interface RadioButtonData {
-  sprite: PIXI.Sprite;
-  defaultTexture: PIXI.Texture;
-  activeTexture: PIXI.Texture;
+  sprite: Sprite;
+  defaultTexture: Texture;
+  activeTexture: Texture;
 }
 
 export default class GADRenderer {
-  private videos: PIXI.Sprite[] = [];
+  private videos: Sprite[] = [];
 
   constructor(
-    private readonly stage: PIXI.Container,
+    private readonly stage: Container,
     private readonly spriteLoader: SpriteLoader
   ) {}
 
@@ -44,7 +50,7 @@ export default class GADRenderer {
       if (kind === "GAD_UNUSED") {
         continue;
       }
-      const position = new PIXI.Point(gadget.Pos[0], gadget.Pos[1]);
+      const position = new Point(gadget.Pos[0], gadget.Pos[1]);
       if (gadget.Posoffs) {
         position.set(
           position.x + gadget.Posoffs[0],
@@ -53,7 +59,7 @@ export default class GADRenderer {
       }
       const size =
         gadget.Size !== undefined
-          ? new PIXI.Point(gadget.Size.x, gadget.Size.y)
+          ? new Point(gadget.Size.x, gadget.Size.y)
           : null;
       const selectable = gadget.Noselflg === undefined || gadget.Noselflg === 0;
       const pressOff = gadget.Pressoff;
@@ -77,7 +83,7 @@ export default class GADRenderer {
           const activeTexture = textures.get(gfx + pressOff);
 
           const sprite = !isSlider
-            ? new PIXI.Sprite(defaultTexture)
+            ? new Sprite(defaultTexture)
             : new SliderSprite(defaultTexture);
           sprite.position.set(position.x, position.y);
           sprite.name = `menu-${id}`;
@@ -130,13 +136,13 @@ export default class GADRenderer {
         case "GAD_TEXTR":
           // case "GAD_TEXTFL":
           const fontSize = 24;
-          const text = new PIXI.extras.BitmapText("Here goes text!", {
+          const text = new BitmapText("Here goes text!", {
             font: { name: "ZEI20V", size: fontSize }
           });
           text.position.set(position.x, position.y);
           text.pivot.set(0, fontSize);
           text.name = `menu-${id}`;
-          text.hitArea = new PIXI.Rectangle(0, 0, size.x, size.y);
+          text.hitArea = new Rectangle(0, 0, size.x, size.y);
           if (kind.endsWith("Z")) {
             // Center text
             text.pivot.set(text.x / 2, text.pivot.y);
@@ -153,9 +159,9 @@ export default class GADRenderer {
     await config.onLoad(this.stage);
   }
 
-  public renderVideo(videoSprite: PIXI.Sprite, onEnd: () => void) {
-    // @ts-ignore
-    const videoTexture: VideoBaseTexture = videoSprite.texture.baseTexture;
+  public renderVideo(videoSprite: Sprite, onEnd: () => void) {
+    const videoTexture = videoSprite.texture.baseTexture
+      .resource as resources.VideoResource;
     videoTexture.source.addEventListener(
       "ended",
       () => {
@@ -168,12 +174,12 @@ export default class GADRenderer {
     this.videos.push(videoSprite);
   }
 
-  public renderVideoFullscreen(videoSprite: PIXI.Sprite, onEnd: () => void) {
+  public renderVideoFullscreen(videoSprite: Sprite, onEnd: () => void) {
     this.destroyVideos();
     this.stage.removeChildren();
 
-    // @ts-ignore
-    const videoTexture: VideoBaseTexture = videoSprite.texture.baseTexture;
+    const videoTexture = videoSprite.texture.baseTexture
+      .resource as resources.VideoResource;
     videoTexture.source.addEventListener(
       "ended",
       () => {

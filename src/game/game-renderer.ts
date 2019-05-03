@@ -1,4 +1,5 @@
-import * as Viewport from "pixi-viewport";
+import Viewport from "pixi-viewport";
+import { Application, Container, interaction, Point, Text } from "pixi.js";
 import IslandRenderer, {
   LAND_OFFSET,
   TILE_HEIGHT,
@@ -8,12 +9,12 @@ import { Island } from "./world/island";
 import World from "./world/world";
 
 export default class GameRenderer {
-  public static fieldPosToWorldPos(fieldPos: PIXI.PointLike) {
+  public static fieldPosToWorldPos(fieldPos: Point) {
     const xx = fieldPos.x;
     const yy = fieldPos.y;
     const worldX = (xx - yy) * (TILE_WIDTH / 2);
     const worldY = (xx + yy) * (TILE_HEIGHT / 2);
-    return new PIXI.Point(worldX, worldY);
+    return new Point(worldX, worldY);
   }
 
   /**
@@ -21,32 +22,32 @@ export default class GameRenderer {
    * Please note that these are *sea-level* coordinates. Use
    * worldPosToFieldPosLand for *land-level* coordinates.
    */
-  public static worldPosToFieldPos(worldPos: PIXI.PointLike) {
+  public static worldPosToFieldPos(worldPos: Point) {
     const x =
       (worldPos.x / (TILE_WIDTH / 2) + worldPos.y / (TILE_HEIGHT / 2)) / 2;
     const y =
       (worldPos.y / (TILE_HEIGHT / 2) - worldPos.x / (TILE_WIDTH / 2)) / 2;
 
-    return new PIXI.Point(Math.round(x), Math.round(y) + 1);
+    return new Point(Math.round(x), Math.round(y) + 1);
   }
 
-  public static worldPosToFieldPosLand(worldPos: PIXI.PointLike) {
-    const adjustedWorldPos = new PIXI.Point();
-    adjustedWorldPos.copy(worldPos);
+  public static worldPosToFieldPosLand(worldPos: Point) {
+    const adjustedWorldPos = new Point();
+    adjustedWorldPos.copyFrom(worldPos);
     adjustedWorldPos.y -= LAND_OFFSET;
 
     return this.worldPosToFieldPos(adjustedWorldPos);
   }
 
-  private money: PIXI.Text;
+  private money: Text;
 
   constructor(
     private readonly world: World,
     private readonly islandRenderer: IslandRenderer,
-    private readonly app: PIXI.Application,
+    private readonly app: Application,
     private readonly viewport: Viewport
   ) {
-    this.money = new PIXI.Text("", {
+    this.money = new Text("", {
       fontFamily: "Arial",
       fontSize: 24,
       fill: 0xff1010
@@ -108,48 +109,45 @@ export default class GameRenderer {
     this.money.text = `Money: ${money}`;
   };
 
-  public onProduced(island: Island, position: PIXI.Point, stock: number) {
+  public onProduced(island: Island, position: Point, stock: number) {
     console.log(
       `Producer at island ${island.id} (${position.x}, ${
         position.y
       }) has now stock: ${stock}.`
     );
-    const text = new PIXI.Text(`Lager: ${stock}`, {
+    const text = new Text(`Lager: ${stock}`, {
       fontFamily: "Arial",
       fontSize: 24,
       fill: 0xff1010
     });
 
     const pos = GameRenderer.fieldPosToWorldPos(
-      new PIXI.Point(
-        island.position.x + position.x,
-        island.position.y + position.y
-      )
+      new Point(island.position.x + position.x, island.position.y + position.y)
     );
     text.position.set(pos.x, pos.y);
     this.viewport.addChild(text);
   }
 
   private debugControls() {
-    const debugContainer = new PIXI.Container();
+    const debugContainer = new Container();
 
     debugContainer.addChild(this.money);
-    const coordinates = new PIXI.Text("", {
+    const coordinates = new Text("", {
       fontFamily: "Arial",
       fontSize: 24,
       fill: 0xff1010
     });
     coordinates.y = 30;
 
-    const islandNumber = new PIXI.Text("", {
+    const islandNumber = new Text("", {
       fontFamily: "Arial",
       fontSize: 24,
       fill: 0xff1010
     });
     islandNumber.y = 2 * 30;
 
-    const interactionManager: PIXI.interaction.InteractionManager = this.app
-      .renderer.plugins.interaction;
+    const interactionManager: interaction.InteractionManager = this.app.renderer
+      .plugins.interaction;
 
     const updatePosition = () => {
       const pos = GameRenderer.worldPosToFieldPosLand(
@@ -187,7 +185,7 @@ export default class GameRenderer {
         island => island.id === myKontor.islandId
       );
       this.moveTo(
-        new PIXI.Point(
+        new Point(
           kontorIsland.position.x + position.x,
           kontorIsland.position.y + position.y
         )
@@ -199,10 +197,10 @@ export default class GameRenderer {
       this.moveTo(myShip.position);
       return;
     }
-    this.moveTo(new PIXI.Point(500 / 2, 300 / 2));
+    this.moveTo(new Point(500 / 2, 300 / 2));
   }
 
-  private moveTo(point: PIXI.Point) {
+  private moveTo(point: Point) {
     this.viewport.moveCenter(GameRenderer.fieldPosToWorldPos(point));
   }
 }

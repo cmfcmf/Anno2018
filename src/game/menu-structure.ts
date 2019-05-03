@@ -1,18 +1,19 @@
-import * as PIXI from "pixi.js";
+import { BaseTexture, Container, Sprite, Texture } from "pixi.js";
+import { utils } from "pixi.js";
 import FileSystem from "../filesystem";
 import { textureFromUint8ArrayMP4 } from "../util/pixi";
 import GADRenderer from "./gad-renderer";
 import Missions from "./menu/missions";
 import MusicPlayer from "./music-player";
 
-type Callback = (stage: PIXI.Container) => void;
+type Callback = (stage: Container) => void;
 
 export interface ScreenConfig {
   onLoad: Callback;
   buttons: Callback[];
 }
 
-export default class MenuStructure extends PIXI.utils.EventEmitter {
+export default class MenuStructure extends utils.EventEmitter {
   private readonly structure: { [k: string]: ScreenConfig } = {
     menu_main: {
       onLoad: () => this._playMainMenuMusic(),
@@ -100,7 +101,6 @@ export default class MenuStructure extends PIXI.utils.EventEmitter {
     const videoData = await this.fs.openAndGetContentAsUint8Array(
       `/videos/${videoNumber}.mp4`
     );
-    const texture = await textureFromUint8ArrayMP4(videoData);
-    return PIXI.Sprite.from(texture);
+    return Sprite.from(await textureFromUint8ArrayMP4(videoData));
   }
 }
