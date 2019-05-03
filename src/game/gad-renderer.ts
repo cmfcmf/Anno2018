@@ -1,9 +1,10 @@
-import VideoBaseTexture = PIXI.VideoBaseTexture;
 import * as PIXI from "pixi.js";
 import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";
 import { ScreenConfig } from "./menu-structure";
 import SliderSprite from "./ui/slider-sprite";
+
+type VideoBaseTexture = PIXI.VideoBaseTexture;
 
 interface RadioButtonData {
   sprite: PIXI.Sprite;

@@ -20,7 +20,6 @@ import {
   TICK,
   timerReducer
 } from "./logic/reducers";
-import Keys = PIXI.keyboard.Keys;
 import { City } from "./world/city";
 import { Island } from "./world/island";
 import { Kontor } from "./world/kontor";
@@ -29,6 +28,8 @@ import { Producer } from "./world/producer";
 import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
+
+type Keys = PIXI.keyboard.Keys;
 
 interface MapById<T> {
   [k: string]: T;

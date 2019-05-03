@@ -6,47 +6,14 @@ const gitRevisionPlugin = new GitRevisionPlugin({
 });
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 module.exports = {
   entry: {
-    app: ["idb.filesystem.js", "@babel/polyfill", "./src/index.ts"]
-  },
-  module: {
-    rules: [
-      {
-        exclude: /node_modules/,
-        test: /\.tsx?$/,
-        use: [
-          {
-            loader: "ts-loader",
-            options: {
-              transpileOnly: true
-            }
-          }
-        ]
-      }
-    ]
-  },
-  // Extract webpack and vendor code into separate files
-  // https://webpack.js.org/guides/caching/#extracting-boilerplate
-  optimization: {
-    // Move webpack runtime data into separate file
-    runtimeChunk: "single",
-    // Move all vendor code into separate file
-    splitChunks: {
-      cacheGroups: {
-        vendor: {
-          chunks: "all",
-          name: "vendors",
-          test: /[\\/]node_modules[\\/]/
-        }
-      }
-    }
+    app: ["./src/index.ts"]
   },
   output: {
     filename: "[name].bundle.js",
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "dist")
   },
   plugins: [
     gitRevisionPlugin,
@@ -66,10 +33,9 @@ module.exports = {
           "initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height"
       },
       title: "Anno 2018"
-    }),
-    new ForkTsCheckerWebpackPlugin()
+    })
   ],
   resolve: {
-    extensions: [".tsx", ".ts", ".js"]
+    extensions: [".tsx", ".ts", ".js", ".jsx"]
   }
 };

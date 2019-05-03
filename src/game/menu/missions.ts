@@ -1,11 +1,12 @@
 import * as PIXI from "pixi.js";
 import FileSystem from "../../filesystem";
 import GAMParser from "../../parsers/GAM/gam-parser";
-import BitmapText = PIXI.extras.BitmapText;
-import Sprite = PIXI.Sprite;
 import t from "../../translation/translator";
 import assert from "../../util/assert";
 import MenuStructure, { ScreenConfig } from "../menu-structure";
+
+type BitmapText = PIXI.extras.BitmapText;
+type Sprite = PIXI.Sprite;
 
 export default class Missions implements ScreenConfig {
   public buttons = [
@@ -142,23 +143,27 @@ export default class Missions implements ScreenConfig {
 
     this.newGameLines.push({ name: t("menu.divider.orginal_missions") });
 
-    missions.filter(mission => mission.missionNum !== -1).forEach(mission => {
-      this.newGameLines.push({
-        name: mission.name,
-        file: mission.file as WebKitFileEntry
+    missions
+      .filter(mission => mission.missionNum !== -1)
+      .forEach(mission => {
+        this.newGameLines.push({
+          name: mission.name,
+          file: mission.file as WebKitFileEntry
+        });
       });
-    });
 
     this.newGameLines.push({ name: t("menu.divider.missions") });
 
     this.newGameLines.push({ name: t("menu.divider.new_missions") });
 
-    missions.filter(mission => mission.missionNum === -1).forEach(mission => {
-      this.newGameLines.push({
-        name: mission.name,
-        file: mission.file as WebKitFileEntry
+    missions
+      .filter(mission => mission.missionNum === -1)
+      .forEach(mission => {
+        this.newGameLines.push({
+          name: mission.name,
+          file: mission.file as WebKitFileEntry
+        });
       });
-    });
 
     this.newGameLines.push({ name: t("menu.divider.custom_missions") });
     const customMissions = await this.fs.ls("/missions-custom", ".szs");

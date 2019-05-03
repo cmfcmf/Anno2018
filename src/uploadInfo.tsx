@@ -120,8 +120,8 @@ export default class UploadInfo extends React.Component<Props, State>
                     message.type === "info"
                       ? "blue"
                       : message.type === "warn"
-                        ? "orange"
-                        : "red"
+                      ? "orange"
+                      : "red"
                 }}
               >
                 {message.type.toUpperCase()}

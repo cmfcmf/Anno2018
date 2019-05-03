@@ -1,6 +1,7 @@
 {
     "editor.tabSize": 2,
     "prettier.tslintIntegration": true,
+    "tslint.configFile": "tslint.json",
     "editor.codeActionsOnSave": {
         "source.fixAll.tslint": true
     },

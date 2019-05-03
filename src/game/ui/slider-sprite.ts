@@ -1,4 +1,4 @@
-import InteractionEvent = PIXI.interaction.InteractionEvent;
+type InteractionEvent = PIXI.interaction.InteractionEvent;
 
 export default class SliderSprite extends PIXI.Sprite {
   private dragging = false;
