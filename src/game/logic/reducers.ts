@@ -85,13 +85,7 @@ export function producerReducer(
   switch (action.type) {
     case UPDATE_PRODUCER:
       const { id, patch } = action.payload;
-      return {
-        ...state,
-        [id]: {
-          ...state[id],
-          ...patch
-        }
-      };
+      return state.mergeIn([id], patch);
     default:
       return state;
   }

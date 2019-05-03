@@ -1,7 +1,10 @@
+import { Map as ImmutableMap, Record } from "immutable";
 import "pixi-keyboard";
 import * as PIXI from "pixi.js";
-import { Action, combineReducers, createStore, Store } from "redux";
+import { Action, createStore, Store } from "redux";
+import { batchActions, enableBatching } from "redux-batched-actions";
 import { devToolsEnhancer } from "redux-devtools-extension";
+import { combineReducers } from "redux-immutable";
 import { Observable } from "rxjs/internal/Observable";
 import { distinctUntilChanged, filter, map } from "rxjs/operators";
 import assert from "../util/assert";
@@ -35,15 +38,61 @@ interface MapById<T> {
   [k: string]: T;
 }
 
-export interface GameState {
+const GameStateFactory = Record<{
   players: MapById<Player>;
   islands: MapById<Island>;
   tasks: MapById<Task>;
   cities: City[];
   kontors: Kontor[];
-  producers: MapById<Producer>;
+  producers: ImmutableMap<number, Producer>;
   timers: Timers & { simulationSpeed: SimulationSpeed };
-}
+}>({
+  players: {},
+  islands: {},
+  tasks: {},
+  cities: [],
+  kontors: [],
+  producers: ImmutableMap<number, Producer>(),
+  timers: {
+    simulationSpeed: 0,
+    cntCity: 0,
+    cntIsland: 0,
+    cntShipyard: 0,
+    cntMilitary: 0,
+    cntProduction: 0,
+    cntSettlers: [],
+    cntGrowth: [],
+    timeCity: 0,
+    timeIsland: 0,
+    timeShipyard: 0,
+    timeMilitary: 0,
+    timeProduction: 0,
+    timeGoodToolsCnt: 0,
+    timeGoodToolsMax: 0,
+    timeGame: 0,
+    noErzOutFlg: 0,
+    tutorFlg: 0,
+    aiLevel: 0,
+    missionNumber: 0,
+    gameId: 0,
+    cityNameNumber: 0,
+    timeNextDrought: 0,
+    timePirateSec: 0,
+    missionSubNumber: 0,
+    shipMax: 0,
+    timeNextVulcano: 0,
+    cntVulcano: 0,
+    timeSettlers: [],
+    timeGrowth: [],
+    enableTrader: false,
+    bigIronRunsOut: false,
+    enableDroughts: false,
+    enablePirate: false,
+    enableVulcano: false
+  }
+});
+
+export type GameState = ReturnType<typeof GameStateFactory>;
 
 function getState$<T>(store: Store<T>) {
   return new Observable<T>(observer => {
@@ -70,12 +119,11 @@ export default class Game {
   }
 
   public async begin(world: World) {
-    const producers: MapById<Producer> = {};
-    world.producers.forEach((producer, idx) => {
-      producers[idx] = producer;
-    });
+    const producers = ImmutableMap(
+      world.producers.map((producer, idx) => [idx, producer])
+    );
 
-    const initialState: GameState = {
+    const initialState: GameState = GameStateFactory({
       players: this.mapArrayById(world.players),
       islands: this.mapArrayById(world.islands),
       tasks: this.mapArrayById(world.tasks),
@@ -83,18 +131,20 @@ export default class Game {
       kontors: world.kontors,
       producers: producers,
       timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused }
-    };
+    });
 
-    this.store = createStore<GameState, Action<string>, any, never>(
-      combineReducers({
-        players: playerReducer,
-        islands: (state: GameState["islands"] = null) => state,
-        timers: timerReducer,
-        tasks: (state: GameState["tasks"] = null) => state,
-        cities: (state: GameState["cities"] = null) => state,
-        kontors: (state: GameState["kontors"] = null) => state,
-        producers: producerReducer
-      }),
+    this.store = createStore(
+      enableBatching(
+        combineReducers({
+          players: playerReducer,
+          islands: (state: GameState["islands"] = null) => state,
+          timers: timerReducer,
+          tasks: (state: GameState["tasks"] = null) => state,
+          cities: (state: GameState["cities"] = null) => state,
+          kontors: (state: GameState["kontors"] = null) => state,
+          producers: producerReducer
+        })
+      ),
       initialState,
       devToolsEnhancer({ actionsBlacklist: [TICK], actionCreators })
     );
@@ -195,11 +245,10 @@ export default class Game {
       )
       .subscribe(state => {
         console.log("update producers");
-        // console.profile("producing");
         const fieldData = this.configLoader.getFieldData();
-        Object.values(state.producers).forEach((producer, id) => {
+        const actions = state.producers.entrySeq().flatMap(([id, producer]) => {
           if (!producer.active) {
-            return;
+            return [];
           }
           const island = state.islands[producer.islandId];
           const buildingId = this.getFieldAtIsland(island, producer.position)
@@ -215,7 +264,8 @@ export default class Game {
               producer.stock < fieldConfig.production.maxStock - 1;
             const newStock = producer.stock + 1;
 
-            this.store.dispatch(
+            this.gameRenderer.onProduced(island, producer.position, newStock);
+            return [
               createUpdateProducer(id, {
                 stock: newStock,
                 timer: canProduceEvenMore
@@ -227,8 +277,7 @@ export default class Game {
                   producer.secondGoodStock - fieldConfig.production.amount2,
                 producedGood: canProduceEvenMore ? 128 : 0
               })
-            );
-            this.gameRenderer.onProduced(island, producer.position, newStock);
+            ];
           } else if (
             producer.producedGood === 0 &&
             (producer.timer === 1 || state.timers.cntProduction === 0)
@@ -239,26 +288,26 @@ export default class Game {
               producer.firstGoodStock >= fieldConfig.production.amount1 &&
               producer.secondGoodStock >= fieldConfig.production.amount2 &&
               producer.stock < fieldConfig.production.maxStock;
-            this.store.dispatch(
+            return [
               createUpdateProducer(id, {
                 timer: canProduce
                   ? fieldConfig.production.interval
                   : producer.timer <= 1
-                    ? 11
-                    : producer.timer - 1,
+                  ? 11
+                  : producer.timer - 1,
                 producedGood: canProduce ? 128 : 0
               })
-            );
+            ];
           } else {
-            this.store.dispatch(
+            return [
               createUpdateProducer(id, {
                 // The timer never reaches 0.
                 timer: producer.timer <= 1 ? 11 : producer.timer - 1
               })
-            );
+            ];
           }
         });
-        // console.profileEnd("producing");
+        this.store.dispatch(batchActions(actions.toArray()));
       });
   }
 
@@ -273,7 +322,7 @@ export default class Game {
     );
 
     const islands = state.islands;
-    for (const producer of Object.values(state.producers)) {
+    state.producers.forEach(producer => {
       const island = islands[producer.islandId];
       const field = island.topFields[producer.position.x][producer.position.y];
       const buildingId = field.fieldId;
@@ -285,7 +334,7 @@ export default class Game {
 
       upkeeps[playerId] +=
         fieldConfig.production.upkeep[producer.active ? "active" : "inactive"];
-    }
+    }, this);
 
     return upkeeps;
   }
