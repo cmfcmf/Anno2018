@@ -1,4 +1,5 @@
-import { GameState } from "../game";
+import { Map } from "immutable";
+import { defaultTimers, GameState } from "../game";
 
 export const TICK = "TICK";
 export const DONATE_MONEY = "DONATE_MONEY";
@@ -23,7 +24,7 @@ function inc(
 }
 
 export function timerReducer(
-  state: GameState["timers"] = null,
+  state: GameState["timers"] = defaultTimers,
   action: any
 ): GameState["timers"] {
   switch (action.type) {
@@ -46,7 +47,7 @@ export function timerReducer(
 }
 
 export function playerReducer(
-  state: GameState["players"] = null,
+  state: GameState["players"] = {},
   action: any
 ): GameState["players"] {
   switch (action.type) {
@@ -79,7 +80,7 @@ export function playerReducer(
 }
 
 export function producerReducer(
-  state: GameState["producers"] = null,
+  state: GameState["producers"] = Map(),
   action: any
 ): GameState["producers"] {
   switch (action.type) {

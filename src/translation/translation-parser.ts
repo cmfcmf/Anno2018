@@ -4,7 +4,7 @@ export default function parseTranslations(
   data: string
 ): Record<TranslationDomain, string[]> {
   const translations: any = {};
-  let currentDomain: string | null;
+  let currentDomain: string | null = null;
 
   for (const line of data.split("\r\n")) {
     if (currentDomain) {

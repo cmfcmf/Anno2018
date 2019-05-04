@@ -79,15 +79,16 @@ export default class GameRenderer {
       this.world.islands
     );
 
-    const fields = make2DArray<Sprite, null>(this.WIDTH, this.HEIGHT, null);
+    const fields = make2DArray<Sprite>(this.WIDTH, this.HEIGHT);
     spritesPerIsland.forEach(spritesOfIsland =>
       spritesOfIsland.forEach(row =>
         row
           .filter(sprite => sprite !== null)
           .forEach(
             sprite =>
-              (fields[sprite.mapPosition.x][sprite.mapPosition.y] =
-                sprite.sprite)
+              (fields[sprite!.mapPosition.x][
+                sprite!.mapPosition.y
+              ] = sprite!.sprite)
           )
       )
     );
@@ -97,7 +98,7 @@ export default class GameRenderer {
     for (let x = 0; x < this.WIDTH && !waterTexture; x++) {
       for (let y = 0; y < this.HEIGHT; y++) {
         if (fields[x][y]) {
-          waterTexture = fields[x][y].texture;
+          waterTexture = fields[x][y]!.texture;
           break;
         }
       }
@@ -266,7 +267,7 @@ export default class GameRenderer {
       const position = myKontor.position;
       const kontorIsland = this.world.islands.find(
         island => island.id === myKontor.islandId
-      );
+      )!;
       this.moveTo(
         new Point(
           kontorIsland.position.x + position.x,

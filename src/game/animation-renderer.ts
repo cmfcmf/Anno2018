@@ -88,7 +88,7 @@ export default class AnimationRenderer {
         const frames: Texture[] = [];
 
         for (let step = 0; step < numSteps; step++) {
-          frames.push(textures.get(gfx));
+          frames.push(textures.get(gfx)!);
           gfx += gfxPerStep;
         }
 

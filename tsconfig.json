@@ -15,6 +15,7 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "strictFunctionTypes": true,
+    "strictNullChecks": true,
     "esModuleInterop": true
   }
 }

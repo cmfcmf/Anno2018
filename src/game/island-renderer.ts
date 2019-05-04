@@ -24,7 +24,7 @@ export default class IslandRenderer {
       spritesOfIsland.forEach(row =>
         row
           .filter(sprite => sprite !== null)
-          .forEach(sprite => this.world.addChild(sprite.sprite))
+          .forEach(sprite => this.world.addChild(sprite!.sprite))
       )
     );
     console.log("Map sprites drawn.");

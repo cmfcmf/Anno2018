@@ -24,10 +24,12 @@ import IslandLoader from "./island-loader";
 import WorldGenerator from "./world-generator";
 
 export default class GAMParser {
-  private worldGenerator: WorldGenerator;
+  private worldGenerator: WorldGenerator | null;
 
-  constructor(private islandLoader: IslandLoader) {
-    this.worldGenerator = new WorldGenerator(islandLoader);
+  constructor(private islandLoader: IslandLoader | null) {
+    this.worldGenerator = islandLoader
+      ? new WorldGenerator(islandLoader)
+      : null;
   }
 
   public parse(data: Stream) {
@@ -38,10 +40,10 @@ export default class GAMParser {
         if (!blocks.has(block.type)) {
           blocks.set(block.type, []);
         }
-        blocks.get(block.type).push(block);
+        blocks.get(block.type)!.push(block);
       } else {
-        const lastIslandBlock = blocks.get("INSEL5")[
-          blocks.get("INSEL5").length - 1
+        const lastIslandBlock = blocks.get("INSEL5")![
+          blocks.get("INSEL5")!.length - 1
         ] as IslandBlock;
         if (lastIslandBlock.inselHausBlocks === undefined) {
           lastIslandBlock.inselHausBlocks = [];
@@ -57,7 +59,7 @@ export default class GAMParser {
 
     const { world, worldGenerationSettings } = await this.doParse(blocks);
 
-    await this.worldGenerator.populateWorld(world, worldGenerationSettings);
+    await this.worldGenerator!.populateWorld(world, worldGenerationSettings);
 
     return world;
   }
@@ -67,7 +69,7 @@ export default class GAMParser {
     console.log(
       [...blocks.keys()]
         .filter(
-          key => blocks.get(key).find(block => block.length > 0) !== undefined
+          key => blocks.get(key)!.find(block => block.length > 0) !== undefined
         )
         .map(key => [key, blocks.get(key)])
     );
@@ -75,11 +77,11 @@ export default class GAMParser {
     let gameName = "";
     if (blocks.has("NAME")) {
       // Missions don't have a name.
-      const nameBlock = blocks.get("NAME")[0];
+      const nameBlock = blocks.get("NAME")![0];
       gameName = nameBlock.data.readString(nameBlock.length);
     }
 
-    const playerBlock = blocks.get("PLAYER4")[0];
+    const playerBlock = blocks.get("PLAYER4")![0];
     const players = this.parsePlayers(playerBlock);
 
     const islandBlocks = blocks.has("INSEL5")
@@ -101,17 +103,17 @@ export default class GAMParser {
 
     // TODO: HIRSCH2, WERFT, SIEDLER, ROHWACHS2, MARKT2, TURM, WIFF
     let trader = null;
-    if (blocks.has("HANDLER") && blocks.get("HANDLER")[0].length > 0) {
-      trader = traderFromSaveGame(blocks.get("HANDLER")[0].data);
+    if (blocks.has("HANDLER") && blocks.get("HANDLER")![0].length > 0) {
+      trader = traderFromSaveGame(blocks.get("HANDLER")![0].data);
     }
 
     assert(blocks.has("TIMERS"));
-    assert(blocks.get("TIMERS").length === 1);
-    const timers = timersFromSaveGame(blocks.get("TIMERS")[0].data);
+    assert(blocks.get("TIMERS")!.length === 1);
+    const timers = timersFromSaveGame(blocks.get("TIMERS")![0].data);
 
     let worldGenerationSettings = WorldGenerationSettings.empty();
     if (blocks.has("SZENE")) {
-      const data = blocks.get("SZENE")[0].data;
+      const data = blocks.get("SZENE")![0].data;
       worldGenerationSettings = WorldGenerationSettings.fromSaveGame(data);
     }
 
@@ -142,7 +144,7 @@ export default class GAMParser {
       return [];
     }
     const entities: T[] = [];
-    for (const block of blocks.get(name)) {
+    for (const block of blocks.get(name)!) {
       while (!block.data.eof()) {
         entities.push(fromSaveGame(block.data));
       }

@@ -74,7 +74,9 @@ export default class BinPacker {
 
   private findNode(root: Node, w: number, h: number): Node | null {
     if (root.used) {
-      return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
+      return (
+        this.findNode(root.right!, w, h) || this.findNode(root.down!, w, h)
+      );
     } else if (w <= root.w && h <= root.h) {
       return root;
     } else {

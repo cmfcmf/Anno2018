@@ -77,7 +77,7 @@ export default class Missions implements ScreenConfig {
           bitmapText.buttonMode = true;
           bitmapText.once("click", async () => {
             await this.menuStructure.renderScreen("menu_loading");
-            this.menuStructure.emit("load-game", line.file.fullPath);
+            this.menuStructure.emit("load-game", line.file!.fullPath);
           });
         }
       }
@@ -179,19 +179,19 @@ export default class Missions implements ScreenConfig {
         const blocks = this.gamParser.parse(data);
         let ranking = -1; // NOT the number of stars
         if (blocks.has("SZENE_RANKING")) {
-          assert(blocks.get("SZENE_RANKING").length === 1);
-          ranking = blocks.get("SZENE_RANKING")[0].data.read32();
+          assert(blocks.get("SZENE_RANKING")!.length === 1);
+          ranking = blocks.get("SZENE_RANKING")![0].data.read32();
         }
         let campaignNum = -1;
         if (blocks.has("SZENE_KAMPAGNE")) {
-          assert(blocks.get("SZENE_KAMPAGNE").length === 1);
-          campaignNum = blocks.get("SZENE_KAMPAGNE")[0].data.read32();
+          assert(blocks.get("SZENE_KAMPAGNE")!.length === 1);
+          campaignNum = blocks.get("SZENE_KAMPAGNE")![0].data.read32();
         }
         // The missionNum denotes which
         let missionNum = -1;
         if (blocks.has("SZENE_MISSNR")) {
-          assert(blocks.get("SZENE_MISSNR").length === 1);
-          missionNum = blocks.get("SZENE_MISSNR")[0].data.read32();
+          assert(blocks.get("SZENE_MISSNR")!.length === 1);
+          missionNum = blocks.get("SZENE_MISSNR")![0].data.read32();
         }
 
         return {

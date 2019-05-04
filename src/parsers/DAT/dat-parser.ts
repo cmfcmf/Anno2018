@@ -6,14 +6,14 @@ export default class DATParser {
 
   private variables: Map<string, any>;
   private objects: any;
-  private template: object;
+  private template: object | null;
   private gfxMap: Map<string, string>;
 
-  private lastGfxName: string;
-  private currentObject: string;
-  private currentNestedObject: string;
-  private currentItem: string;
-  private currentNestedItem: number;
+  private lastGfxName: string | null;
+  private currentObject: string | null;
+  private currentNestedObject: string | null;
+  private currentItem: string | null;
+  private currentNestedItem: number | null;
 
   constructor() {
     this.log = log.getLogger("dat-parser");
@@ -95,7 +95,7 @@ export default class DATParser {
     assert(this.currentItem != null);
 
     const fill = result[1];
-    const item = this.objects[this.currentObject].items[this.currentItem];
+    const item = this.objects[this.currentObject!].items[this.currentItem!];
     if (fill.startsWith("0,MAX")) {
       assert(this.template === null);
       this.template = item;
@@ -103,10 +103,10 @@ export default class DATParser {
       assert(item.hasOwnProperty("nested_objects"));
 
       const baseItemNum = this.getValue(null, fill, false);
-      const baseItem = this.objects[this.currentObject].items[baseItemNum];
-      this.objects[this.currentObject].items[this.currentItem] = this.deepCopy(
-        baseItem
-      );
+      const baseItem = this.objects[this.currentObject!].items[baseItemNum];
+      this.objects[this.currentObject!].items[
+        this.currentItem!
+      ] = this.deepCopy(baseItem);
 
       if (this.lastGfxName != null) {
         item.GfxCategory = this.lastGfxName;
@@ -125,7 +125,7 @@ export default class DATParser {
       } else if (value.startsWith("GFX")) {
         const currentGfx = value.split("+")[0];
         if (this.gfxMap.has(currentGfx)) {
-          this.gfxMap.set(constant, this.gfxMap.get(currentGfx));
+          this.gfxMap.set(constant, this.gfxMap.get(currentGfx)!);
         }
       }
     }
@@ -144,7 +144,7 @@ export default class DATParser {
       assert(this.currentItem !== null);
       this.currentNestedObject = objectName;
       this.currentNestedItem = 0;
-      const item = this.objects[this.currentObject].items[this.currentItem];
+      const item = this.objects[this.currentObject].items[this.currentItem!];
       if (
         item.nested_objects[this.currentNestedObject] === undefined ||
         item.nested_objects[this.currentNestedObject][
@@ -187,28 +187,30 @@ export default class DATParser {
       if (this.currentNestedObject === null) {
         this.currentItem = value;
 
-        this.objects[this.currentObject].items[this.currentItem] = {
+        this.objects[this.currentObject!].items[this.currentItem!] = {
           nested_objects: {}
         };
         if (this.template !== null) {
           const tmp = this.deepCopy(this.template);
-          this.objects[this.currentObject].items[
-            this.currentItem
+          this.objects[this.currentObject!].items[
+            this.currentItem!
           ] = this.deepMerge(
             tmp,
-            this.objects[this.currentObject].items[this.currentItem]
+            this.objects[this.currentObject!].items[this.currentItem!]
           );
         }
       } else {
         this.currentNestedItem = value;
-        this.objects[this.currentObject].items[this.currentItem].nested_objects[
-          this.currentNestedObject
-        ][this.currentNestedItem] = {};
+        this.objects[this.currentObject!].items[
+          this.currentItem!
+        ].nested_objects[this.currentNestedObject][
+          this.currentNestedItem!
+        ] = {};
       }
 
       return;
     }
-    const item = this.objects[this.currentObject].items[this.currentItem];
+    const item = this.objects[this.currentObject!].items[this.currentItem!];
 
     if (key === "Gfx" && valueAsString.startsWith("GFX")) {
       this.lastGfxName = valueAsString.split("+")[0];
@@ -222,7 +224,7 @@ export default class DATParser {
       }
     } else {
       const nestedItem =
-        item.nested_objects[this.currentNestedObject][this.currentNestedItem];
+        item.nested_objects[this.currentNestedObject][this.currentNestedItem!];
       if (
         Object.keys(nestedItem).includes(key) &&
         this.isObject(nestedItem[key])
@@ -235,7 +237,7 @@ export default class DATParser {
   }
 
   private getValue(
-    key: string,
+    key: string | null,
     value: string,
     isMath: boolean,
     arrayElement: number = -1
@@ -243,8 +245,8 @@ export default class DATParser {
     let result;
     if (isMath) {
       if ((result = value.match(/^([+\-])(\d+)$/))) {
-        let oldVal = this.variables.has(key)
-          ? this.deepCopy(this.variables.get(key))
+        let oldVal = this.variables.has(key!)
+          ? this.deepCopy(this.variables.get(key!))
           : null;
         if (oldVal.toString() === "RUINE_KONTOR_1") {
           // TODO

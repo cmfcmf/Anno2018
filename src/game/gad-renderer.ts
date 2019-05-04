@@ -79,8 +79,8 @@ export default class GADRenderer {
             `TOOLS/${blockNumMapping.get(blockNr)}`
           );
 
-          const defaultTexture = textures.get(gfx);
-          const activeTexture = textures.get(gfx + pressOff);
+          const defaultTexture = textures.get(gfx)!;
+          const activeTexture = textures.get(gfx + pressOff)!;
 
           const sprite = !isSlider
             ? new Sprite(defaultTexture)
@@ -90,7 +90,7 @@ export default class GADRenderer {
 
           if (isSlider) {
             (sprite as SliderSprite).setSliderData(
-              size.y,
+              size!.y,
               sliderOffset[1],
               sliderSize[1]
             );
@@ -142,7 +142,7 @@ export default class GADRenderer {
           text.position.set(position.x, position.y);
           text.pivot.set(0, fontSize);
           text.name = `menu-${id}`;
-          text.hitArea = new Rectangle(0, 0, size.x, size.y);
+          text.hitArea = new Rectangle(0, 0, size!.x, size!.y);
           if (kind.endsWith("Z")) {
             // Center text
             text.pivot.set(text.x / 2, text.pivot.y);

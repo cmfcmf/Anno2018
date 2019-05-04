@@ -12,7 +12,7 @@ export default class SpriteLoader {
     if (!this.textures.has(directory)) {
       await this.loadTextures(directory);
     }
-    return this.textures.get(directory);
+    return this.textures.get(directory)!;
   };
 
   private loadTextures = async (directory: string) => {

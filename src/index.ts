@@ -183,11 +183,11 @@ import { getQueryParameter } from "./util/util";
     console.table(blocks);
 
     const island = islandFromSaveGame(
-      blocks.find(block => ["INSEL5", "INSEL4", "INSEL3"].includes(block.type))
+      blocks.find(block => ["INSEL5", "INSEL4", "INSEL3"].includes(block.type))!
         .data
     );
     islandLoader.setIslandFields(island, [
-      blocks.find(block => block.type === "INSELHAUS")
+      blocks.find(block => block.type === "INSELHAUS")!
     ]);
     island.position = new Point(0, 0);
     island.positionRect = new Rectangle(0, 0, island.size.x, island.size.y);

@@ -55,14 +55,14 @@ export default class WorldGenerator {
       // numTreasures,
 
       let newIsland;
-      switch (inselBlock.type) {
+      switch (inselBlock!.type) {
         case "INSEL5":
           newIsland = islandFromIsland5File(
             nextIslandId++,
             islandTemplate.position,
             isSouth,
             numBaseIsland,
-            inselBlock.data
+            inselBlock!.data
           );
           break;
         case "INSEL4":
@@ -71,7 +71,7 @@ export default class WorldGenerator {
             islandTemplate.position,
             isSouth,
             numBaseIsland,
-            inselBlock.data
+            inselBlock!.data
           );
           break;
         case "INSEL3":
@@ -80,14 +80,14 @@ export default class WorldGenerator {
             islandTemplate.position,
             isSouth,
             numBaseIsland,
-            inselBlock.data
+            inselBlock!.data
           );
           break;
         default:
           throw new Error("This code cannot be reached.");
       }
 
-      this.islandLoader.setIslandFields(newIsland, [inselHausBlock]);
+      this.islandLoader.setIslandFields(newIsland, [inselHausBlock!]);
 
       world.islands.push(newIsland);
     }

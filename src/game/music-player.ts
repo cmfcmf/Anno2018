@@ -65,12 +65,12 @@ export default class MusicPlayer {
         source: data,
         preload: preload,
         singleInstance: true,
-        loaded: (err: Error, preloadedSound: pixiSound.Sound) => {
+        loaded: (err: Error, preloadedSound: pixiSound.Sound | undefined) => {
           if (preload) {
             if (err) {
               reject(err);
             } else {
-              resolve(preloadedSound);
+              resolve(preloadedSound!);
             }
           }
         }

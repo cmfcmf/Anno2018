@@ -36,6 +36,44 @@ interface MapById<T> {
   [k: string]: T;
 }
 
+export const defaultTimers = {
+  simulationSpeed: 0,
+  cntCity: 0,
+  cntIsland: 0,
+  cntShipyard: 0,
+  cntMilitary: 0,
+  cntProduction: 0,
+  cntSettlers: [],
+  cntGrowth: [],
+  timeCity: 0,
+  timeIsland: 0,
+  timeShipyard: 0,
+  timeMilitary: 0,
+  timeProduction: 0,
+  timeGoodToolsCnt: 0,
+  timeGoodToolsMax: 0,
+  timeGame: 0,
+  noErzOutFlg: 0,
+  tutorFlg: 0,
+  aiLevel: 0,
+  missionNumber: 0,
+  gameId: 0,
+  cityNameNumber: 0,
+  timeNextDrought: 0,
+  timePirateSec: 0,
+  missionSubNumber: 0,
+  shipMax: 0,
+  timeNextVulcano: 0,
+  cntVulcano: 0,
+  timeSettlers: [],
+  timeGrowth: [],
+  enableTrader: false,
+  bigIronRunsOut: false,
+  enableDroughts: false,
+  enablePirate: false,
+  enableVulcano: false
+};
+
 const GameStateFactory = Record<{
   players: MapById<Player>;
   islands: MapById<Island>;
@@ -51,43 +89,7 @@ const GameStateFactory = Record<{
   cities: [],
   kontors: [],
   producers: ImmutableMap<number, Producer>(),
-  timers: {
-    simulationSpeed: 0,
-    cntCity: 0,
-    cntIsland: 0,
-    cntShipyard: 0,
-    cntMilitary: 0,
-    cntProduction: 0,
-    cntSettlers: [],
-    cntGrowth: [],
-    timeCity: 0,
-    timeIsland: 0,
-    timeShipyard: 0,
-    timeMilitary: 0,
-    timeProduction: 0,
-    timeGoodToolsCnt: 0,
-    timeGoodToolsMax: 0,
-    timeGame: 0,
-    noErzOutFlg: 0,
-    tutorFlg: 0,
-    aiLevel: 0,
-    missionNumber: 0,
-    gameId: 0,
-    cityNameNumber: 0,
-    timeNextDrought: 0,
-    timePirateSec: 0,
-    missionSubNumber: 0,
-    shipMax: 0,
-    timeNextVulcano: 0,
-    cntVulcano: 0,
-    timeSettlers: [],
-    timeGrowth: [],
-    enableTrader: false,
-    bigIronRunsOut: false,
-    enableDroughts: false,
-    enablePirate: false,
-    enableVulcano: false
-  }
+  timers: defaultTimers
 });
 
 export type GameState = ReturnType<typeof GameStateFactory>;
@@ -104,7 +106,7 @@ function getState$<T>(store: Store<T>) {
 export default class Game {
   private store: Store<GameState>;
 
-  private timerId: number = null;
+  private timerId: number | null;
   private readonly myPlayerId: number = 0;
   private readonly keyboardManager: KeyboardManager;
 
@@ -136,11 +138,11 @@ export default class Game {
       enableBatching(
         combineReducers({
           players: playerReducer,
-          islands: (state: GameState["islands"] = null) => state,
+          islands: (state: GameState["islands"] = {}) => state,
           timers: timerReducer,
-          tasks: (state: GameState["tasks"] = null) => state,
-          cities: (state: GameState["cities"] = null) => state,
-          kontors: (state: GameState["kontors"] = null) => state,
+          tasks: (state: GameState["tasks"] = {}) => state,
+          cities: (state: GameState["cities"] = []) => state,
+          kontors: (state: GameState["kontors"] = []) => state,
           producers: producerReducer
         })
       ),
@@ -244,9 +246,9 @@ export default class Game {
             return [];
           }
           const island = state.islands[producer.islandId];
-          const buildingId = this.getFieldAtIsland(island, producer.position)
+          const buildingId = this.getFieldAtIsland(island, producer.position)!
             .fieldId;
-          const fieldConfig = fieldData.get(buildingId);
+          const fieldConfig = fieldData.get(buildingId)!;
           assert(fieldConfig);
 
           if (producer.producedGood === 128 && producer.timer === 1) {
@@ -317,12 +319,12 @@ export default class Game {
     const islands = state.islands;
     state.producers.forEach(producer => {
       const island = islands[producer.islandId];
-      const field = island.fields[producer.position.x][producer.position.y];
+      const field = island.fields[producer.position.x][producer.position.y]!;
       const buildingId = field.fieldId;
       const playerId = field.playerId;
       assert(buildingId !== 0xffff);
       assert(playerId < 7);
-      const fieldConfig = this.configLoader.getFieldData().get(buildingId);
+      const fieldConfig = this.configLoader.getFieldData().get(buildingId)!;
       assert(fieldConfig);
 
       upkeeps[playerId] +=

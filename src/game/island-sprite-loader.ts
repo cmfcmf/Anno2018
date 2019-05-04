@@ -37,10 +37,9 @@ export default class IslandSpriteLoader {
   public getIslandSprites = async (island: Island) => {
     await this.init();
 
-    const sprites = make2DArray<SpriteWithPosition, null>(
+    const sprites = make2DArray<SpriteWithPosition>(
       island.size.x,
-      island.size.y,
-      null
+      island.size.y
     );
 
     for (let x = 0; x < island.size.x; x++) {
