@@ -190,7 +190,7 @@ export default class GAMParser {
         }
       }
       this.islandLoader.setIslandFields(island, [
-        // islandBottomBlock,
+        islandBottomBlock,
         islandTopBlock
       ]);
 

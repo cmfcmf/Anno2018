@@ -14,6 +14,15 @@
     },
     {
       "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chromium",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}",
+      "runtimeExecutable": "/usr/bin/chromium-browser",
+      "userDataDir": false
+    },
+    {
+      "type": "chrome",
       "request": "attach",
       "name": "Attach to Chrome",
       "port": 9222,

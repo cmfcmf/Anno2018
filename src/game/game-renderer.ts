@@ -1,10 +1,22 @@
 import Viewport from "pixi-viewport";
-import { Application, Container, interaction, Point, Text } from "pixi.js";
+import {
+  Application,
+  Container,
+  interaction,
+  Point,
+  Sprite,
+  Text,
+  Texture
+} from "pixi.js";
+import { from, fromEvent, merge } from "rxjs";
+import { auditTime } from "rxjs/operators";
+import { make2DArray } from "../util/util";
 import IslandRenderer, {
   LAND_OFFSET,
   TILE_HEIGHT,
   TILE_WIDTH
 } from "./island-renderer";
+import { SpriteWithPosition } from "./island-sprite-loader";
 import { Island } from "./world/island";
 import World from "./world/world";
 
@@ -40,6 +52,9 @@ export default class GameRenderer {
   }
 
   private money: Text;
+  private readonly WIDTH = 500;
+  private readonly HEIGHT = 350;
+  private fields: Array<Array<Sprite | null>>;
 
   constructor(
     private readonly world: World,
@@ -64,23 +79,51 @@ export default class GameRenderer {
       this.world.islands
     );
 
-    // spritesPerIsland.forEach((sprites, idx) => {
-    //   if (idx !== 4) {
-    //     sprites.forEach(sprite => (sprite.sprite.visible = false));
-    //   }
-    // });
-    /*
-    let i = 0;
-    setInterval(() => {
-      spritesPerIsland[i].forEach(sprite => sprite.sprite.visible = false);
-      i++;
-      if (i === spritesPerIsland.length) {
-        i = 0;
+    const fields = make2DArray<Sprite, null>(this.WIDTH, this.HEIGHT, null);
+    spritesPerIsland.forEach(spritesOfIsland =>
+      spritesOfIsland.forEach(row =>
+        row
+          .filter(sprite => sprite !== null)
+          .forEach(
+            sprite =>
+              (fields[sprite.mapPosition.x][sprite.mapPosition.y] =
+                sprite.sprite)
+          )
+      )
+    );
+
+    // TODO: Hack to find the water texture.
+    let waterTexture: Texture | null = null;
+    for (let x = 0; x < this.WIDTH && !waterTexture; x++) {
+      for (let y = 0; y < this.HEIGHT; y++) {
+        if (fields[x][y]) {
+          waterTexture = fields[x][y].texture;
+          break;
+        }
       }
-      console.log(`Rendering island ${i}.`);
-      spritesPerIsland[i].forEach(sprite => sprite.sprite.visible = true);
-    }, 1000);
-    */
+    }
+
+    // Fill in water between islands
+    fields.forEach((row, x) =>
+      row.forEach((field, y) => {
+        if (field === null) {
+          // TODO: This should be an animated sprite.
+          const sprite = new Sprite(waterTexture!);
+
+          const { x: worldX, y: worldY } = GameRenderer.fieldPosToWorldPos(
+            new Point(x, y)
+          );
+          // Set bottom left corner of sprite as origin.
+          sprite.anchor.set(0, 1);
+          sprite.x = worldX;
+          sprite.y = worldY;
+
+          fields[x][y] = sprite;
+          this.viewport.addChild(sprite);
+        }
+      })
+    );
+    this.fields = fields;
 
     // Render ships
     // ...
@@ -89,12 +132,21 @@ export default class GameRenderer {
     // ...
 
     this.moveCameraToStartPosition(myPlayerId);
+
+    merge(
+      from(["initial"]),
+      fromEvent(this.viewport as any, "zoomed"),
+      fromEvent(this.viewport as any, "moved")
+    )
+      .pipe(auditTime(200))
+      .subscribe(this.cull);
   }
 
   public zoom(zoom: 1 | 2 | 3) {
     const center = this.viewport.center;
     this.viewport.scale.set(1.0 / zoom);
     this.viewport.moveCenter(center.x, center.y);
+    this.cull();
   }
 
   // public onMove(listener: (viewport: Viewport) => void) {
@@ -127,6 +179,37 @@ export default class GameRenderer {
     text.position.set(pos.x, pos.y);
     this.viewport.addChild(text);
   }
+
+  private cull = () => {
+    const viewportBounds = this.viewport.getVisibleBounds();
+
+    const topLeft = GameRenderer.worldPosToFieldPos(
+      new Point(viewportBounds.x - TILE_WIDTH, viewportBounds.y - TILE_HEIGHT)
+    );
+    const bottomRight = GameRenderer.worldPosToFieldPos(
+      new Point(
+        viewportBounds.x + viewportBounds.width + TILE_WIDTH,
+        // we need to add the height of the highest sprite in the game, so
+        // that it is still drawn even if it is below the viewport.
+        // TODO: Verify that 200 fits.
+        viewportBounds.y + viewportBounds.height + TILE_HEIGHT + 200
+      )
+    );
+
+    for (let x = 0; x < this.WIDTH; x++) {
+      for (let y = 0; y < this.HEIGHT; y++) {
+        const field = this.fields[x][y];
+        if (!field) {
+          continue;
+        }
+        field.visible =
+          x + y >= topLeft.x + topLeft.y &&
+          x - y >= topLeft.x - topLeft.y &&
+          x + y <= bottomRight.x + bottomRight.y &&
+          x - y <= bottomRight.x - bottomRight.y;
+      }
+    }
+  };
 
   private debugControls() {
     const debugContainer = new Container();

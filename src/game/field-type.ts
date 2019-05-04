@@ -1,7 +1,6 @@
 import { AnimatedSprite, Point, Sprite, Texture } from "pixi.js";
 import GameRenderer from "./game-renderer";
-import { SpriteWithPositionAndLayer } from "./island-sprite-loader";
-import { WorldLayer } from "./island-sprite-loader";
+import { SpriteWithPosition } from "./island-sprite-loader";
 import { Rotation4 } from "./world/world";
 
 export type GroundFieldType =
@@ -112,13 +111,13 @@ export default class FieldType {
   }
 
   public getSprites(
+    islandPosition: Point,
     fieldPos: Point,
     rotation: Rotation4,
     animationStep: number,
-    textures: Map<number, Texture>,
-    layer: WorldLayer
+    textures: Map<number, Texture>
   ) {
-    const sprites: SpriteWithPositionAndLayer[] = [];
+    const sprites: SpriteWithPosition[] = [];
     const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
     const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
     for (let y = 0; y < sy; y++) {
@@ -156,9 +155,12 @@ export default class FieldType {
         sprite.y = worldY + this.yOffset;
         sprites.push({
           sprite: sprite,
-          pixelPosition: new Point(xx, yy),
-          mapPosition: new Point(x, y),
-          layer: layer
+          pixelPosition: new Point(sprite.x, sprite.y),
+          mapPosition: new Point(xx, yy),
+          mapPositionOnIsland: new Point(
+            xx - islandPosition.x,
+            yy - islandPosition.y
+          )
         });
       }
     }

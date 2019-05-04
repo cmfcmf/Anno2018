@@ -24,7 +24,7 @@ export class OreLocation {
     const position = new Point(data.read8(), data.read8());
     const discoveredBy = data.read8(); // unsure
     const size = data.read8();
-    assert(data.read8() === 0);
+    data.read8(); // mostly 0?
     const amount = data.read16(); // unsure
 
     return new OreLocation(kind, size, amount, position, discoveredBy);

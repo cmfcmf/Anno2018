@@ -4,7 +4,7 @@ import lookup, { TranslationKeys } from "./translations";
 const translations: Map<TranslationKeys, string> = new Map();
 
 export default function t(key: TranslationKeys): string {
-  return translations.get(key);
+  return translations.get(key) || "?";
 }
 
 export async function loadTranslations(fs: FileSystem) {

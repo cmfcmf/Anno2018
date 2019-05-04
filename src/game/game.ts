@@ -168,10 +168,7 @@ export default class Game {
   }
 
   public getFieldAtIsland = (island: Island, islandPos: Point) => {
-    return {
-      base: island.baseFields[islandPos.x][islandPos.y],
-      top: island.topFields[islandPos.x][islandPos.y]
-    };
+    return island.fields[islandPos.x][islandPos.y];
   };
 
   public getFieldAt = (globalPos: Point) => {
@@ -179,10 +176,7 @@ export default class Game {
       each.positionRect.contains(globalPos.x, globalPos.y)
     );
     if (!island) {
-      return {
-        base: null,
-        top: null
-      };
+      return null;
     }
     const islandPos = new Point(
       globalPos.x - island.position.x,
@@ -251,7 +245,7 @@ export default class Game {
           }
           const island = state.islands[producer.islandId];
           const buildingId = this.getFieldAtIsland(island, producer.position)
-            .top.fieldId;
+            .fieldId;
           const fieldConfig = fieldData.get(buildingId);
           assert(fieldConfig);
 
@@ -323,7 +317,7 @@ export default class Game {
     const islands = state.islands;
     state.producers.forEach(producer => {
       const island = islands[producer.islandId];
-      const field = island.topFields[producer.position.x][producer.position.y];
+      const field = island.fields[producer.position.x][producer.position.y];
       const buildingId = field.fieldId;
       const playerId = field.playerId;
       assert(buildingId !== 0xffff);

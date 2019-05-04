@@ -1,6 +1,13 @@
 import * as log from "loglevel";
 import Viewport from "pixi-viewport";
-import { Application, MIPMAP_MODES, SCALE_MODES, settings } from "pixi.js";
+import {
+  Application,
+  MIPMAP_MODES,
+  Point,
+  Rectangle,
+  SCALE_MODES,
+  settings
+} from "pixi.js";
 import FileSystem from "./filesystem";
 import GameLoader from "./game-loader";
 import AnimationRenderer from "./game/animation-renderer";
@@ -110,7 +117,7 @@ import { getQueryParameter } from "./util/util";
     configLoader,
     spriteLoader
   );
-  const islandRenderer = new IslandRenderer(viewport, fs, worldFieldBuilder);
+  const islandRenderer = new IslandRenderer(viewport, worldFieldBuilder);
 
   const gameLoader = new GameLoader(
     fs,
@@ -182,6 +189,8 @@ import { getQueryParameter } from "./util/util";
     islandLoader.setIslandFields(island, [
       blocks.find(block => block.type === "INSELHAUS")
     ]);
+    island.position = new Point(0, 0);
+    island.positionRect = new Rectangle(0, 0, island.size.x, island.size.y);
 
     menuViewport.visible = false;
     await islandRenderer.render([island]);

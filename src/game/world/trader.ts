@@ -14,7 +14,7 @@ export function traderFromSaveGame(data: Stream) {
   const goods = parseGoods(data);
   const _3 = data.read(292);
 
-  console.error(_1, _2, goods, _3);
+  console.log("trader", _1, _2, goods, _3);
 
   return {
     goods

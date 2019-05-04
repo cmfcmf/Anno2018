@@ -84,7 +84,7 @@ export function taskFromSaveGame(data: Stream) {
     requiredLevelCount: data.read32()
   };
 
-  console.warn("task", id, _1, _3, _5, _6, _7);
+  console.log("task", id, _1, _3, _5, _6, _7);
 
   return {
     id,

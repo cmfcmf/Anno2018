@@ -59,8 +59,7 @@ export function islandFromIsland3File(
     isSouth,
     differsFromBaseIsland: false,
     fertilityDiscovered: false,
-    baseFields: [],
-    topFields: []
+    fields: []
   };
 }
 
@@ -139,10 +138,9 @@ export function islandFromSaveGame(data: Stream) {
   // unsure
   const duerrcnt = data.read32();
 
-  assert(data.read32() === 0);
+  data.read32(); // mostly 0?
 
-  const baseFields: Field[][] = [];
-  const topFields: Array<Array<Field | null>> = [];
+  const fields: Array<Array<Field | null>> = [];
 
   return {
     id,
@@ -156,8 +154,7 @@ export function islandFromSaveGame(data: Stream) {
     isSouth,
     differsFromBaseIsland,
     fertilityDiscovered: fertilityDiscovered !== 0,
-    baseFields,
-    topFields
+    fields
   };
 
   // island.debug = {

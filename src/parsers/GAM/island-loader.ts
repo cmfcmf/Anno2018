@@ -99,11 +99,9 @@ export default class IslandLoader {
   }
 
   public setIslandFields(island: Island, blocks: Block[]) {
-    island.baseFields = [];
-    island.topFields = [];
+    island.fields = [];
     for (let x = 0; x < island.size.x; x++) {
-      island.baseFields.push(new Array(island.size.y).fill(null));
-      island.topFields.push(new Array(island.size.y).fill(null));
+      island.fields.push(new Array(island.size.y).fill(null));
     }
     for (const block of blocks) {
       const parsedFields = this.parseIslandFields(island, block);
@@ -113,31 +111,7 @@ export default class IslandLoader {
           if (parsedField === null) {
             continue;
           }
-          const config = this.fieldData.get(parsedField.fieldId);
-          if (
-            [
-              "BODEN",
-              "FLUSS",
-              "FLUSSECK",
-              "HANG",
-              "HANGQUELL",
-              "HANGECK",
-              "STRAND",
-              "STRANDMUND",
-              "STRANDECKI",
-              "STRANDVARI",
-              "STRANDECKA",
-              "BRANDUNG",
-              "BRANDECK",
-              "MEER",
-              "FELS",
-              "MUENDUNG"
-            ].includes(config.kind)
-          ) {
-            island.baseFields[x][y] = parsedField;
-          } else {
-            island.topFields[x][y] = parsedField;
-          }
+          island.fields[x][y] = parsedField;
         }
       }
     }

@@ -24,7 +24,7 @@ export function uInt8ToBase64(arr: Uint8Array): string {
  *
  * Taken from https://stackoverflow.com/a/901144
  */
-export function getQueryParameter(name: string): string {
+export function getQueryParameter(name: string): string | null {
   const url = window.location.href;
   name = name.replace(/[\[\]]/g, "\\$&");
   const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
@@ -46,4 +46,10 @@ export function findRootInZip(zip: JSZip): JSZip {
     return zip.folder(gfxFolder[0].name.replace("GFX/", ""));
   }
   throw new Error("Your ZIP file does not have the expected structure.");
+}
+
+export function make2DArray<T>(x: number, y: number): Array<Array<T | null>> {
+  return Array(x)
+    .fill(undefined)
+    .map(() => Array(y).fill(null));
 }

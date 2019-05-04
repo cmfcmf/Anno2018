@@ -36,12 +36,12 @@ export function createSetSimulationSpeed(newSpeed: SimulationSpeed) {
   };
 }
 
-export function createAddMoney(playerId: number, upkeep: number) {
+export function createAddMoney(playerId: number, money: number) {
   return {
     type: ADD_MONEY,
     payload: {
       playerId,
-      upkeep
+      money
     }
   };
 }
