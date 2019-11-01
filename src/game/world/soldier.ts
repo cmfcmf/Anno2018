@@ -8,6 +8,17 @@ import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import { Rotation8 } from "./world";
 
+/**
+ * # Animation notes
+ *
+ * There is a seperate animation per player color (red, blue, yellow, white)
+ *
+ * KANONIER1, KANONIER2, KANONIER3, KANONIER4
+ * KAVALERIE1, KAVALERIE2, KAVALERIE3, KAVALERIE4
+ * MUSKETIER1, MUSKETIER2, MUSKETIER3, MUSKETIER4
+ * SOLDAT1, SOLDAT2, SOLDAT3, SOLDAT4
+ */
+
 export enum SoldierType {
   Swordsman = 0,
   Cavalry = 1,

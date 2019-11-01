@@ -9,6 +9,21 @@ import Stream from "../../parsers/stream";
 import { ShipCourse } from "./ship-course";
 import { Rotation8 } from "./world";
 
+/**
+ * # Animation Notes
+ *
+ * There are the following flags:
+ * FAHNE1, FAHNE2, FAHNE3, FAHNE4 and FAHNEWEISS
+ *
+ * and these ships:
+ * HANDEL1, HANDEL2, HANDELD1, HANDELD2
+ * KRIEG1, KRIEG2, KRIEGD1, KRIEGD2
+ *
+ * HANDLER, HANDLERD
+ * PIRAT, PIRATD
+ *
+ */
+
 export interface ShipGood {
   good_id: number;
   amount: number;
@@ -24,6 +39,16 @@ export interface ShipTradeStop {
 }
 
 export type Ship = ReturnType<typeof shipFromSaveGame>;
+
+export const SHIP_TYPES = {
+  0x15: "HANDEL1",
+  0x17: "HANDEL2",
+  0x19: "KRIEG1",
+  0x1b: "KRIEG2",
+  0x1d: "HANDLER",
+  0x1f: "PIRAT",
+  0x25: "HANDLER" // TODO, Why is this duplicated?
+};
 
 export function shipFromSaveGame(data: Stream) {
   const name = data.readString(28);
@@ -42,7 +67,7 @@ export function shipFromSaveGame(data: Stream) {
   const sellingPrice = data.read16();
   const id = data.read16();
   const type = data.read16();
-  const _4 = data.read8();
+  const kind = data.read8(); // ?
   const playerId = data.read8();
   const _5 = data.read32();
   const rotation = data.read16() as Rotation8;
@@ -53,6 +78,8 @@ export function shipFromSaveGame(data: Stream) {
 
   return {
     id,
+    type,
+    kind,
     playerId,
     position,
     rotation,

@@ -1,11 +1,13 @@
 import { Viewport } from "pixi-viewport";
 import { Application } from "pixi.js";
 import FileSystem from "./filesystem";
+import AnimationRenderer from "./game/animation-renderer";
 import ConfigLoader from "./game/config-loader";
 import Game from "./game/game";
 import GameRenderer from "./game/game-renderer";
 import IslandRenderer from "./game/island-renderer";
 import MusicPlayer from "./game/music-player";
+import { SimulationSpeed } from "./game/world/world";
 import GAMParser from "./parsers/GAM/gam-parser";
 
 export default class GameLoader {
@@ -16,7 +18,8 @@ export default class GameLoader {
     private readonly app: Application,
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
-    private readonly musicPlayer: MusicPlayer
+    private readonly musicPlayer: MusicPlayer,
+    private readonly animationRenderer: AnimationRenderer
   ) {}
 
   public async loadByName(gameName: string) {
@@ -37,18 +40,23 @@ export default class GameLoader {
   public async load(saveGame: WebKitEntry | string) {
     const saveGameData = await this.fs.openAndGetContentAsStream(saveGame);
     const world = await this.gamParser.getWorld(saveGameData);
+    const myPlayerId = 0;
 
+    const gameLogic = new Game(this.configLoader, world);
     const gameRenderer = new GameRenderer(
-      world,
+      gameLogic,
       this.islandRenderer,
       this.app,
-      this.viewport
+      this.viewport,
+      this.configLoader,
+      this.animationRenderer,
+      myPlayerId
     );
 
-    const gameLogic = new Game(gameRenderer, this.configLoader);
-    await gameLogic.begin(world);
-
+    await gameRenderer.begin();
     this.musicPlayer.playAll();
+
+    gameLogic.setSimulationSpeed(SimulationSpeed.Default);
   }
 
   private async loadSavesAndMissions() {

@@ -119,6 +119,11 @@ import { getQueryParameter } from "./util/util";
   );
   const islandRenderer = new IslandRenderer(viewport, worldFieldBuilder);
 
+  const animationData = JSON.parse(
+    await fs.openAndGetContentAsText("/animations.json")
+  );
+  const animationRenderer = new AnimationRenderer(animationData, spriteLoader);
+
   const gameLoader = new GameLoader(
     fs,
     gamParser,
@@ -126,7 +131,8 @@ import { getQueryParameter } from "./util/util";
     app,
     viewport,
     configLoader,
-    musicPlayer
+    musicPlayer,
+    animationRenderer
   );
 
   const queryGameName = getQueryParameter("load");
@@ -143,35 +149,7 @@ import { getQueryParameter } from "./util/util";
     await menuStructure.renderScreen(gad);
   } else if (animationName !== null) {
     console.log(`Rendering animation "${animationName}".`);
-    const animationData = JSON.parse(
-      await fs.openAndGetContentAsText("/animations.json")
-    );
-    const animationRenderer = new AnimationRenderer(
-      animationData,
-      spriteLoader
-    );
-    // await animationRenderer.renderAnimation(animation, viewport);
-    const animation = await animationRenderer.getAnimation(animationName);
-
-    const animIdx = 0;
-    const rotation = 1;
-
-    const sprite = animation[animIdx].sprites[rotation];
-    const config = animation[animIdx].config;
-    sprite.loop = true;
-    if (config.Kind !== "ENDLESS") {
-      let cnt = 0;
-      sprite.onLoop = () => {
-        cnt++;
-        console.log(cnt, config.AnimRept);
-        if (cnt === config.AnimRept) {
-          sprite.loop = false;
-        }
-      };
-    }
-
-    viewport.addChild(sprite);
-    sprite.play();
+    await animationRenderer.renderAnimation(animationName, viewport);
   } else if (islandName !== null) {
     console.info(`Rendering island "${islandName}".`);
     const islandFile = await islandLoader.loadIslandFileByName(islandName);

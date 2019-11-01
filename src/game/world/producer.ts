@@ -15,14 +15,23 @@ export function producerFromSaveGame(data: Stream) {
   const position = new Point(data.read8(), data.read8());
   const speed = data.read8();
   const speedCount = data.read8();
-  const stock = data.read16() / 32;
+
+  // TODO: Without Math.floor, some producers have x.5 goods. Investigate why.
+  const stock = Math.floor(data.read16() / 32);
+
+  assert(Number.isInteger(stock));
 
   data.read8();
 
   const timer = data.read16();
 
-  const secondGoodStock = data.read16() / 32;
-  const firstGoodStock = data.read16() / 32;
+  // TODO: Without Math.floor, some producers have x.5 goods. Investigate why.
+  const secondGoodStock = Math.floor(data.read16() / 32);
+  // TODO: Without Math.floor, some producers have x.5 goods. Investigate why.
+  const firstGoodStock = Math.floor(data.read16() / 32);
+
+  assert(Number.isInteger(firstGoodStock));
+  assert(Number.isInteger(secondGoodStock));
 
   data.read8();
 

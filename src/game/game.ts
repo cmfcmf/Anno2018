@@ -1,14 +1,13 @@
 import { EventEmitter } from "events";
-import { Key, KeyboardManager } from "pixi-keyboard";
 import { Point } from "pixi.js";
 import assert from "../util/assert";
 import ConfigLoader from "./config-loader";
-import GameRenderer from "./game-renderer";
 import { City } from "./world/city";
 import { Island } from "./world/island";
 import { Kontor } from "./world/kontor";
 import { Player } from "./world/player";
 import { Producer } from "./world/producer";
+import { Ship } from "./world/ship";
 import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
@@ -62,26 +61,16 @@ export interface GameState {
   cities: City[];
   kontors: Kontor[];
   producers: Producer[];
+  ships: Ship[];
   timers: Timers & { simulationSpeed: SimulationSpeed };
 }
 
 export default class Game extends EventEmitter {
+  public state: GameState;
   private timerId: number | null;
-  private readonly myPlayerId: number = 0;
-  private readonly keyboardManager: KeyboardManager;
 
-  private state: GameState;
-
-  constructor(
-    private readonly gameRenderer: GameRenderer,
-    private readonly configLoader: ConfigLoader
-  ) {
+  constructor(private readonly configLoader: ConfigLoader, world: World) {
     super();
-    this.keyboardManager = new KeyboardManager();
-    this.setupHotKeys();
-  }
-
-  public async begin(world: World) {
     this.state = {
       players: this.mapArrayById(world.players),
       islands: this.mapArrayById(world.islands),
@@ -89,23 +78,9 @@ export default class Game extends EventEmitter {
       cities: world.cities,
       kontors: world.kontors,
       producers: world.producers,
+      ships: world.ships,
       timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused }
     };
-
-    this.addListener("tick", this.watchTicksForUpkeep);
-    this.addListener("tick", this.watchTicksForProducing);
-
-    this.addListener("player/money", ({ playerId, money }) => {
-      if (playerId === this.myPlayerId) {
-        this.gameRenderer.setMoney(money);
-      }
-    });
-
-    this.setSimulationSpeed(SimulationSpeed.Default);
-
-    this.keyboardManager.enable();
-
-    await this.gameRenderer.begin(this.myPlayerId);
   }
 
   public getFieldAtIsland = (island: Island, islandPos: Point) => {
@@ -127,7 +102,7 @@ export default class Game extends EventEmitter {
     return this.getFieldAtIsland(island, islandPos);
   };
 
-  private setSimulationSpeed(speed: SimulationSpeed) {
+  public setSimulationSpeed(speed: SimulationSpeed) {
     this.state.timers.simulationSpeed = speed;
 
     if (this.timerId) {
@@ -191,21 +166,21 @@ export default class Game extends EventEmitter {
 
       if (producer.producedGood === 128 && producer.timer === 1) {
         // We have finished producing!
-        const canProduceEvenMore =
-          producer.firstGoodStock >= 2 * fieldConfig.production.amount1 &&
-          producer.secondGoodStock >= 2 * fieldConfig.production.amount2 &&
-          producer.stock < fieldConfig.production.maxStock - 1;
         const newStock = producer.stock + 1;
-
-        this.gameRenderer.onProduced(island, producer.position, newStock);
+        const newFirstGoodStock =
+          producer.firstGoodStock - fieldConfig.production.amount1;
+        const newSecondGoodStock =
+          producer.secondGoodStock - fieldConfig.production.amount2;
+        const canProduceEvenMore =
+          newFirstGoodStock >= fieldConfig.production.amount1 &&
+          newSecondGoodStock >= fieldConfig.production.amount2 &&
+          newStock < fieldConfig.production.maxStock;
 
         this.updateProcuder((id as unknown) as number, {
           stock: newStock,
           timer: canProduceEvenMore ? fieldConfig.production.interval : 11,
-          firstGoodStock:
-            producer.firstGoodStock - fieldConfig.production.amount1,
-          secondGoodStock:
-            producer.secondGoodStock - fieldConfig.production.amount2,
+          firstGoodStock: newFirstGoodStock,
+          secondGoodStock: newSecondGoodStock,
           producedGood: canProduceEvenMore ? 128 : 0
         });
       } else if (
@@ -236,10 +211,17 @@ export default class Game extends EventEmitter {
   }
 
   private updateProcuder(producerId: number, patch: Partial<Producer>) {
-    let producer = this.state.producers[producerId];
-    producer = { ...producer, ...patch };
+    const producer = this.state.producers[producerId];
+    Object.assign(producer, patch);
 
     this.emit("producer/updated", { producerId });
+    if (patch.stock !== undefined) {
+      this.emit("producer/good-produced", {
+        island: this.state.islands[producer.islandId],
+        position: producer.position,
+        stock: producer.stock
+      });
+    }
   }
 
   private calculateUpkeeps() {
@@ -267,43 +249,6 @@ export default class Game extends EventEmitter {
     return upkeeps;
   }
 
-  private setupHotKeys() {
-    const showTaskKey = Key.F1;
-    this.keyboardManager.onKeyPressedWithPreventDefault(showTaskKey, () => {
-      const player = this.state.players[this.myPlayerId];
-      const assignedTask = this.state.tasks[player.assignedTaskId];
-      if (assignedTask !== undefined) {
-        console.info(assignedTask.text);
-      } else {
-        console.info("It appears like you have no task :/");
-      }
-    });
-
-    const zoomKeys: Array<{ key: number; zoom: 1 | 2 | 3 }> = [
-      { key: Key.F2, zoom: 1 },
-      { key: Key.F3, zoom: 2 },
-      { key: Key.F4, zoom: 3 }
-    ];
-    for (const zoomKey of zoomKeys) {
-      this.keyboardManager.onKeyPressedWithPreventDefault(zoomKey.key, () =>
-        this.gameRenderer.zoom(zoomKey.zoom)
-      );
-    }
-
-    const speedKeys = [
-      { keys: [Key.PAUSE], speed: SimulationSpeed.Paused },
-      { keys: [Key.F5], speed: SimulationSpeed.Slow },
-      { keys: [Key.F6], speed: SimulationSpeed.Medium },
-      { keys: [Key.F7], speed: SimulationSpeed.Fast },
-      { keys: [Key.SHIFT, Key.F8], speed: SimulationSpeed.SuperFast }
-    ];
-    for (const speedKey of speedKeys) {
-      this.keyboardManager.onKeysPressedWithPreventDefault(speedKey.keys, () =>
-        this.setSimulationSpeed(speedKey.speed)
-      );
-    }
-  }
-
   private tick = () => {
     this.state.timers.timeGame++;
     this.state.timers.cntCity = this.inc(this.state.timers.cntCity, 8, 100);
@@ -324,6 +269,8 @@ export default class Game extends EventEmitter {
       10
     );
 
+    this.watchTicksForUpkeep();
+    this.watchTicksForProducing();
     this.emit("tick");
   };
 
