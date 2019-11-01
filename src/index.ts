@@ -1,5 +1,5 @@
 import * as log from "loglevel";
-import Viewport from "pixi-viewport";
+import { Viewport } from "pixi-viewport";
 import {
   Application,
   MIPMAP_MODES,

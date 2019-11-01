@@ -1,4 +1,4 @@
-import * as Viewport from "pixi-viewport";
+import { Viewport } from "pixi-viewport";
 import { AnimatedSprite, Texture } from "pixi.js";
 import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";

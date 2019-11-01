@@ -335,7 +335,7 @@ export default lookup;
 
 type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 type UnionToIntersection<U extends object> = {
-  [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never
+  [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
 };
 export type TranslationKeys = keyof UnionToIntersection<
   (typeof lookup)[keyof typeof lookup]

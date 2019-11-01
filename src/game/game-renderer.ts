@@ -1,4 +1,4 @@
-import Viewport from "pixi-viewport";
+import { Viewport } from "pixi-viewport";
 import {
   Application,
   Container,
@@ -164,9 +164,7 @@ export default class GameRenderer {
 
   public onProduced(island: Island, position: Point, stock: number) {
     console.log(
-      `Producer at island ${island.id} (${position.x}, ${
-        position.y
-      }) has now stock: ${stock}.`
+      `Producer at island ${island.id} (${position.x}, ${position.y}) has now stock: ${stock}.`
     );
     const text = new Text(`Lager: ${stock}`, {
       fontFamily: "Arial",

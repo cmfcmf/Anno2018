@@ -1,4 +1,4 @@
-import Viewport from "pixi-viewport";
+import { Viewport } from "pixi-viewport";
 import { Application } from "pixi.js";
 import FileSystem from "./filesystem";
 import ConfigLoader from "./game/config-loader";
