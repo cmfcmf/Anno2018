@@ -19,14 +19,21 @@ export default class WorldGenerator {
     let nextIslandId = Math.max(...world.islands.map(island => island.id)) + 1;
 
     for (const islandTemplate of worldGenerationSettings.islandTemplates) {
-      const {
-        data,
-        isSouth,
-        id: numBaseIsland
-      } = await this.islandLoader.loadRandomIslandFile(
-        islandTemplate.size,
-        islandTemplate.climate
-      );
+      const { data, isSouth, id: numBaseIsland } =
+        islandTemplate.numBaseIsland === 0xffff
+          ? await this.islandLoader.loadRandomIslandFile(
+              islandTemplate.size,
+              islandTemplate.climate
+            )
+          : {
+              isSouth: islandTemplate.climate === "SOUTH",
+              id: islandTemplate.numBaseIsland,
+              data: await this.islandLoader.loadIslandFileNum({
+                isSouth: islandTemplate.climate === "SOUTH",
+                numBaseIsland: islandTemplate.numBaseIsland,
+                size: islandTemplate.size
+              })
+            };
 
       const blocks: Block[] = [];
       while (!data.eof()) {

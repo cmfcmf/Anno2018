@@ -37,17 +37,26 @@ export default class World {
     public readonly timers: Timers,
     public readonly producers: Producer[]
   ) {
+    console.log("Tasks");
     console.table(tasks);
-    console.log(gameName);
+    console.log("Game Name", gameName);
+    console.log("Islands");
     console.table(islands);
+    console.log("Players");
     console.table(players);
+    console.log("Soldiers");
     console.table(soldiers);
+    console.log("Ships");
     console.table(ships);
+    console.log("Kontors");
     console.table(kontors);
+    console.log("Castles");
     console.table(castles);
+    console.log("Cities");
     console.table(cities);
-    console.log(trader);
-    console.log(timers);
+    console.log("Trader", trader);
+    console.log("Timers", timers);
+    console.log("Producers");
     console.table(producers);
   }
 }

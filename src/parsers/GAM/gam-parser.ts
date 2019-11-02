@@ -56,7 +56,6 @@ export default class GAMParser {
 
   public async getWorld(data: Stream) {
     const blocks = this.parse(data);
-
     const { world, worldGenerationSettings } = await this.doParse(blocks);
 
     await this.worldGenerator!.populateWorld(world, worldGenerationSettings);
@@ -177,7 +176,8 @@ export default class GAMParser {
         // The basis block contains the same information already present in
         // the island block of the savegame. We can safely skip over it.
         const islandBasisBlock = Block.fromStream(islandFile);
-        assert(islandBasisBlock.type === "INSEL5");
+        // TODO: New Horizons 0 has a basis block of INSEL3
+        // assert(islandBasisBlock.type === "INSEL5", `Expected different island basis block ${islandBasisBlock.type}`);
 
         islandBottomBlock = Block.fromStream(islandFile);
         assert(islandBottomBlock.type === "INSELHAUS");

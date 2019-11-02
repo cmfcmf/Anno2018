@@ -61,6 +61,21 @@ export default class IslandLoader {
     throw new Error("Could not load island");
   }
 
+  public async loadIslandFileNum(island: {
+    isSouth: boolean;
+    numBaseIsland: number;
+    size: IslandSizeId;
+  }) {
+    const climate = island.isSouth ? "south" : "north";
+    const islandNumber = island.numBaseIsland.toString().padStart(2, "0");
+    const islandSize = this.islandSizes.find(each => each.id === island.size)!;
+    return this.fs.openAndGetContentAsStream(
+      `/islands/${climate}/${islandSize.name}${islandNumber}.scp`
+    );
+
+    throw new Error("Could not load island");
+  }
+
   public async loadIslandFileByName(name: string) {
     return this.fs.openAndGetContentAsStream(`/islands/${name}.scp`);
   }

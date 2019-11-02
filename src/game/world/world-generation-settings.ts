@@ -14,6 +14,7 @@ export interface IslandTemplate {
   size: 0 | 1 | 2 | 3 | 4;
   position: Point;
   climate: "NORTH" | "SOUTH" | "ANY";
+  numBaseIsland: number;
 }
 
 export default class WorldGenerationSettings {
@@ -51,13 +52,15 @@ export default class WorldGenerationSettings {
       }
       assert(data.read8() === 0x0000);
       const num = data.read8();
-      const fileNr = data.read32(); // Largely uninteresting, mostly 0x0000FFFF, sometimes 0x00000000
+      const numBaseIsland = data.read16(); // 0xFFFF for random
+      assert(data.read16() === 0);
       const position = new Point(data.read32(), data.read32());
       islandTemplates.push({
         num,
         size: islandSize as IslandSizeId,
         position: position,
-        climate: forceNorth ? "NORTH" : forceSouth ? "SOUTH" : "ANY"
+        climate: forceNorth ? "NORTH" : forceSouth ? "SOUTH" : "ANY",
+        numBaseIsland
       });
     }
     for (const each of data.slice(data.length - data.position())) {
