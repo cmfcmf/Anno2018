@@ -3,6 +3,7 @@ import { Viewport } from "pixi-viewport";
 import {
   Application,
   Container,
+  Graphics,
   interaction,
   Point,
   Sprite,
@@ -15,11 +16,8 @@ import { make2DArray } from "../util/util";
 import AnimationRenderer from "./animation-renderer";
 import ConfigLoader from "./config-loader";
 import Game from "./game";
-import IslandRenderer, {
-  LAND_OFFSET,
-  TILE_HEIGHT,
-  TILE_WIDTH
-} from "./island-renderer";
+import { LAND_OFFSET, TILE_HEIGHT, TILE_WIDTH } from "./island-renderer";
+import IslandSpriteLoader from "./island-sprite-loader";
 import { Island } from "./world/island";
 import { SimulationSpeed } from "./world/world";
 
@@ -63,7 +61,7 @@ export default class GameRenderer {
 
   constructor(
     private readonly game: Game,
-    private readonly islandRenderer: IslandRenderer,
+    private readonly islandSpriteLoader: IslandSpriteLoader,
     private readonly app: Application,
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
@@ -84,23 +82,47 @@ export default class GameRenderer {
       fontSize: 24,
       fill: 0xff1010
     });
-    this.simulationSpeedDisplay.y = 4 * 30;
+    this.simulationSpeedDisplay.y = 5 * 30;
   }
 
   public async begin() {
     this.keyboardManager.enable();
+    this.viewport.removeChildren();
     this.debugControls();
 
-    this.viewport.removeChildren();
+    const dbg = (xx: number, yy: number, w: number = 5, h: number = 5) => {
+      const rect = new Graphics();
+      rect.position.set(xx, yy);
+      rect.beginFill(0x00ff00);
+      rect.drawRect(0, 0, w, h);
+      this.viewport.addChild(rect);
+    };
 
     // Render islands
-    const spritesPerIsland = await this.islandRenderer.render(
-      Object.values(this.game.state.islands)
+    const spritesPerIsland = await Promise.all(
+      Object.values(this.game.state.islands).map(island =>
+        this.islandSpriteLoader.getIslandSprites(island)
+      )
     );
+    console.log("Map sprites loaded.");
+
+    spritesPerIsland.forEach(spritesOfIsland => {
+      spritesOfIsland.sprites.forEach(row =>
+        row
+          .filter(sprite => sprite !== null)
+          .forEach(sprite => this.viewport.addChild(sprite!.sprite))
+      );
+      spritesOfIsland.smokeSprites.forEach(smokeSprite => {
+        this.viewport.addChild(smokeSprite);
+        smokeSprite.play();
+        dbg(smokeSprite.x, smokeSprite.y, 3, 3);
+      });
+    });
+    console.log("Map sprites drawn.");
 
     const fields = make2DArray<Sprite>(this.WIDTH, this.HEIGHT);
     spritesPerIsland.forEach(spritesOfIsland =>
-      spritesOfIsland.forEach(row =>
+      spritesOfIsland.sprites.forEach(row =>
         row
           .filter(sprite => sprite !== null)
           .forEach(
@@ -159,12 +181,59 @@ export default class GameRenderer {
 
         const { rotation, playerId } = ship;
         const { x, y } = GameRenderer.fieldPosToWorldPos(ship.position);
-        const { main, bug } = animation[0].sprites[rotation];
+        const { main, bug } = animation.animations[0].rotations[rotation];
+
+        const offsetX = -Math.floor(main.width / 2) + TILE_WIDTH / 2;
+        const offsetY = animation.config.Posoffs[0] + 18; // TODO: Where does the 18 come from?
+
+        const mainX = x + offsetX;
+        const mainY = y + offsetY;
+
         if (bug) {
-          this.animationRenderer.debugDrawSprite(bug, this.viewport, x, y);
+          this.animationRenderer.debugDrawSprite(
+            bug,
+            this.viewport,
+            mainX + (main.width - bug.width) / 2,
+            y
+          );
         }
-        this.animationRenderer.debugDrawSprite(main, this.viewport, x, y);
+        this.animationRenderer.debugDrawSprite(
+          main,
+          this.viewport,
+          mainX,
+          mainY
+        );
         // TODO: Fahne for playerId
+
+        // HP
+        const hp = new Graphics();
+        const HP_WIDTH = 38;
+        const HP_HEIGHT = 7;
+
+        const hpX = x + TILE_WIDTH / 2 - HP_WIDTH / 2;
+        const hpY = mainY - main.height + 12 - 21 + 8 + 6; // TODO: This is wrong
+        hp.position.set(hpX, hpY);
+        hp.beginFill(0x00ff00);
+        hp.drawRect(0, 0, HP_WIDTH, HP_HEIGHT);
+        this.viewport.addChild(hp);
+
+        dbg(x, y);
+        dbg(x - TILE_WIDTH / 2, y + TILE_HEIGHT);
+
+        const txt = new Text(
+          `size: ${main.width}x${main.height} posoff: ${JSON.stringify(
+            animation.config.Posoffs
+          )} offset: ${offsetX}x${offsetY}, fahnoffs: ${JSON.stringify(
+            animation.config.Fahnoffs
+          )}, hp: ${hpX - x}x${hpY - y}`,
+          {
+            fontFamily: "Arial",
+            fontSize: 24,
+            fill: 0xff1010
+          }
+        );
+        txt.position.set(x, y + 50 + Math.random() * 150);
+        this.viewport.addChild(txt);
       })
     );
 
@@ -363,7 +432,7 @@ export default class GameRenderer {
             .getFieldData()
             .get(fieldData.fieldId)!;
 
-          producerInfo.text = `Producer: Stock: ${producer.stock} (max: ${fieldConfig.production.maxStock}, good: ${fieldConfig.production.good}), Good A: ${producer.firstGoodStock} (required: ${fieldConfig.production.amount1}, good: ${fieldConfig.production.good1}), Good B: ${producer.secondGoodStock} (required: ${fieldConfig.production.amount2}, good: ${fieldConfig.production.good2}), Active: ${producer.active}, Timer: ${producer.timer}`;
+          producerInfo.text = `Producer: Stock: ${producer.stock} (max: ${fieldConfig.production.maxStock}, good: ${fieldConfig.production.good}), Good A: ${producer.firstGoodStock} (required: ${fieldConfig.production.amount1}, good: ${fieldConfig.production.good1}), Good B: ${producer.secondGoodStock} (required: ${fieldConfig.production.amount2}, good: ${fieldConfig.production.good2}),\n Active: ${producer.active}, Timer: ${producer.timer}, Rotation: ${fieldData.rotation}`;
         } else {
           producerInfo.text = "No Producer";
         }

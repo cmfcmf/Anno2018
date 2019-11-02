@@ -1,5 +1,7 @@
 import { AnimatedSprite, Point, Sprite, Texture } from "pixi.js";
+import AnimationRenderer from "./animation-renderer";
 import GameRenderer from "./game-renderer";
+import { TILE_HEIGHT, TILE_WIDTH } from "./island-renderer";
 import { SpriteWithPosition } from "./island-sprite-loader";
 import { Rotation4 } from "./world/world";
 
@@ -69,6 +71,7 @@ export default class FieldType {
     radius: number;
     interval: number;
     maxStock: number;
+    smokeAnimationNames: string[];
   };
 
   constructor(config: any) {
@@ -106,17 +109,25 @@ export default class FieldType {
           : 0,
       radius: productionConfig.Radius,
       interval: productionConfig.Interval,
-      maxStock: productionConfig.Maxlager
+      maxStock: productionConfig.Maxlager,
+      smokeAnimationNames: Array.isArray(productionConfig.Rauchfignr)
+        ? productionConfig.Rauchfignr
+        : productionConfig.Rauchfignr
+        ? [productionConfig.Rauchfignr]
+        : []
     };
   }
 
-  public getSprites(
+  public async getSprites(
+    playerId: number,
     islandPosition: Point,
     fieldPos: Point,
     rotation: Rotation4,
     animationStep: number,
-    textures: Map<number, Texture>
+    textures: Map<number, Texture>,
+    animationRenderer: AnimationRenderer
   ) {
+    const smokeAnimations: AnimatedSprite[] = [];
     const sprites: SpriteWithPosition[] = [];
     const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
     const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
@@ -165,7 +176,71 @@ export default class FieldType {
       }
     }
 
-    return sprites;
+    if (this.production.smokeAnimationNames) {
+      const { x: worldX, y: worldY } = GameRenderer.fieldPosToWorldPos(
+        new Point(fieldPos.x, fieldPos.y)
+      );
+      console.log("smoke animation", this.production.smokeAnimationNames);
+      await Promise.all(
+        this.production.smokeAnimationNames.map(async smokeAnimationName => {
+          if (smokeAnimationName === "FAHNEKONTOR") {
+            // The pirate kontor actually uses an invalid animation name. That appears to be a bug in Anno1602 itself.
+            return;
+          }
+
+          const smokeAnimation = await animationRenderer.getAnimation(
+            smokeAnimationName
+          );
+          const animation =
+            Object.keys(smokeAnimation.animations).length > 1
+              ? smokeAnimation.animations[playerId]
+              : smokeAnimation.animations[0];
+          const smokeSprite = animation.rotations[0].main;
+
+          smokeSprite.x =
+            worldX -
+            Math.floor(smokeSprite.width / 2) + // calculate smoke center position
+            TILE_WIDTH * 0.75 -
+            (sy - sx + 1) * (TILE_WIDTH * 0.25) + // move to building center
+            Math.floor(
+              ((smokeAnimation.config.Fahnoffs[0] *
+                (rotation === 0 || rotation === 3 ? 1 : -1) -
+                smokeAnimation.config.Fahnoffs[1] *
+                  (rotation === 0 || rotation === 1 ? 1 : -1)) *
+                TILE_WIDTH) /
+                2
+            );
+
+          smokeSprite.y =
+            worldY -
+            TILE_HEIGHT / 2 +
+            (sx + sy - 2) * TILE_HEIGHT * 0.25 + // move bottom of smoke to building center
+            Math.floor(
+              ((smokeAnimation.config.Fahnoffs[0] *
+                (rotation === 0 || rotation === 1 ? 1 : -1) +
+                smokeAnimation.config.Fahnoffs[1] *
+                  (rotation === 0 || rotation === 3 ? 1 : -1)) *
+                TILE_HEIGHT) /
+                2
+            ) -
+            Math.floor(TILE_HEIGHT * smokeAnimation.config.Fahnoffs[2]);
+          smokeSprite.anchor = new Point(0, 1);
+          smokeAnimations.push(smokeSprite);
+
+          if (smokeAnimationName.startsWith("RAUCH")) {
+            // TODO: This doesn't quite look like the original, but works for now.
+            smokeSprite.alpha = 0.7;
+          }
+
+          if (smokeAnimationName === "RAUCHGOLD") {
+            // @ts-ignore
+            window.FOO = smokeSprite;
+          }
+        })
+      );
+    }
+
+    return { sprites, smokeAnimations };
   }
 
   private getTexture(

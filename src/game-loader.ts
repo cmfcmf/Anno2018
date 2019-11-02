@@ -5,7 +5,7 @@ import AnimationRenderer from "./game/animation-renderer";
 import ConfigLoader from "./game/config-loader";
 import Game from "./game/game";
 import GameRenderer from "./game/game-renderer";
-import IslandRenderer from "./game/island-renderer";
+import IslandSpriteLoader from "./game/island-sprite-loader";
 import MusicPlayer from "./game/music-player";
 import { SimulationSpeed } from "./game/world/world";
 import GAMParser from "./parsers/GAM/gam-parser";
@@ -14,7 +14,7 @@ export default class GameLoader {
   constructor(
     private readonly fs: FileSystem,
     private readonly gamParser: GAMParser,
-    private readonly islandRenderer: IslandRenderer,
+    private readonly islandSpriteLoader: IslandSpriteLoader,
     private readonly app: Application,
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
@@ -45,7 +45,7 @@ export default class GameLoader {
     const gameLogic = new Game(this.configLoader, world);
     const gameRenderer = new GameRenderer(
       gameLogic,
-      this.islandRenderer,
+      this.islandSpriteLoader,
       this.app,
       this.viewport,
       this.configLoader,

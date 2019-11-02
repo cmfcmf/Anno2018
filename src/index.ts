@@ -111,23 +111,22 @@ import { getQueryParameter } from "./util/util";
   const spriteLoader = new SpriteLoader(fs);
   const islandLoader = new IslandLoader(fs, configLoader.getFieldData());
 
-  const gamParser = new GAMParser(islandLoader);
-  const worldFieldBuilder = new IslandSpriteLoader(
-    fs,
-    configLoader,
-    spriteLoader
-  );
-  const islandRenderer = new IslandRenderer(viewport, worldFieldBuilder);
-
   const animationData = JSON.parse(
     await fs.openAndGetContentAsText("/animations.json")
   );
   const animationRenderer = new AnimationRenderer(animationData, spriteLoader);
 
+  const gamParser = new GAMParser(islandLoader);
+  const islandSpriteLoader = new IslandSpriteLoader(
+    configLoader,
+    spriteLoader,
+    animationRenderer
+  );
+
   const gameLoader = new GameLoader(
     fs,
     gamParser,
-    islandRenderer,
+    islandSpriteLoader,
     app,
     viewport,
     configLoader,
@@ -171,6 +170,7 @@ import { getQueryParameter } from "./util/util";
     island.positionRect = new Rectangle(0, 0, island.size.x, island.size.y);
 
     menuViewport.visible = false;
+    const islandRenderer = new IslandRenderer(viewport, islandSpriteLoader);
     await islandRenderer.render([island]);
   } else {
     // menuViewport.fit(); // TODO: Makes usage of sliders harder

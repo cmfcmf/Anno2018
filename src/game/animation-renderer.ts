@@ -68,15 +68,22 @@ export default class AnimationRenderer {
     const textures = await this.spriteLoader.getTextures(gfxFilename);
 
     const animatedSprites: {
-      [k: string]: {
-        sprites: Array<{
-          main: AnimatedSprite;
-          bug?: AnimatedSprite;
-          flag?: AnimatedSprite;
-        }>;
-        config: AnimationConfig;
-      };
-    } = {};
+      config: AnimationData;
+      animations: Record<
+        string,
+        {
+          rotations: Array<{
+            main: AnimatedSprite;
+            bug?: AnimatedSprite;
+            flag?: AnimatedSprite;
+          }>;
+          config: AnimationConfig;
+        }
+      >;
+    } = {
+      config: animationData,
+      animations: {}
+    };
 
     for (const animIdx of Object.keys(animationData.nested_objects.ANIM)) {
       const animatedSpritesForAnim: Array<{
@@ -87,7 +94,8 @@ export default class AnimationRenderer {
 
       const animation = animationData.nested_objects.ANIM[animIdx];
 
-      const numSteps = animationData.Nowalkani ? 1 : animation.AnimAnz;
+      // Force 1 step for all ships. Ship animation data is incorrect.
+      const numSteps = animationData.Bugfignr ? 1 : animation.AnimAnz;
       const speed = (1 / 60) * (1000.0 / animation.AnimSpeed);
       const gfxPerStep = animation.AnimAdd;
       const repeats = animation.AnimRept ? animation.AnimRept : 0;
@@ -116,13 +124,13 @@ export default class AnimationRenderer {
         let bugAnimation: AnimatedSprite | undefined;
         if (animationData.Bugfignr) {
           const tmp = await this.getAnimation(animationData.Bugfignr);
-          bugAnimation = tmp[0].sprites[rotationIdx].main;
+          bugAnimation = tmp.animations[0].rotations[rotationIdx].main;
         }
 
         let flagAnimation: AnimatedSprite | undefined;
         if (animationData.Fahnoffs && false) {
           const tmp = await this.getAnimation("FAHNE3");
-          flagAnimation = tmp[0].sprites[rotationIdx].main;
+          flagAnimation = tmp.animations[0].rotations[rotationIdx].main;
         }
 
         animatedSpritesForAnim.push({
@@ -132,8 +140,8 @@ export default class AnimationRenderer {
         });
       }
 
-      animatedSprites[animIdx] = {
-        sprites: animatedSpritesForAnim, // One per rotation
+      animatedSprites.animations[animIdx] = {
+        rotations: animatedSpritesForAnim, // One per rotation
         config: animation
       };
     }
@@ -148,7 +156,7 @@ export default class AnimationRenderer {
     let y = 200;
 
     for (const animIdx of Object.keys(animations)) {
-      const animatedSpritesForAnim = animations[animIdx].sprites;
+      const animatedSpritesForAnim = animations.animations[animIdx].rotations;
 
       let x = 0;
       animatedSpritesForAnim.forEach(sprites => {

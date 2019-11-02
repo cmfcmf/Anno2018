@@ -1,7 +1,9 @@
-import { Point, Sprite, Texture } from "pixi.js";
+import AsyncLock from "async-lock";
+import { AnimatedSprite, Point, Sprite, Texture } from "pixi.js";
 import FileSystem from "../filesystem";
 import SpriteLoader from "../sprite-loader";
 import { make2DArray } from "../util/util";
+import AnimationRenderer from "./animation-renderer";
 import ConfigLoader from "./config-loader";
 import { default as FieldX } from "./field-type";
 import { Island } from "./world/island";
@@ -15,27 +17,30 @@ export interface SpriteWithPosition {
 
 export default class IslandSpriteLoader {
   private inited = false;
-
   private fields: ReadonlyMap<number, FieldX> = new Map();
-
   private textures: Map<number, Texture> = new Map();
+  private lock: AsyncLock = new AsyncLock();
 
   constructor(
-    private readonly fs: FileSystem,
     private readonly configLoader: ConfigLoader,
-    private readonly spriteLoader: SpriteLoader
+    private readonly spriteLoader: SpriteLoader,
+    private readonly animationRenderer: AnimationRenderer
   ) {}
 
   public init = async () => {
-    if (!this.inited) {
-      this.textures = await this.spriteLoader.getTextures("STADTFLD");
-      this.fields = this.configLoader.getFieldData();
-      this.inited = true;
-    }
+    await this.lock.acquire("init", async () => {
+      if (!this.inited) {
+        this.textures = await this.spriteLoader.getTextures("STADTFLD");
+        this.fields = this.configLoader.getFieldData();
+        this.inited = true;
+      }
+    });
   };
 
   public getIslandSprites = async (island: Island) => {
     await this.init();
+
+    const smokeSprites: AnimatedSprite[] = [];
 
     const sprites = make2DArray<SpriteWithPosition>(
       island.size.x,
@@ -44,18 +49,19 @@ export default class IslandSpriteLoader {
 
     for (let x = 0; x < island.size.x; x++) {
       for (let y = 0; y < island.size.y; y++) {
-        this.handleField(island, x, y, sprites);
+        await this.loadSpritesOfField(island, x, y, sprites, smokeSprites);
       }
     }
 
-    return sprites;
+    return { sprites, smokeSprites };
   };
 
-  private handleField = (
+  private loadSpritesOfField = async (
     island: Island,
     x: number,
     y: number,
-    sprites: Array<Array<SpriteWithPosition | null>>
+    sprites: Array<Array<SpriteWithPosition | null>>,
+    smokeSprites: AnimatedSprite[]
   ) => {
     const field = island.fields[x][y];
     if (field === null) {
@@ -67,12 +73,17 @@ export default class IslandSpriteLoader {
     }
     const origin = new Point(island.position.x + x, island.position.y + y);
 
-    const newSprites = fieldConfig.getSprites(
+    const {
+      sprites: newSprites,
+      smokeAnimations
+    } = await fieldConfig.getSprites(
+      field.playerId,
       island.position,
       origin,
       field.rotation,
       field.ani,
-      this.textures
+      this.textures,
+      this.animationRenderer
     );
     newSprites.forEach(newSprite => {
       const { x: xx, y: yy } = newSprite.mapPositionOnIsland;
@@ -80,5 +91,6 @@ export default class IslandSpriteLoader {
         sprites[xx][yy] = newSprite;
       }
     });
+    smokeSprites.push(...smokeAnimations);
   };
 }

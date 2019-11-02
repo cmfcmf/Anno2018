@@ -1,6 +1,5 @@
 import { Container } from "pixi.js";
 import IslandSpriteLoader from "./island-sprite-loader";
-import { SpriteWithPosition } from "./island-sprite-loader";
 import { Island } from "./world/island";
 
 export const TILE_WIDTH = 64;
@@ -14,14 +13,13 @@ export default class IslandRenderer {
   ) {}
 
   public render = async (islands: Island[]) => {
-    await this.spriteLoader.init();
     const islandSprites = await Promise.all(
-      islands.map(async island => this.spriteLoader.getIslandSprites(island))
+      islands.map(island => this.spriteLoader.getIslandSprites(island))
     );
     console.log("Map sprites loaded.");
 
     islandSprites.forEach(spritesOfIsland =>
-      spritesOfIsland.forEach(row =>
+      spritesOfIsland.sprites.forEach(row =>
         row
           .filter(sprite => sprite !== null)
           .forEach(sprite => this.world.addChild(sprite!.sprite))

@@ -1,17 +1,23 @@
+import AsyncLock from "async-lock";
 import { Spritesheet, Texture } from "pixi.js";
 import FileSystem from "./filesystem";
 import { textureFromUint8ArrayPNG } from "./util/pixi";
 
 export default class SpriteLoader {
   private textures: Map<string, Map<number, Texture>> = new Map();
+  private lock: AsyncLock = new AsyncLock();
 
   constructor(private readonly fs: FileSystem) {}
 
   public getTextures = async (directory: string) => {
     directory = `/gfx/${directory}`;
-    if (!this.textures.has(directory)) {
-      await this.loadTextures(directory);
-    }
+
+    // Make sure that textures aren't loaded multiple times at once.
+    await this.lock.acquire(directory, async () => {
+      if (!this.textures.has(directory)) {
+        await this.loadTextures(directory);
+      }
+    });
     return this.textures.get(directory)!;
   };
 
