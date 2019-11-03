@@ -40,14 +40,14 @@ export interface ShipTradeStop {
 
 export type Ship = ReturnType<typeof shipFromSaveGame>;
 
-export const SHIP_TYPES = {
+export const SHIP_TYPES: Record<number, string> = {
   0x15: "HANDEL1",
   0x17: "HANDEL2",
   0x19: "KRIEG1",
   0x1b: "KRIEG2",
-  0x1d: "HANDLER",
+  0x1d: "HANDLER", // This is the trade ship
   0x1f: "PIRAT",
-  0x25: "HANDLER" // TODO, Why is this duplicated?
+  0x25: "TRADER1" // This is the guy that walks around islands.
 };
 
 export function shipFromSaveGame(data: Stream) {

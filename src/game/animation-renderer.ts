@@ -38,10 +38,23 @@ interface AnimationData {
   // + more
 }
 
+export interface MyAnimation {
+  config: AnimationData;
+  animations: Record<
+    string,
+    {
+      rotations: Array<{
+        main: AnimatedSprite;
+      }>;
+      config: AnimationConfig;
+    }
+  >;
+}
+
 export default class AnimationRenderer {
   constructor(private animationData: any, private spriteLoader: SpriteLoader) {}
 
-  public async getAnimation(name: string) {
+  public async getAnimation(name: string): Promise<MyAnimation> {
     const animationData: AnimationData = this.animationData.objects.FIGUR.items[
       name
     ];
@@ -87,20 +100,7 @@ export default class AnimationRenderer {
 
     const textures = await this.spriteLoader.getTextures(gfxFilename);
 
-    const animatedSprites: {
-      config: AnimationData;
-      animations: Record<
-        string,
-        {
-          rotations: Array<{
-            main: AnimatedSprite;
-            bug?: AnimatedSprite;
-            flag?: AnimatedSprite;
-          }>;
-          config: AnimationConfig;
-        }
-      >;
-    } = {
+    const animatedSprites: MyAnimation = {
       config: animationData,
       animations: {}
     };
@@ -109,7 +109,6 @@ export default class AnimationRenderer {
       const animatedSpritesForAnim: Array<{
         main: AnimatedSprite;
         bug?: AnimatedSprite;
-        flag?: AnimatedSprite;
       }> = [];
 
       const animation = ANIM[animIdx];
@@ -141,22 +140,8 @@ export default class AnimationRenderer {
         animatedSprite.animationSpeed = speed;
         spritesForRotation.push(animatedSprite);
 
-        let bugAnimation: AnimatedSprite | undefined;
-        if (animationData.Bugfignr) {
-          const tmp = await this.getAnimation(animationData.Bugfignr);
-          bugAnimation = tmp.animations[0].rotations[rotationIdx].main;
-        }
-
-        let flagAnimation: AnimatedSprite | undefined;
-        if (animationData.Fahnoffs && false) {
-          const tmp = await this.getAnimation("FAHNE3");
-          flagAnimation = tmp.animations[0].rotations[rotationIdx].main;
-        }
-
         animatedSpritesForAnim.push({
-          main: animatedSprite,
-          bug: bugAnimation,
-          flag: flagAnimation
+          main: animatedSprite
         });
       }
 
@@ -170,32 +155,19 @@ export default class AnimationRenderer {
   }
 
   public async renderAnimation(name: string, viewport: Viewport) {
-    const animations = await this.getAnimation(name);
-    console.log(animations);
+    const animationData = await this.getAnimation(name);
+    console.log(animationData);
 
     let y = 200;
 
-    for (const animIdx of Object.keys(animations)) {
-      const animatedSpritesForAnim = animations.animations[animIdx].rotations;
+    for (const animIdx of Object.keys(animationData.animations)) {
+      const animatedSpritesForAnim =
+        animationData.animations[animIdx].rotations;
 
       let x = 0;
       animatedSpritesForAnim.forEach(sprites => {
-        const { main, bug, flag } = sprites;
-
-        if (bug) {
-          this.debugDrawSprite(
-            bug,
-            viewport,
-            x + (main.width - bug.width) / 2,
-            y
-          );
-        }
-        if (flag) {
-          this.debugDrawSprite(flag, viewport, x, y);
-        }
-        this.debugDrawSprite(main, viewport, x, y);
-
-        x += main.width;
+        this.debugDrawSprite(sprites.main, viewport, x, y);
+        x += sprites.main.width;
       });
       y += 50;
     }

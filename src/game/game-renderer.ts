@@ -12,13 +12,15 @@ import {
 } from "pixi.js";
 import { from, fromEvent, merge } from "rxjs";
 import { auditTime } from "rxjs/operators";
-import { assertNever, make2DArray } from "../util/util";
+import { make2DArray } from "../util/util";
 import AnimationRenderer from "./animation-renderer";
 import ConfigLoader from "./config-loader";
 import Game from "./game";
 import { LAND_OFFSET, TILE_HEIGHT, TILE_WIDTH } from "./island-renderer";
 import IslandSpriteLoader from "./island-sprite-loader";
+import { RenderedShip } from "./renderer/isometric/renderered-ship";
 import { Island } from "./world/island";
+import { SHIP_TYPES } from "./world/ship";
 import { SimulationSpeed } from "./world/world";
 
 export default class GameRenderer {
@@ -175,155 +177,27 @@ export default class GameRenderer {
 
     this.moveCameraToStartPosition(this.myPlayerId);
 
+    const renderedShips = this.game.state.ships
+      // TODO: We ignore the land trader for now
+      .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
+      .map(ship => new RenderedShip(ship.id, ship.playerId === 4));
+
     await Promise.all(
-      this.game.state.ships.map(async ship => {
-        const animation = await this.animationRenderer.getShipAnimation(ship);
-
-        const { rotation, playerId } = ship;
-        const { x, y } = GameRenderer.fieldPosToWorldPos(ship.position);
-        const { main, bug } = animation.animations[0].rotations[rotation];
-
-        const offsetX = -Math.floor(main.width / 2) + TILE_WIDTH / 2;
-        const offsetY = animation.config.Posoffs[0] + 18; // TODO: Where does the 18 come from?
-
-        const mainX = x + offsetX;
-        const mainY = y + offsetY;
-
-        if (bug) {
-          this.animationRenderer.debugDrawSprite(
-            bug,
-            this.viewport,
-            mainX + (main.width - bug.width) / 2,
-            y
-          );
-        }
-        this.animationRenderer.debugDrawSprite(
-          main,
-          this.viewport,
-          mainX,
-          mainY
-        );
-
-        const flagAnimationName = `FAHNE${
-          false /* TODO: ship.whiteFlag */
-            ? "WEISS"
-            : ship.playerId === 5
-            ? "PIRAT"
-            : ship.playerId + 1
-        }`;
-        const flagAnimationData = await this.animationRenderer.getAnimation(
-          flagAnimationName
-        );
-        const flagAnimation = flagAnimationData.animations[0].rotations[0].main;
-
-        // We can't simply use Math.floor, since Math.floor(-1.5) === -2.
-        // However, what we want is -1.
-        const floor = (n: number) => {
-          return Math.sign(n) * Math.floor(Math.abs(n));
-        };
-
-        // TODO: We should also use Fahnoffs[0]. However, this is not that big
-        // of an issue, since all ships have Fahnoffs[0] = 0.
-        const Fahnoffs = animation.config.Fahnoffs;
-
-        let flagOffsetX = 0;
-        switch (ship.rotation) {
-          case 0:
-          case 2:
-            flagOffsetX = floor((Fahnoffs[1] * TILE_WIDTH) / 2);
-            break;
-          case 4:
-          case 6:
-            flagOffsetX = -floor((Fahnoffs[1] * TILE_WIDTH) / 2);
-            break;
-          case 1:
-            flagOffsetX = floor((Fahnoffs[1] * TILE_WIDTH * Math.sqrt(2)) / 2);
-            break;
-          case 5:
-            flagOffsetX = -floor((Fahnoffs[1] * TILE_WIDTH * Math.sqrt(2)) / 2);
-            break;
-          case 3:
-          case 7:
-            flagOffsetX = 0;
-            break;
-          default:
-            assertNever(ship.rotation);
-        }
-
-        let flagOffsetY = 0;
-        // TODO: Fahnoffs[0]
-        switch (ship.rotation) {
-          case 2:
-          case 4:
-            flagOffsetY = floor((Fahnoffs[1] * TILE_HEIGHT) / 2);
-            break;
-          case 0:
-          case 6:
-            flagOffsetY = -floor((Fahnoffs[1] * TILE_HEIGHT) / 2);
-            break;
-          case 3:
-            flagOffsetY = floor((Fahnoffs[1] * TILE_HEIGHT * Math.sqrt(2)) / 2);
-            break;
-          case 7:
-            flagOffsetY = -floor(
-              (Fahnoffs[1] * TILE_HEIGHT * Math.sqrt(2)) / 2
-            );
-            break;
-          case 1:
-          case 5:
-            flagOffsetY = 0;
-            break;
-          default:
-            assertNever(ship.rotation);
-        }
-
-        const flagX =
-          x -
-          Math.floor(flagAnimation.width / 2) +
-          TILE_WIDTH / 2 +
-          flagOffsetX;
-
-        const flagY =
-          y + 18 + 30 - Math.floor(Fahnoffs[2] * TILE_HEIGHT) + flagOffsetY;
-        this.animationRenderer.debugDrawSprite(
-          flagAnimation,
-          this.viewport,
-          flagX,
-          flagY
-        );
-
-        // HP
-        const hp = new Graphics();
-        const HP_WIDTH = 38;
-        const HP_HEIGHT = 7;
-
-        const hpX = x + TILE_WIDTH / 2 - HP_WIDTH / 2;
-        const hpY = flagY - flagAnimation.height - HP_HEIGHT;
-        hp.position.set(hpX, hpY);
-        hp.beginFill(0x00ff00);
-        hp.drawRect(0, 0, HP_WIDTH, HP_HEIGHT);
-        this.viewport.addChild(hp);
-
-        dbg(x, y);
-        dbg(x - TILE_WIDTH / 2, y + TILE_HEIGHT);
-
-        const txt = new Text(
-          `size: ${main.width}x${main.height} posoff: ${JSON.stringify(
-            animation.config.Posoffs
-          )} offset: ${offsetX}x${offsetY}, fahnoffs: ${JSON.stringify(
-            Fahnoffs
-          )}, hp: ${hpX - x}x${hpY - y}`,
-          {
-            fontFamily: "Arial",
-            fontSize: 24,
-            fill: 0xff1010
-          }
-        );
-        txt.text = flagOffsetX.toString();
-        txt.position.set(x, y + 50);
-        this.viewport.addChild(txt);
-      })
+      this.game.state.ships
+        .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
+        .map(ship =>
+          renderedShips
+            .find(each => each.id === ship.id)!
+            .begin(ship, this.animationRenderer)
+        )
     );
+    this.game.state.ships
+      .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
+      .forEach(ship => {
+        renderedShips
+          .find(each => each.id === ship.id)!
+          .render(ship, this.viewport);
+      });
 
     merge(
       from(["initial"]),
@@ -410,6 +284,7 @@ export default class GameRenderer {
     console.log(
       `Producer at island ${island.id} (${position.x}, ${position.y}) has now stock: ${stock}.`
     );
+    // TODO: This uses the wrong color, position, font and timings.
     const text = new Text(`Stock: ${stock}`, {
       fontFamily: "Arial",
       fontSize: 24,
@@ -421,6 +296,18 @@ export default class GameRenderer {
     );
     text.position.set(pos.x, pos.y);
     this.viewport.addChild(text);
+
+    const duration = 2000;
+    const startTime = this.app.ticker.lastTime;
+    const fn = () => {
+      text.position.y =
+        text.position.y - (this.app.ticker.deltaMS * 100) / duration;
+      if (this.app.ticker.lastTime - startTime > duration) {
+        this.app.ticker.remove(fn);
+        this.viewport.removeChild(text);
+      }
+    };
+    this.app.ticker.add(fn);
   }
 
   private cull = () => {

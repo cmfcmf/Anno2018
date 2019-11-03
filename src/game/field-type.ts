@@ -180,7 +180,6 @@ export default class FieldType {
       const { x: worldX, y: worldY } = GameRenderer.fieldPosToWorldPos(
         new Point(fieldPos.x, fieldPos.y)
       );
-      console.log("smoke animation", this.production.smokeAnimationNames);
       await Promise.all(
         this.production.smokeAnimationNames.map(async smokeAnimationName => {
           if (smokeAnimationName === "FAHNEKONTOR") {

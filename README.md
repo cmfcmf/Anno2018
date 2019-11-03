@@ -27,9 +27,9 @@ This would have never been possible without the work of countless Anno enthusias
 
 - [x] Load Anno 1602 savegames
 - [x] Render Anno 1602 savegames
-- [ ] Render static animations (flags, smoke)
+- [x] Render static animations (flags, smoke)
 - [x] Render tile animations (water, rivers, mill, canon foundry)
-- [ ] Render ships
+- [x] Render ships
 - [ ] Building logic
   - [ ] Render radius
   - [x] Calculate running cost
@@ -39,7 +39,7 @@ This would have never been possible without the work of countless Anno enthusias
   - [ ] Production building logic
     - [ ] Render worker animations
     - [ ] Fetch raw goods
-    - [ ] Produce goods
+    - [x] Produce goods
     - [ ] Pause if on fire or manually paused
   - [ ] Public building logic
   - [ ] House logic
