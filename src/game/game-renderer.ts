@@ -12,7 +12,7 @@ import {
 } from "pixi.js";
 import { from, fromEvent, merge } from "rxjs";
 import { auditTime } from "rxjs/operators";
-import { make2DArray } from "../util/util";
+import { assertNever, make2DArray } from "../util/util";
 import AnimationRenderer from "./animation-renderer";
 import ConfigLoader from "./config-loader";
 import Game from "./game";
@@ -203,7 +203,94 @@ export default class GameRenderer {
           mainX,
           mainY
         );
-        // TODO: Fahne for playerId
+
+        const flagAnimationName = `FAHNE${
+          false /* TODO: ship.whiteFlag */
+            ? "WEISS"
+            : ship.playerId === 5
+            ? "PIRAT"
+            : ship.playerId + 1
+        }`;
+        const flagAnimationData = await this.animationRenderer.getAnimation(
+          flagAnimationName
+        );
+        const flagAnimation = flagAnimationData.animations[0].rotations[0].main;
+
+        // We can't simply use Math.floor, since Math.floor(-1.5) === -2.
+        // However, what we want is -1.
+        const floor = (n: number) => {
+          return Math.sign(n) * Math.floor(Math.abs(n));
+        };
+
+        // TODO: We should also use Fahnoffs[0]. However, this is not that big
+        // of an issue, since all ships have Fahnoffs[0] = 0.
+        const Fahnoffs = animation.config.Fahnoffs;
+
+        let flagOffsetX = 0;
+        switch (ship.rotation) {
+          case 0:
+          case 2:
+            flagOffsetX = floor((Fahnoffs[1] * TILE_WIDTH) / 2);
+            break;
+          case 4:
+          case 6:
+            flagOffsetX = -floor((Fahnoffs[1] * TILE_WIDTH) / 2);
+            break;
+          case 1:
+            flagOffsetX = floor((Fahnoffs[1] * TILE_WIDTH * Math.sqrt(2)) / 2);
+            break;
+          case 5:
+            flagOffsetX = -floor((Fahnoffs[1] * TILE_WIDTH * Math.sqrt(2)) / 2);
+            break;
+          case 3:
+          case 7:
+            flagOffsetX = 0;
+            break;
+          default:
+            assertNever(ship.rotation);
+        }
+
+        let flagOffsetY = 0;
+        // TODO: Fahnoffs[0]
+        switch (ship.rotation) {
+          case 2:
+          case 4:
+            flagOffsetY = floor((Fahnoffs[1] * TILE_HEIGHT) / 2);
+            break;
+          case 0:
+          case 6:
+            flagOffsetY = -floor((Fahnoffs[1] * TILE_HEIGHT) / 2);
+            break;
+          case 3:
+            flagOffsetY = floor((Fahnoffs[1] * TILE_HEIGHT * Math.sqrt(2)) / 2);
+            break;
+          case 7:
+            flagOffsetY = -floor(
+              (Fahnoffs[1] * TILE_HEIGHT * Math.sqrt(2)) / 2
+            );
+            break;
+          case 1:
+          case 5:
+            flagOffsetY = 0;
+            break;
+          default:
+            assertNever(ship.rotation);
+        }
+
+        const flagX =
+          x -
+          Math.floor(flagAnimation.width / 2) +
+          TILE_WIDTH / 2 +
+          flagOffsetX;
+
+        const flagY =
+          y + 18 + 30 - Math.floor(Fahnoffs[2] * TILE_HEIGHT) + flagOffsetY;
+        this.animationRenderer.debugDrawSprite(
+          flagAnimation,
+          this.viewport,
+          flagX,
+          flagY
+        );
 
         // HP
         const hp = new Graphics();
@@ -211,7 +298,7 @@ export default class GameRenderer {
         const HP_HEIGHT = 7;
 
         const hpX = x + TILE_WIDTH / 2 - HP_WIDTH / 2;
-        const hpY = mainY - main.height + 12 - 21 + 8 + 6; // TODO: This is wrong
+        const hpY = flagY - flagAnimation.height - HP_HEIGHT;
         hp.position.set(hpX, hpY);
         hp.beginFill(0x00ff00);
         hp.drawRect(0, 0, HP_WIDTH, HP_HEIGHT);
@@ -224,7 +311,7 @@ export default class GameRenderer {
           `size: ${main.width}x${main.height} posoff: ${JSON.stringify(
             animation.config.Posoffs
           )} offset: ${offsetX}x${offsetY}, fahnoffs: ${JSON.stringify(
-            animation.config.Fahnoffs
+            Fahnoffs
           )}, hp: ${hpX - x}x${hpY - y}`,
           {
             fontFamily: "Arial",
@@ -232,7 +319,8 @@ export default class GameRenderer {
             fill: 0xff1010
           }
         );
-        txt.position.set(x, y + 50 + Math.random() * 150);
+        txt.text = flagOffsetX.toString();
+        txt.position.set(x, y + 50);
         this.viewport.addChild(txt);
       })
     );

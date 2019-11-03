@@ -74,7 +74,6 @@ export function shipFromSaveGame(data: Stream) {
   const tradeStops = parseShipTradeStops(data, 8);
   const _6 = data.read16();
   const cargo = parseShipGoods(data, 8);
-  // type_name = SHIP_TYPES[ship['type']],
 
   return {
     id,

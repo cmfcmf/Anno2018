@@ -56,3 +56,7 @@ export function make2DArray<T>(x: number, y: number): Array<Array<T | null>> {
     .fill(undefined)
     .map(() => Array(y).fill(null));
 }
+
+export function assertNever(x: never): never {
+  throw new Error(`Unexpected object: ${x}`);
+}

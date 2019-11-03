@@ -47,16 +47,36 @@ export default class AnimationRenderer {
     ];
     if (!animationData) {
       console.log(this.animationData.objects.FIGUR.items);
-      throw new Error("Invalid animation name");
+      throw new Error(`Invalid animation name: ${name}`);
     }
     console.log(animationData);
 
-    if (Object.values(animationData.nested_objects).length === 0) {
-      throw new Error(
-        `Animation "${name}" does not include sufficient animation data.`
-      );
+    let ANIM: Record<string, AnimationConfig>;
+    if (
+      [
+        "FAHNE1",
+        "FAHNE2",
+        "FAHNE3",
+        "FAHNE4",
+        "FAHNEWEISS",
+        "FAHNEPIRAT"
+      ].includes(name)
+    ) {
+      // These animations do not include the necessary animation config.
+      // Simply copy the first animation config from the marketplace.
+      ANIM = {
+        0: this.animationData.objects.FIGUR.items.FAHNEMARKT.nested_objects
+          .ANIM[0]
+      };
+    } else {
+      if (Object.values(animationData.nested_objects).length === 0) {
+        throw new Error(
+          `Animation "${name}" does not include sufficient animation data.`
+        );
+      }
+      assert(animationData.nested_objects.ANIM);
+      ANIM = animationData.nested_objects.ANIM;
     }
-    assert(animationData.nested_objects.ANIM);
 
     const baseGfx = animationData.Gfx;
     const baseFramesPerRotation = animationData.Rotate;
@@ -85,14 +105,14 @@ export default class AnimationRenderer {
       animations: {}
     };
 
-    for (const animIdx of Object.keys(animationData.nested_objects.ANIM)) {
+    for (const animIdx of Object.keys(ANIM)) {
       const animatedSpritesForAnim: Array<{
         main: AnimatedSprite;
         bug?: AnimatedSprite;
         flag?: AnimatedSprite;
       }> = [];
 
-      const animation = animationData.nested_objects.ANIM[animIdx];
+      const animation = ANIM[animIdx];
 
       // Force 1 step for all ships. Ship animation data is incorrect.
       const numSteps = animationData.Bugfignr ? 1 : animation.AnimAnz;
