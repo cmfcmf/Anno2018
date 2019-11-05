@@ -93,8 +93,8 @@ export default class MenuStructure extends utils.EventEmitter {
     await this.gadRenderer.render(data, config);
   }
 
-  public _playMainMenuMusic() {
-    this.musicPlayer.play("1st Beginning", true);
+  public async _playMainMenuMusic() {
+    await this.musicPlayer.play("1st Beginning", true);
   }
 
   private async loadVideoSprite(videoNumber: number) {

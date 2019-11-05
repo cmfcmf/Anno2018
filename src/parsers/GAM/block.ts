@@ -20,7 +20,6 @@ export class Block {
   }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class IslandBlock extends Block {
   public inselHausBlocks: Block[] = [];
 }

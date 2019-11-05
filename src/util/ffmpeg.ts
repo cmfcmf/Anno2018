@@ -1,17 +1,22 @@
+import AsyncLock from "async-lock";
+
 let loadedFFmpeg: any;
 
+const lock = new AsyncLock();
+
 export async function loadFFmpeg(): Promise<any> {
-  if (loadedFFmpeg) {
-    return loadedFFmpeg;
-  }
+  await lock.acquire("ffmpeg", async () => {
+    if (!loadedFFmpeg) {
+      // eslint-disable-next-line require-atomic-updates
+      loadedFFmpeg = await doLoadFFmpeg();
 
-  loadedFFmpeg = await doLoadFFmpeg();
-
-  await new Promise((resolve, reject) => {
-    loadedFFmpeg({
-      arguments: ["-version"],
-      returnCallback: resolve
-    });
+      await new Promise((resolve, reject) => {
+        loadedFFmpeg({
+          arguments: ["-version"],
+          returnCallback: resolve
+        });
+      });
+    }
   });
 
   return loadedFFmpeg;
@@ -26,7 +31,6 @@ async function doLoadFFmpeg() {
   } else {
     // We can't write require() directly, because we don't want webpack to interpret it.
     // It is only used when running this script under Node.js.
-    // tslint:disable-next-line:no-eval
     ffmpeg = eval("require")(
       __dirname + "/../../node_modules/smk2mp4/demo/ffmpeg.js"
     );

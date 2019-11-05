@@ -18,12 +18,8 @@ export default class SMKParser {
       return await this.convert(args, inputFiles);
     } catch (e) {
       if (e.message === "only-one-audio-stream") {
-        try {
-          const args = this.prepareArguments(false);
-          return await this.convert(args, inputFiles);
-        } catch (e) {
-          throw e;
-        }
+        const args = this.prepareArguments(false);
+        return await this.convert(args, inputFiles);
       } else {
         throw e;
       }

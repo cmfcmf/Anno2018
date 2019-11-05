@@ -17,6 +17,7 @@ import parseTranslations from "./translation/translation-parser";
 import UploadInfo from "./uploadInfo";
 import { findRootInZip } from "./util/util";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const escapeStringRegexp = require("escape-string-regexp");
 
 export interface UploadLogger {
@@ -339,7 +340,7 @@ export default class UploadHandler {
     const wavParser = new WAVParser();
     // const mp3Encoder = new MP3Encoder();
 
-    const songs = await this.findFilesInZip(annoRoot, "MUSIC8", ".wav");
+    const songs = this.findFilesInZip(annoRoot, "MUSIC8", ".wav");
     for (const song of songs) {
       const name = song.path.substr(1);
       this.logger.info(`Converting song ${name}`);
@@ -371,7 +372,7 @@ export default class UploadHandler {
 
     const smkParser = new SMKParser();
 
-    const videos = await this.findFilesInZip(annoRoot, "VIDEOSMK", ".smk");
+    const videos = this.findFilesInZip(annoRoot, "VIDEOSMK", ".smk");
     for (const video of videos) {
       const name = video.path.substr(1);
       this.logger.info(`Converting video ${name}`);

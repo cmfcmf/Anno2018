@@ -1,7 +1,6 @@
 import BSHParser from "../parsers/BSH/bsh-parser";
 import Stream from "../parsers/stream";
-
-const fs = require("fs");
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 4) {
@@ -28,7 +27,7 @@ if (!fs.existsSync(outDirPath)) {
 
 console.info(`Converting ${inFilePath}`);
 
-// tslint:disable-next-line:no-floating-promises
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
   const data = new Stream(fs.readFileSync(inFilePath));
   const bshParser = new BSHParser();

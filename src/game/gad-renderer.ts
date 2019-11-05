@@ -74,7 +74,7 @@ export default class GADRenderer {
       const sliderSize = gadget.Slidsize;
 
       switch (kind) {
-        case "GAD_GFX":
+        case "GAD_GFX": {
           const textures = await this.spriteLoader.getTextures(
             `TOOLS/${blockNumMapping.get(blockNr)}`
           );
@@ -131,9 +131,10 @@ export default class GADRenderer {
           }
           this.stage.addChild(sprite);
           break;
+        }
         case "GAD_TEXTL":
         case "GAD_TEXTZ":
-        case "GAD_TEXTR":
+        case "GAD_TEXTR": {
           // case "GAD_TEXTFL":
           const fontSize = 24;
           const text = new BitmapText("Here goes text!", {
@@ -151,12 +152,13 @@ export default class GADRenderer {
           }
           this.stage.addChild(text);
           break;
+        }
         default:
           console.warn(`Unsupported kind: ${kind}`);
       }
     }
 
-    await config.onLoad(this.stage);
+    config.onLoad(this.stage);
   }
 
   public renderVideo(videoSprite: Sprite, onEnd: () => void) {

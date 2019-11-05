@@ -55,17 +55,17 @@ export default class DATParser {
 
       let result;
 
-      if ((result = line.match(/^(@?)(\w+)\s*=\s*((?:\d+|\+|\w+)+)$/))) {
+      if ((result = /^(@?)(\w+)\s*=\s*((?:\d+|\+|\w+)+)$/.exec(line))) {
         this.handleConstantAssignment(result);
         continue;
       }
 
-      if ((result = line.match(/^ObjFill:\s*([\w,]+)$/))) {
+      if ((result = /^ObjFill:\s*([\w,]+)$/.exec(line))) {
         this.handleObjFill(result);
         continue;
       }
 
-      if ((result = line.match(/^Objekt:\s*(\w+)$/))) {
+      if ((result = /^Objekt:\s*(\w+)$/.exec(line))) {
         this.handleNestedObjectBegin(result);
         continue;
       }
@@ -75,7 +75,7 @@ export default class DATParser {
         continue;
       }
 
-      if ((result = line.match(/^(@?)(\w+):\s*(.*?)\s*$/))) {
+      if ((result = /^(@?)(\w+):\s*(.*?)\s*$/.exec(line))) {
         this.handleProperty(result);
         continue;
       }
@@ -100,7 +100,7 @@ export default class DATParser {
       assert(this.template === null);
       this.template = item;
     } else {
-      assert(item.hasOwnProperty("nested_objects"));
+      assert(Object.prototype.hasOwnProperty.call(item, "nested_objects"));
 
       const baseItemNum = this.getValue(null, fill, false);
       const baseItem = this.objects[this.currentObject!].items[baseItemNum];
@@ -244,7 +244,7 @@ export default class DATParser {
   ): any {
     let result;
     if (isMath) {
-      if ((result = value.match(/^([+\-])(\d+)$/))) {
+      if ((result = /^([+-])(\d+)$/.exec(value))) {
         let oldVal = this.variables.has(key!)
           ? this.deepCopy(this.variables.get(key!))
           : null;
@@ -272,13 +272,13 @@ export default class DATParser {
       }
     }
 
-    if (value.match(/^[\-+]?\d+$/)) {
+    if (/^[-+]?\d+$/.exec(value)) {
       return parseInt(value, 10);
     }
-    if (value.match(/^[\-+]?\d+\.\d+$/)) {
+    if (/^[-+]?\d+\.\d+$/.exec(value)) {
       return parseFloat(value);
     }
-    if ((result = value.match(/^([A-Za-z0-9_]+)(?:\[(\d+)])?$/))) {
+    if ((result = /^([A-Za-z0-9_]+)(?:\[(\d+)])?$/.exec(value))) {
       const name = result[1];
       const arrayIdx = result[2];
       // TODO: When is value not in variables
@@ -290,7 +290,7 @@ export default class DATParser {
       }
       return res;
     }
-    if (value.indexOf(",") !== -1) {
+    if (value.includes(",")) {
       const values = value
         .split(",")
         .map((v, index) => this.getValue(key, v.trim(), isMath, index));
@@ -309,8 +309,8 @@ export default class DATParser {
       }
     }
     if (
-      (result = value.match(
-        /^([A-z]+(?:\[\d+])?|\d+)([+\-])([A-z]+(?:\[\d+])?|\d+)$/
+      (result = /^([A-z]+(?:\[\d+])?|\d+)([+-])([A-z]+(?:\[\d+])?|\d+)$/.exec(
+        value
       ))
     ) {
       const op = result[2];

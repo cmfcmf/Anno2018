@@ -1,6 +1,5 @@
 import DATParser from "../parsers/DAT/dat-parser";
-
-const fs = require("fs");
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 4) {

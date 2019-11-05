@@ -4,30 +4,31 @@ const webpack = require("webpack");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 module.exports = merge(common, {
-    devServer: {
-        contentBase: false,
-        hot: true,
-    },
-    devtool: "inline-source-map",
-    mode: "development",
-    module: {
-      rules: [
-        {
-          exclude: /node_modules/,
-          test: /\.tsx?$/,
-          use: [
-            {
-              loader: "ts-loader",
-              options: {
-                transpileOnly: true
-              }
+  devServer: {
+    contentBase: false,
+    hot: true
+  },
+  devtool: "inline-source-map",
+  mode: "development",
+  module: {
+    rules: [
+      {
+        exclude: /node_modules/,
+        test: /\.tsx?$/,
+        use: [
+          {
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true,
+              configFile: "tsconfig.browser.json"
             }
-          ]
-        }
-      ]
-    },
-    plugins: [
-        new webpack.HotModuleReplacementPlugin(),
-        new ForkTsCheckerWebpackPlugin()
-    ],
+          }
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin(),
+    new ForkTsCheckerWebpackPlugin({ tsconfig: "tsconfig.browser.json" })
+  ]
 });

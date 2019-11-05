@@ -7,6 +7,7 @@ import BinPacker from "./bin-packer";
 import colorPalette, { colorsToIdx } from "./bsh-color-palette";
 import BSHImage from "./bsh-image";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const UPNG = require("upng-js/UPNG.js");
 
 interface AtlasData {

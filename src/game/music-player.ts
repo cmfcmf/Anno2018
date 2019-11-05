@@ -1,5 +1,6 @@
 import pixiSound from "pixi-sound";
 import FileSystem from "../filesystem";
+
 const Sound = pixiSound.Sound;
 
 export default class MusicPlayer {
@@ -20,18 +21,18 @@ export default class MusicPlayer {
     }
   }
 
-  public play(name: string, loop: boolean = false) {
+  public async play(name: string, loop: boolean = false) {
     const song = this.songs.find(each => each.name === name + ".wav");
     if (song === undefined) {
       console.warn(`Song ${name} not found.`);
       return;
     }
     if (!song.sound.isPlaying) {
-      song.sound.play({ loop: loop });
+      await song.sound.play({ loop: loop });
     }
   }
 
-  public playAll() {
+  public async playAll() {
     if (this.songs.length === 0) {
       console.warn("No music to play found :(");
       return;
@@ -44,19 +45,19 @@ export default class MusicPlayer {
 
     this.playing = true;
     this.currentSongIdx = -1;
-    this.playNext();
+    await this.playNext();
   }
 
   public stop() {
     this.songs.forEach(song => song.sound.stop());
   }
 
-  private playNext() {
+  private async playNext() {
     this.currentSongIdx++;
     if (this.currentSongIdx === this.songs.length) {
       this.currentSongIdx = 0;
     }
-    this.songs[this.currentSongIdx].sound.play(this.playNext.bind(this));
+    await this.songs[this.currentSongIdx].sound.play(this.playNext.bind(this));
   }
 
   private loadSound(data: ArrayBuffer, preload: boolean = false) {
@@ -70,7 +71,7 @@ export default class MusicPlayer {
             if (err) {
               reject(err);
             } else {
-              resolve(preloadedSound!);
+              resolve(preloadedSound);
             }
           }
         }

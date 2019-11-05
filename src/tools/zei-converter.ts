@@ -1,9 +1,8 @@
 import BSHParser from "../parsers/BSH/bsh-parser";
 import Stream from "../parsers/stream";
 import BitmapFontGenerator from "../parsers/ZEI/bitmap-font-generator";
-
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 
 const args = process.argv;
 if (args.length !== 4) {
@@ -30,7 +29,7 @@ if (!fs.existsSync(outDirPath)) {
 
 console.info(`Converting ${inFilePath}`);
 
-// tslint:disable-next-line:no-floating-promises
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
   const data = new Stream(fs.readFileSync(inFilePath));
   const fontName = path.basename(inFilePath, path.extname(inFilePath));

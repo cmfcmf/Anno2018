@@ -1,7 +1,6 @@
 import { Producer } from "../game/world/producer";
-
-const path = require("path");
-const fs = require("fs");
+import * as path from "path";
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 3) {
@@ -15,7 +14,7 @@ const inFilePath = args[2];
 
 console.info(`Converting ${inFilePath}`);
 
-// tslint:disable-next-line:no-floating-promises
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 const files = fs.readdirSync(inFilePath);
 files.sort((a: string, b: string) => {
   const aa = parseInt(a.split("_")[1].split(".")[0], 10);

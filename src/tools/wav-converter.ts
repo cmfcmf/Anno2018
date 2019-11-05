@@ -1,7 +1,6 @@
 import MP3Encoder from "../parsers/WAV/mp3-encoder";
 import WAVParser from "../parsers/WAV/wav-parser";
-
-const fs = require("fs");
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 4) {

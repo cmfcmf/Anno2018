@@ -1,6 +1,7 @@
 import assert from "../../util/assert";
 import { RawSamples } from "./wav-parser";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const lamejs = require("lamejs");
 
 export default class MP3Encoder {

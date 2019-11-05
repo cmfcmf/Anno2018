@@ -3,12 +3,8 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "module": "es6",
-    "target": "es2015",
+    "target": "es2020",
     "allowJs": true,
-    "lib": [
-      "es2017",
-      "dom"
-    ],
     "jsx": "react",
     "moduleResolution": "Node",
     "noImplicitAny": true,
@@ -16,6 +12,7 @@
     "alwaysStrict": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "typeRoots": [ "./types", "./node_modules/@types" ]
   }
 }

@@ -3,7 +3,9 @@ import IslandSpriteLoader from "./island-sprite-loader";
 import { Island } from "./world/island";
 
 export const TILE_WIDTH = 64;
+
 export const TILE_HEIGHT = 32;
+
 export const LAND_OFFSET = -20;
 
 export default class IslandRenderer {

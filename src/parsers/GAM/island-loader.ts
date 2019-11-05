@@ -6,7 +6,9 @@ import assert from "../../util/assert";
 import { Block } from "./block";
 
 export type IslandSizeId = 0 | 1 | 2 | 3 | 4;
+
 export type IslandSizeName = "lit" | "mit" | "med" | "big" | "lar";
+
 interface IslandSize {
   id: IslandSizeId;
   name: IslandSizeName;
@@ -160,7 +162,7 @@ export default class IslandLoader {
   ) {
     return (await this.fs.ls(`/islands/${climate}`))
       .filter(islandFile => islandFile.name.startsWith(sizeName))
-      .filter(islandFile => islandFile.name.match(/\d\d\.scp$/) !== null)
+      .filter(islandFile => /\d\d\.scp$/.exec(islandFile.name) !== null)
       .map(file => {
         return {
           file: file,

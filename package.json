@@ -44,8 +44,13 @@
     "@types/jszip": "^3.1.6",
     "@types/pngjs": "^3.3.1",
     "@types/webpack": "^4.39.8",
+    "@typescript-eslint/eslint-plugin": "^2.6.1",
+    "@typescript-eslint/parser": "^2.6.1",
     "babel-loader": "^8.0.6",
     "copy-webpack-plugin": "^5.0.4",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
     "fork-ts-checker-webpack-plugin": "^3.0.1",
     "git-revision-webpack-plugin": "^3.0.4",
     "html-webpack-plugin": "^3.2.0",
@@ -56,10 +61,6 @@
     "ts-jest": "^24.1.0",
     "ts-loader": "^6.2.1",
     "ts-node": "^8.4.1",
-    "tslint": "^5.20.0",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-plugin-prettier": "^2.0.1",
-    "tslint-react": "^4.1.0",
     "typescript": "^3.6.4",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.41.2",
@@ -70,18 +71,18 @@
   "scripts": {
     "start": "webpack-dev-server --host 0.0.0.0 --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
-    "lint": "tslint --project .",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
     "test": "jest",
     "test-watch": "jest --notify --watchAll",
     "postinstall": "patch-package",
-    "cod-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/cod-converter.ts",
-    "bsh-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/bsh-converter.ts",
-    "dat-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/dat-converter.ts",
-    "gam-analyzer": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/gam-analyzer.ts",
-    "gam-analyzer2": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/gam-analyzer2.ts",
-    "smk-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/smk-converter.ts",
-    "wav-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/wav-converter.ts",
-    "zei-converter": "ts-node -O \"{\\\"module\\\":\\\"commonjs\\\"}\" src/tools/zei-converter.ts"
+    "cod-converter": "ts-node --project tsconfig.node.json src/tools/cod-converter.ts",
+    "bsh-converter": "ts-node --project tsconfig.node.json src/tools/bsh-converter.ts",
+    "dat-converter": "ts-node --project tsconfig.node.json src/tools/dat-converter.ts",
+    "gam-analyzer":  "ts-node --project tsconfig.node.json src/tools/gam-analyzer.ts",
+    "gam-analyzer2": "ts-node --project tsconfig.node.json src/tools/gam-analyzer2.ts",
+    "smk-converter": "ts-node --project tsconfig.node.json src/tools/smk-converter.ts",
+    "wav-converter": "ts-node --project tsconfig.node.json src/tools/wav-converter.ts",
+    "zei-converter": "ts-node --project tsconfig.node.json src/tools/zei-converter.ts"
   },
   "jest": {
     "transform": {
@@ -102,9 +103,6 @@
     ]
   },
   "browserslist": "last 2 versions, ie 10",
-  "types": [
-    "./types"
-  ],
   "husky": {
     "hooks": {
       "pre-commit": "yarn run lint"

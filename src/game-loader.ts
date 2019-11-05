@@ -54,7 +54,7 @@ export default class GameLoader {
     );
 
     await gameRenderer.begin();
-    this.musicPlayer.playAll();
+    await this.musicPlayer.playAll();
 
     gameLogic.setSimulationSpeed(SimulationSpeed.Default);
   }

@@ -27,7 +27,7 @@ import { loadTranslations } from "./translation/translator";
 import UploadHandler from "./upload";
 import { getQueryParameter } from "./util/util";
 
-// tslint:disable-next-line:no-floating-promises
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
   log.enableAll();
 
@@ -140,6 +140,7 @@ import { getQueryParameter } from "./util/util";
   const islandName = getQueryParameter("island");
   if (queryGameName !== null) {
     await gameLoader.loadByName(queryGameName);
+    // eslint-disable-next-line require-atomic-updates
     menuViewport.visible = false;
   } else if (gad !== null) {
     console.info(`Rendering "${gad}" screen.`);
@@ -169,6 +170,7 @@ import { getQueryParameter } from "./util/util";
     island.position = new Point(0, 0);
     island.positionRect = new Rectangle(0, 0, island.size.x, island.size.y);
 
+    // eslint-disable-next-line require-atomic-updates
     menuViewport.visible = false;
     const islandRenderer = new IslandRenderer(viewport, islandSpriteLoader);
     await islandRenderer.render([island]);

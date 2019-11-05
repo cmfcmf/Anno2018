@@ -12,11 +12,9 @@ export function uInt8ToBase64(arr: Uint8Array): string {
     index += CHUNK_SIZE;
   }
 
-  // tslint:disable:no-eval
   return typeof window !== "undefined"
     ? btoa(result)
     : eval("require")("btoa")(result);
-  // tslint:enable:no-eval
 }
 
 /**
@@ -29,7 +27,7 @@ export function getQueryParameter(
   defaultValue: string | null = null
 ): string | null {
   const url = window.location.href;
-  name = name.replace(/[\[\]]/g, "\\$&");
+  name = name.replace(/[[\]]/g, "\\$&");
   const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
   const results = regex.exec(url);
   if (!results) {

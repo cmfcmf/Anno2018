@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const UPNG = require("upng-js/UPNG.js");
 
 export default class BSHImage {

@@ -1,7 +1,6 @@
 import Stream from "../parsers/stream";
 import CODParser from "./../parsers/COD/cod-parser";
-
-const fs = require("fs");
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 4) {

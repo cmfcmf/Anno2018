@@ -1,5 +1,7 @@
 import { uInt8ToBase64 } from "../../util/util";
 import { SpriteSheetConfig } from "../BSH/bsh-parser";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const xml = require("xml");
 
 export default class BitmapFontGenerator {

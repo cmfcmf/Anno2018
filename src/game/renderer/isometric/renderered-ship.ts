@@ -73,10 +73,10 @@ export class RenderedShip {
         flagOffsetX += -floor((Fahnoffs[1] * TILE_WIDTH) / 2);
         break;
       case 1:
-        flagOffsetX += floor((Fahnoffs[1] * TILE_WIDTH * Math.sqrt(2)) / 2);
+        flagOffsetX += floor((Fahnoffs[1] * TILE_WIDTH * Math.SQRT2) / 2);
         break;
       case 5:
-        flagOffsetX += -floor((Fahnoffs[1] * TILE_WIDTH * Math.sqrt(2)) / 2);
+        flagOffsetX += -floor((Fahnoffs[1] * TILE_WIDTH * Math.SQRT2) / 2);
         break;
       case 3:
       case 7:
@@ -97,10 +97,10 @@ export class RenderedShip {
         flagOffsetY += -floor((Fahnoffs[1] * TILE_HEIGHT) / 2);
         break;
       case 3:
-        flagOffsetY += floor((Fahnoffs[1] * TILE_HEIGHT * Math.sqrt(2)) / 2);
+        flagOffsetY += floor((Fahnoffs[1] * TILE_HEIGHT * Math.SQRT2) / 2);
         break;
       case 7:
-        flagOffsetY += -floor((Fahnoffs[1] * TILE_HEIGHT * Math.sqrt(2)) / 2);
+        flagOffsetY += -floor((Fahnoffs[1] * TILE_HEIGHT * Math.SQRT2) / 2);
         break;
       case 1:
       case 5:

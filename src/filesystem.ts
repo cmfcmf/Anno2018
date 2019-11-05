@@ -1,6 +1,7 @@
 import Stream from "./parsers/stream";
 import { uInt8ToBase64 } from "./util/util";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const Filer = require("filer.js");
 
 export default class FileSystem {
@@ -38,9 +39,9 @@ export default class FileSystem {
     directory: string | WebKitEntry,
     filterByExtensions?: string
   ): Promise<WebKitEntry[]> {
-    const entries = await (new Promise((resolve, reject) => {
+    const entries = await new Promise<WebKitEntry[]>((resolve, reject) => {
       this.filer.ls(directory, resolve, reject);
-    }) as Promise<WebKitEntry[]>);
+    });
 
     if (!filterByExtensions) {
       return entries;
@@ -72,6 +73,7 @@ export default class FileSystem {
     for (const part of parts) {
       path += "/";
       const entries = await this.ls(path);
+      // eslint-disable-next-line require-atomic-updates
       path += part;
       if (entries.find(entry => entry.fullPath === path) === undefined) {
         return false;
@@ -83,7 +85,7 @@ export default class FileSystem {
   public async open(entryOrPath: string | WebKitEntry): Promise<File> {
     return new Promise((resolve, reject) =>
       this.filer.open(entryOrPath, resolve, reject)
-    ) as Promise<File>;
+    );
   }
 
   public async openAndGetContentAsText(entryOrPath: string | WebKitEntry) {

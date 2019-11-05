@@ -1,6 +1,5 @@
 import SMKParser from "../parsers/SMK/smk-parser";
-
-const fs = require("fs");
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 4) {
@@ -31,7 +30,7 @@ function fileSize(x: number) {
   return Math.round(x / 10_000) / 100;
 }
 
-// tslint:disable-next-line:no-floating-promises
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
   const smkParser = new SMKParser();
   const mp4Data: Uint8Array = await smkParser.parse(

@@ -7,12 +7,15 @@ global.document = {
     height: 0,
     getContext: () => ({
       fillStyle: "",
-      // tslint:disable-next-line:no-empty
-      fillRect: () => {},
-      // tslint:disable-next-line:no-empty
-      drawImage: () => {},
-      // tslint:disable-next-line:no-empty
-      getImageData: () => {}
+      fillRect: () => {
+        // Do nothing
+      },
+      drawImage: () => {
+        // Do nothing
+      },
+      getImageData: () => {
+        // Do nothing
+      }
     })
   })
 };
@@ -23,9 +26,8 @@ global.navigator = {
 
 import GAMParser from "../parsers/GAM/gam-parser";
 import Stream from "../parsers/stream";
-
-const path = require("path");
-const fs = require("fs");
+import * as path from "path";
+import * as fs from "fs";
 
 const args = process.argv;
 if (args.length !== 3) {
@@ -41,7 +43,7 @@ console.info(`Converting ${inFilePath}`);
 
 const gamParser = new GAMParser(null);
 
-// tslint:disable-next-line:no-floating-promises
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 fs.readdirSync(inFilePath).forEach(async (fileName: string) => {
   if (!fileName.endsWith(".gam")) {
     return;
