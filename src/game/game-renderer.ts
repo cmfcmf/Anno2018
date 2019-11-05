@@ -1,4 +1,4 @@
-import { Key, KeyboardManager } from "pixi-keyboard";
+import { Key, KeyboardManager, Keys } from "pixi-keyboard";
 import { Viewport } from "pixi-viewport";
 import {
   Application,
@@ -89,6 +89,11 @@ export default class GameRenderer {
 
   public async begin() {
     this.keyboardManager.enable();
+    this.app.ticker.add(() => {
+      // Necessary to update key down state used for moving around.
+      this.keyboardManager.update();
+    })
+
     this.viewport.removeChildren();
     this.debugControls();
 
@@ -201,8 +206,8 @@ export default class GameRenderer {
 
     merge(
       from(["initial"]),
-      fromEvent(this.viewport as any, "zoomed"),
-      fromEvent(this.viewport as any, "moved")
+      fromEvent(this.viewport, "zoomed"),
+      fromEvent(this.viewport, "moved"),
     )
       .pipe(auditTime(200))
       .subscribe(this.cull);
@@ -259,6 +264,33 @@ export default class GameRenderer {
         this.game.setSimulationSpeed(speedKey.speed)
       );
     }
+
+    const SCROLL_SPEED = 50;
+    [Key.LEFT, Key.RIGHT, Key.UP, Key.DOWN].forEach(key =>
+      this.keyboardManager.setPreventDefault(key));
+    this.keyboardManager.on("down", (key: Keys) => {
+      console.log("key down", key);
+      switch (key) {
+        case Key.LEFT:
+          this.viewport.moveCorner(this.viewport.corner.x - SCROLL_SPEED, this.viewport.corner.y);
+          this.cull();
+          break;
+        case Key.RIGHT:
+          this.viewport.moveCorner(this.viewport.corner.x + SCROLL_SPEED, this.viewport.corner.y);
+          this.cull();
+          break;
+        case Key.UP:
+          this.viewport.moveCorner(this.viewport.corner.x, this.viewport.corner.y - SCROLL_SPEED);
+          this.cull();
+          break;
+        case Key.DOWN:
+          this.viewport.moveCorner(this.viewport.corner.x, this.viewport.corner.y + SCROLL_SPEED);
+          this.cull();
+          break;
+        default:
+          break;
+      }
+    });
   }
 
   private zoom(zoom: 1 | 2 | 3) {
