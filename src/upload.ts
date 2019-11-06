@@ -54,6 +54,9 @@ export default class UploadHandler {
           alert("Upload finished. The page will now refresh.");
           window.location.reload(true);
         },
+        onDownloadFiles: async () => {
+          await this.fs.download("/");
+        },
         setLogger: this.setLogger.bind(this)
       }),
       game

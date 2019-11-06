@@ -1,5 +1,5 @@
 import Stream from "./parsers/stream";
-import { uInt8ToBase64 } from "./util/util";
+import JSZip from "jszip";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Filer = require("filer.js");
@@ -168,13 +168,13 @@ export default class FileSystem {
   }
 
   public async download(pathOrEntry: string | WebKitEntry) {
-    let files;
+    let entries;
     try {
-      files = await this.ls(pathOrEntry);
+      entries = await this.ls(pathOrEntry);
     } catch (e) {
       return this.downloadFile(pathOrEntry);
     }
-    return this.downloadDirectory(files);
+    return this.downloadDirectory(entries);
   }
 
   private async downloadFile(pathOrEntry: string | WebKitEntry) {
@@ -182,21 +182,35 @@ export default class FileSystem {
       typeof pathOrEntry === "string" ? pathOrEntry : pathOrEntry.fullPath;
 
     const content = await this.openAndGetContentAsUint8Array(pathOrEntry);
-    const element = document.createElement("a");
-    element.setAttribute(
-      "href",
-      `data:application/json;base64,${uInt8ToBase64(content)}`
-    );
-    element.setAttribute("download", fileName);
-    element.style.display = "none";
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    this.doDownload(fileName, content);
   }
 
-  private async downloadDirectory(files: WebKitEntry[]) {
-    for (const file of files) {
-      await this.download(file);
-    }
+  private async downloadDirectory(entries: WebKitEntry[]) {
+    const zip = new JSZip();
+
+    const addToZip = async (entries: WebKitEntry[]) =>
+      Promise.all(
+        entries.map(async entry => {
+          console.log(entry.fullPath);
+          if (entry.isFile) {
+            zip.file(entry.fullPath, this.openAndGetContentAsUint8Array(entry));
+          } else {
+            const subEntries = await this.ls(entry);
+            await addToZip(subEntries);
+          }
+        })
+      );
+    await addToZip(entries);
+
+    const zipContent = await zip.generateAsync({ type: "uint8array" });
+    this.doDownload("data.zip", zipContent);
+  }
+
+  private doDownload(fileName: string, content: Uint8Array) {
+    const blob = new Blob([content], { type: "application/zip" });
+    const element = document.createElement("a");
+    element.href = window.URL.createObjectURL(blob);
+    element.download = fileName;
+    element.click();
   }
 }

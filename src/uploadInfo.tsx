@@ -9,6 +9,7 @@ interface Props {
     evt: ChangeEvent<HTMLInputElement>
   ) => Promise<void>;
   setLogger: (logger: UploadLogger) => void;
+  onDownloadFiles: () => Promise<void>;
 }
 
 interface State {
@@ -142,6 +143,15 @@ export default class UploadInfo extends React.Component<Props, State>
             onChange={this.props.onSaveOrMissionUploaded}
           />
         </p>
+
+        <h2>Downloading all uploaded and converted files</h2>
+        <p>
+          Use this button to download an archive of all uploaded files. This
+          includes the original files as well as converted files:
+        </p>
+        <button type="button" onClick={this.props.onDownloadFiles}>
+          Download files
+        </button>
 
         <h2>Resetting files</h2>
         <p>
