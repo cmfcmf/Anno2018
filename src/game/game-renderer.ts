@@ -8,7 +8,8 @@ import {
   Point,
   Sprite,
   Text,
-  Texture
+  Texture,
+  Rectangle
 } from "pixi.js";
 import { from, fromEvent, merge } from "rxjs";
 import { auditTime } from "rxjs/operators";
@@ -22,6 +23,7 @@ import { RenderedShip } from "./renderer/isometric/renderered-ship";
 import { Island } from "./world/island";
 import { SHIP_TYPES } from "./world/ship";
 import { SimulationSpeed } from "./world/world";
+import { isWithinRadius } from "./radius";
 
 export default class GameRenderer {
   public static fieldPosToWorldPos(fieldPos: Point) {
@@ -30,6 +32,12 @@ export default class GameRenderer {
     const worldX = (xx - yy) * (TILE_WIDTH / 2);
     const worldY = (xx + yy) * (TILE_HEIGHT / 2);
     return new Point(worldX, worldY);
+  }
+
+  public static landFieldPosToWorldPos(fieldPos: Point) {
+    const result = this.fieldPosToWorldPos(fieldPos);
+    result.y += LAND_OFFSET;
+    return result;
   }
 
   /**
@@ -227,6 +235,73 @@ export default class GameRenderer {
       "simulation-speed",
       speed => (this.simulationSpeedDisplay.text = `Simulation speed: ${speed}`)
     );
+
+    const highlightField = (
+      annoX: number,
+      annoY: number,
+      color: number = 0xff0000
+    ) => {
+      let { x, y } = GameRenderer.landFieldPosToWorldPos(
+        new Point(annoX, annoY)
+      );
+      x += TILE_WIDTH / 2;
+      y -= TILE_HEIGHT;
+      const tmp = new Graphics();
+      tmp.beginFill(color);
+      tmp.alpha = 0.2;
+      tmp.visible = this.showRadiusOfAllBuildings;
+      tmp.drawPolygon([
+        new Point(x, y),
+        new Point(x + TILE_WIDTH / 2, y + TILE_HEIGHT / 2),
+        new Point(x, y + TILE_HEIGHT),
+        new Point(x - TILE_WIDTH / 2, y + TILE_HEIGHT / 2)
+      ]);
+      this.radiusSprites.push(tmp);
+      this.viewport.addChild(tmp);
+    };
+
+    this.game.state.producers.forEach(producer => {
+      const island = this.game.state.islands[producer.islandId];
+
+      const base = new Point(
+        island.position.x + producer.position.x,
+        island.position.y + producer.position.y
+      );
+      const fieldData = this.game.getFieldAtIsland(island, producer.position)!;
+      const fieldConfig = this.configLoader
+        .getFieldData()
+        .get(fieldData.fieldId)!;
+      const size = fieldConfig.size;
+      const actualSizeX = fieldData.rotation % 2 === 0 ? size.x : size.y;
+      const actualSizeY = fieldData.rotation % 2 === 0 ? size.y : size.x;
+      const radius = fieldConfig.production.radius;
+
+      for (let x = 0; x < actualSizeX; x++) {
+        for (let y = 0; y < actualSizeY; y++) {
+          highlightField(base.x + x, base.y + y);
+        }
+      }
+
+      const buildingRectangle = new Rectangle(
+        base.x,
+        base.y,
+        actualSizeX,
+        actualSizeY
+      );
+      for (let x = -20; x < 20; x++) {
+        for (let y = -20; y < 20; y++) {
+          if (
+            isWithinRadius(
+              buildingRectangle,
+              radius,
+              new Point(base.x + x, base.y + y)
+            )
+          ) {
+            highlightField(base.x + x, base.y + y, 0xffff00);
+          }
+        }
+      }
+    });
   }
 
   private setupHotKeys() {
@@ -304,6 +379,20 @@ export default class GameRenderer {
           break;
       }
     });
+
+    // TODO: Temporary and for debugging only
+    this.keyboardManager.onKeyPressedWithPreventDefault(Key.R, () => {
+      this.toggleShowRadiusOfAllBuildings();
+    });
+  }
+
+  private showRadiusOfAllBuildings = false;
+  private radiusSprites: Container[] = [];
+  private toggleShowRadiusOfAllBuildings() {
+    this.showRadiusOfAllBuildings = !this.showRadiusOfAllBuildings;
+    this.radiusSprites.forEach(
+      each => (each.visible = this.showRadiusOfAllBuildings)
+    );
   }
 
   private zoom(zoom: 1 | 2 | 3) {

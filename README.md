@@ -31,8 +31,9 @@ This would have never been possible without the work of countless Anno enthusias
 - [x] Render tile animations (water, rivers, mill, canon foundry)
 - [x] Render ships
 - [ ] Building logic
-  - [ ] Render radius
+  - [x] Calculate radius
   - [x] Calculate running cost
+  - [ ] Visualize radius
   - [ ] Market logic
     - [ ] Calculate storage capactiy
     - [ ] Fetch produced goods
@@ -41,6 +42,7 @@ This would have never been possible without the work of countless Anno enthusias
     - [ ] Fetch raw goods
     - [x] Produce goods
     - [ ] Pause if on fire or manually paused
+    - [ ] Building UI
   - [ ] Public building logic
   - [ ] House logic
     - [ ] Tax

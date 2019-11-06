@@ -107,7 +107,11 @@ export default class FieldType {
         productionConfig.Workmenge !== undefined
           ? productionConfig.Workmenge
           : 0,
-      radius: productionConfig.Radius,
+      radius:
+        productionConfig.Radius === "RADIUS_MARKT" ||
+        productionConfig.Radius === "RADIUS_HQ"
+          ? 16
+          : productionConfig.Radius,
       interval: productionConfig.Interval,
       maxStock: productionConfig.Maxlager,
       smokeAnimationNames: Array.isArray(productionConfig.Rauchfignr)
@@ -229,11 +233,6 @@ export default class FieldType {
           if (smokeAnimationName.startsWith("RAUCH")) {
             // TODO: This doesn't quite look like the original, but works for now.
             smokeSprite.alpha = 0.7;
-          }
-
-          if (smokeAnimationName === "RAUCHGOLD") {
-            // @ts-ignore
-            window.FOO = smokeSprite;
           }
         })
       );
