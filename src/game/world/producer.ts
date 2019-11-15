@@ -8,129 +8,177 @@ import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import assert from "../../util/assert";
 
-export type Producer = Readonly<ReturnType<typeof producerFromSaveGame>>;
+export class Producer {
+  public islandId: number;
+  public position: Point;
 
-export function producerFromSaveGame(data: Stream) {
-  const islandId = data.read8();
-  const position = new Point(data.read8(), data.read8());
-  const speed = data.read8();
-  const speedCount = data.read8();
+  /**
+   * The amount of goods already produced and waiting for pickup.
+   */
+  public stock: number;
+  // The amount of primary input goods waiting to be used.
+  // They are only "taken" when an output good is finished.
+  public firstGoodStock: number;
+  // The amount of secondary input goods waiting to be used (normally wood).
+  // This is 0 for buildings which don't use secondary goods.
+  // They are only "taken" when an output good is finished.
+  public secondGoodStock: number;
 
-  // TODO: Without Math.floor, some producers have x.5 goods. Investigate why.
-  const stock = Math.floor(data.read16() / 32);
+  /**
+   * The timer is decremented every second, regardless of whether or not
+   * the building has enough input goods to produce something. Once it would reach 0
+   * (i.e., the timer never actually reaches 0):
+   * If there are enough input goods to produce an output good (= producedGood is 128):
+   *   - the timer is set to "HAUS_PRODTYP.Interval"
+   *   - "stock" is incremented
+   *   - "firstGoodStock" is decremented by "HAUS_PRODTYP.Rohmenge"
+   *   - "secondGoodStock" ???
+   *   - "noGoodCnt" is set to 0
+   * If there are NOT enough goods (= producedGood is not 128):
+   *   - it is set to 11 (at least for "Webstube")
+   *   - "noGoodCnt" is increased (up to a maximum of 15)
+   *
+   * Whenever new input goods are delivered and there were previously not enough
+   * input goods to create output goods, the timer is immediately set to
+   * "HAUS_PRODTYP.Interval" ??
+   *
+   * I am unsure why the timer is running even when no goods are currently being
+   * produced.
+   */
+  public timer: number;
+  public prodCount: number;
+  public timeCount: number;
+  public howMuchIsBeingProduced: number;
 
-  assert(Number.isInteger(stock));
+  private goodWasProduced: number;
+  private speedCnt: number;
 
-  data.read8();
+  public static load(data: Stream) {
+    const p = new Producer();
 
-  const timer = data.read16();
+    p.islandId = data.read8();
+    p.position = new Point(data.read8(), data.read8());
+    data.read8();
 
-  // TODO: Without Math.floor, some producers have x.5 goods. Investigate why.
-  const secondGoodStock = Math.floor(data.read16() / 32);
-  // TODO: Without Math.floor, some producers have x.5 goods. Investigate why.
-  const firstGoodStock = Math.floor(data.read16() / 32);
+    p.speedCnt = data.read8() & 0b111;
+    p.stock = data.read16();
+    data.read8();
 
-  assert(Number.isInteger(firstGoodStock));
-  assert(Number.isInteger(secondGoodStock));
+    p.timer = data.read16();
+    p.secondGoodStock = data.read16();
 
-  data.read8();
+    p.firstGoodStock = data.read16();
+    data.read8();
+    p.howMuchIsBeingProduced = data.read8();
 
-  const producedGood = data.read8();
+    p.prodCount = data.read16();
+    p.timeCount = data.read16();
 
-  // The following two values are used to calculate the "Auslastung"
+    const flags = data.read8();
+    p.setActive(!!(flags & (1 << 0)));
+    p.setAnimCount((flags >> 2) & 0b1111);
+    p.setGoodsAllowedForPickup((flags & (1 << 6)) === 1);
+    if (flags & (1 << 1)) {
+      p.goodWasProduced |= 1 << 6;
+    } else {
+      p.goodWasProduced &= ~(1 << 6);
+    }
 
-  // Increased by 32 whenever "stock" is increased.
-  const prodCnt = data.read16() / 32;
-  const timeCnt = data.read16();
+    p.setGoodWasProducedTimer(data.read8() & 0b1111);
+    assert(data.read16() === 0);
 
-  const flags1 = data.read8();
-  const active = (flags1 & (1 << 0)) > 0;
-  const connectedToMarket = (flags1 & (1 << 1)) > 0;
+    return p;
+  }
 
-  const animCnt = (flags1 >> 2) & 0b1111;
-  const allowGoodPickup = (flags1 & (1 << 6)) === 0;
+  public save(stream: Stream) {
+    stream.write8(this.islandId);
+    stream.write8(this.position.x);
+    stream.write8(this.position.y);
+    stream.write8(0);
 
-  const noGoodCnt = data.read8() & 0b1111;
-  assert(data.read16() === 0);
+    stream.write8(this.speedCnt & 0b111);
+    stream.write16(this.stock);
+    stream.write8(0);
 
-  return {
-    // The island id.
-    islandId,
-    // The position relative to the island.
-    position,
-    /*
-      > BYTE speed; //  Welcher Speedzähler (MAXWACHSSPEEDKIND)
-      > immer 0
+    stream.write16(this.timer);
+    stream.write16(this.secondGoodStock);
 
-      Always 0 in a big savegame.
-    */
-    speed,
-    /*
-      > UINT speedcnt:8; //  Wenn (Zeitzähler == Speedzähler) timer++ (MAXROHWACHSCNT)
-      > 0x07, 0x05, 0x04, 0x03, 0x00 (irgendetwas, blockweise konstant, unterscheidet sich pro Spielstand maximal um 1)
+    stream.write16(this.firstGoodStock);
+    stream.write8(0);
+    stream.write8(this.howMuchIsBeingProduced);
 
-      Always runs from 0 to 7 and repeats.
-      It appears to be synchronized across all buildings and was the same value for all buildings in a big savegame.
-      It is equal to the global "timers.cntProduction".
-    */
-    speedCount,
+    stream.write16(this.prodCount);
+    stream.write16(this.timeCount);
 
-    /**
-     * The amount of goods already produced and waiting for pickup.
-     */
-    stock,
+    const flags =
+      ((this.isActive() ? 0b1 : 0b0) << 0) |
+      (((this.goodWasProduced >> 6) & 1) << 1) |
+      (this.getAnimCount() << 2) |
+      ((this.goodsAllowedForPickup() ? 0b1 : 0b0) << 6);
+    stream.write8(flags);
+    stream.write8(this.getGoodWasProducedTimer());
+    stream.write16(0);
+  }
 
-    /**
-     * The timer is decremented every second, regardless of whether or not
-     * the building has enough input goods to produce something. Once it would reach 0
-     * (i.e., the timer never actually reaches 0):
-     * If there are enough input goods to produce an output good (= producedGood is 128):
-     *   - the timer is set to "HAUS_PRODTYP.Interval"
-     *   - "stock" is incremented
-     *   - "firstGoodStock" is decremented by "HAUS_PRODTYP.Rohmenge"
-     *   - "secondGoodStock" ???
-     *   - "noGoodCnt" is set to 0
-     * If there are NOT enough goods (= producedGood is not 128):
-     *   - it is set to 11 (at least for "Webstube")
-     *   - "noGoodCnt" is increased (up to a maximum of 15)
-     *
-     * Whenever new input goods are delivered and there were previously not enough
-     * input goods to create output goods, the timer is immediately set to
-     * "HAUS_PRODTYP.Interval" ??
-     *
-     * I am unsure why the timer is running even when no goods are currently being
-     * produced.
-     */
-    timer,
+  public isProducing() {
+    return !!(this.goodWasProduced & (1 << 7));
+  }
 
-    // The amount of primary input goods waiting to be used.
-    // They are only "taken" when an output good is finished.
-    firstGoodStock,
-    // The amount of secondary input goods waiting to be used (normally wood).
-    // This is 0 for buildings which don't use secondary goods.
-    // They are only "taken" when an output good is finished.
-    secondGoodStock,
+  public isActive() {
+    return !!(this.speedCnt & (1 << 3));
+  }
 
-    producedGood,
-    prodCnt,
-    timeCnt,
-    active,
+  public setActive(active: boolean) {
+    if (active) {
+      this.speedCnt |= 1 << 3;
+    } else {
+      this.speedCnt &= ~(1 << 3);
+    }
+  }
 
-    /**
-     * Appears to always be false.
-     * In a big savegame, this was true only for a single building: One of the native HQs.
-     */
-    connectedToMarket,
+  public goodsAllowedForPickup() {
+    return !!(this.goodWasProduced & (1 << 4));
+  }
 
-    // Always 0 for a "Webstube"
-    animCnt,
-    allowGoodPickup,
+  public setGoodsAllowedForPickup(value: boolean) {
+    if (value) {
+      this.goodWasProduced |= 1 << 4;
+    } else {
+      this.goodWasProduced &= ~(1 << 4);
+    }
+  }
 
-    /**
-     * Increased up to a maximum of 15 whenever "timer" reaches 0 and no good could be produced,
-     * otherwise set to 0.
-     * Once it reaches (4?) the "no input goods" symbol is displayed above the building.
-     */
-    noGoodCnt
-  };
+  public stockAsInt() {
+    return this.stock >>> 5;
+  }
+
+  public firstGoodStockAsInt() {
+    return this.firstGoodStock >>> 5;
+  }
+
+  public secondGoodStockAsInt() {
+    return this.secondGoodStock >>> 5;
+  }
+
+  /**
+   * timer that counts up and is reset whenever a good is produced
+   */
+  public getGoodWasProducedTimer() {
+    return this.goodWasProduced & 0b1111;
+  }
+
+  public setGoodWasProducedTimer(value: number) {
+    assert(value >= 0 && value <= 0b1111);
+    this.goodWasProduced =
+      (this.goodWasProduced & 0b11110000) | (value & 0b1111);
+  }
+
+  public getAnimCount() {
+    return (this.speedCnt >> 4) & 0b1111;
+  }
+
+  public setAnimCount(value: number) {
+    assert(value >= 0 && value <= 0b1111);
+    this.speedCnt = (this.speedCnt & 0b1111) | (value << 4);
+  }
 }

@@ -9,11 +9,12 @@ export default class Missions implements ScreenConfig {
   public buttons = [
     this.renderNewGame.bind(this),
     this.renderLoadGame.bind(this),
-    async () => {
-      await this.menuStructure.renderScreen("menu_loading");
+    async (container: Container) => {
+      await this.menuStructure.renderScreen(container, "menu_loading");
       this.menuStructure.emit("load-game", "/saves/lastgame.gam");
     },
-    async () => this.menuStructure.renderScreen("menu_main"),
+    async (container: Container) =>
+      this.menuStructure.renderScreen(container, "menu_main"),
     async (stage: Container) => {
       this.currentPage = Math.max(0, this.currentPage - 1);
       await this.renderNewGame(stage);
@@ -26,6 +27,8 @@ export default class Missions implements ScreenConfig {
       await this.renderNewGame(stage);
     }
   ];
+
+  public texts = [];
 
   private readonly ROWS = 14;
 
@@ -76,7 +79,7 @@ export default class Missions implements ScreenConfig {
           bitmapText.interactive = true;
           bitmapText.buttonMode = true;
           bitmapText.once("click", async () => {
-            await this.menuStructure.renderScreen("menu_loading");
+            await this.menuStructure.renderScreen(stage, "menu_loading");
             this.menuStructure.emit("load-game", line.file!.fullPath);
           });
         }
@@ -114,7 +117,7 @@ export default class Missions implements ScreenConfig {
         bitmapText.interactive = true;
         bitmapText.buttonMode = true;
         bitmapText.once("click", async () => {
-          await this.menuStructure.renderScreen("menu_loading");
+          await this.menuStructure.renderScreen(stage, "menu_loading");
           this.menuStructure.emit("load-game", saves[i].fullPath);
         });
       } else {

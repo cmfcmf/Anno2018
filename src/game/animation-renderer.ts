@@ -31,6 +31,7 @@ interface AnimationData {
   Nowalkani: number;
   Rotate: number;
   Worktime: number;
+  Speed: number;
   Posoffs: [number, number]; // TODO: What is this?!
   Fahnoffs: [number, number, number];
   GfxCategory: string;
@@ -62,7 +63,6 @@ export default class AnimationRenderer {
       console.log(this.animationData.objects.FIGUR.items);
       throw new Error(`Invalid animation name: ${name}`);
     }
-    console.log(animationData);
 
     let ANIM: Record<string, AnimationConfig>;
     if (

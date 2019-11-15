@@ -66,6 +66,7 @@ export default class FieldType {
     };
     good1: string;
     good2: string;
+    amount: number;
     amount1: number;
     amount2: number;
     radius: number;
@@ -102,6 +103,7 @@ export default class FieldType {
       upkeep,
       good1: productionConfig.Rohstoff,
       good2: productionConfig.Workstoff,
+      amount: productionConfig.Prodmenge,
       amount1: productionConfig.Rohmenge,
       amount2:
         productionConfig.Workmenge !== undefined

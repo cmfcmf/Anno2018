@@ -21,20 +21,25 @@ interface RadioButtonData {
 export default class GADRenderer {
   private videos: Sprite[] = [];
 
-  constructor(
-    private readonly stage: Container,
-    private readonly spriteLoader: SpriteLoader
-  ) {}
+  constructor(private readonly spriteLoader: SpriteLoader) {}
 
-  public async render(data: any, config: ScreenConfig) {
+  public clear(container: Container) {
     this.destroyVideos();
-    this.stage.removeChildren();
+    container.removeChildren();
+  }
+
+  public async render(container: Container, data: any, config: ScreenConfig) {
+    this.destroyVideos();
 
     const blockNumMapping: Map<number, string> = new Map();
     for (const name of Object.keys(data.variables)) {
       const value = data.variables[name];
       if (name.startsWith("BLK_")) {
-        blockNumMapping.set(value, name.substring(4));
+        let tmp = name.substring(4);
+        if (tmp === "TOOL") {
+          tmp = "TOOLS";
+        }
+        blockNumMapping.set(value, tmp);
       }
     }
 
@@ -47,7 +52,7 @@ export default class GADRenderer {
       const blockNr = gadget.Blocknr;
       const gfx = gadget.Gfxnr;
       const kind: string = gadget.Kind;
-      if (kind === "GAD_UNUSED") {
+      if (kind === "GAD_UNUSED" || kind === "GAD_NIX") {
         continue;
       }
       const position = new Point(gadget.Pos[0], gadget.Pos[1]);
@@ -99,7 +104,9 @@ export default class GADRenderer {
           if (selectable) {
             sprite.buttonMode = true;
             sprite.interactive = true;
-            const callback = config.buttons[selectableCount];
+            const callback = Array.isArray(config.buttons)
+              ? config.buttons[selectableCount]
+              : config.buttons[id];
 
             if (isRadioButton) {
               if (radioButtons.length === 0) {
@@ -119,7 +126,7 @@ export default class GADRenderer {
                   }
                 }
               }
-              callback(this.stage);
+              callback(container);
             });
 
             if (!isRadioButton) {
@@ -129,7 +136,7 @@ export default class GADRenderer {
 
             selectableCount++;
           }
-          this.stage.addChild(sprite);
+          container.addChild(sprite);
           break;
         }
         case "GAD_TEXTL":
@@ -137,7 +144,7 @@ export default class GADRenderer {
         case "GAD_TEXTR": {
           // case "GAD_TEXTFL":
           const fontSize = 24;
-          const text = new BitmapText("Here goes text!", {
+          const text = new BitmapText(config.texts[id] || "???", {
             font: { name: "ZEI20V", size: fontSize }
           });
           text.position.set(position.x, position.y);
@@ -146,46 +153,56 @@ export default class GADRenderer {
           text.hitArea = new Rectangle(0, 0, size!.x, size!.y);
           if (kind.endsWith("Z")) {
             // Center text
-            text.pivot.set(text.x / 2, text.pivot.y);
+            text.anchor = new Point(0.5, 0);
           } else if (kind.endsWith("R")) {
-            // text.pivot.set(text.x, text.pivot.y);
+            text.anchor = new Point(1, 0);
           }
-          this.stage.addChild(text);
+          container.addChild(text);
           break;
         }
+        // TODO: Shadows
+        // case "GAD_GFXRAST":
+        //   break;
         default:
           console.warn(`Unsupported kind: ${kind}`);
       }
     }
 
-    config.onLoad(this.stage);
+    config.onLoad(container);
   }
 
-  public renderVideo(videoSprite: Sprite, onEnd: () => void) {
+  public renderVideo(
+    container: Container,
+    videoSprite: Sprite,
+    onEnd: () => void
+  ) {
     const videoTexture = videoSprite.texture.baseTexture
       .resource as resources.VideoResource;
     videoTexture.source.addEventListener(
       "ended",
       () => {
-        this.stage.removeChild(videoSprite);
+        container.removeChild(videoSprite);
         onEnd();
       },
       { once: true }
     );
-    this.stage.addChild(videoSprite);
+    container.addChild(videoSprite);
     this.videos.push(videoSprite);
   }
 
-  public renderVideoFullscreen(videoSprite: Sprite, onEnd: () => void) {
-    this.destroyVideos();
-    this.stage.removeChildren();
+  public renderVideoFullscreen(
+    container: Container,
+    videoSprite: Sprite,
+    onEnd: () => void
+  ) {
+    this.clear(container);
 
     const videoTexture = videoSprite.texture.baseTexture
       .resource as resources.VideoResource;
     videoTexture.source.addEventListener(
       "ended",
       () => {
-        this.stage.removeChild(videoSprite);
+        container.removeChild(videoSprite);
         onEnd();
       },
       { once: true }
@@ -202,7 +219,7 @@ export default class GADRenderer {
       (videoSprite.texture.height * videoSprite.scale.y) / 2;
     videoSprite.position.set(x, y);
 
-    this.stage.addChild(videoSprite);
+    container.addChild(videoSprite);
   }
 
   private destroyVideos() {

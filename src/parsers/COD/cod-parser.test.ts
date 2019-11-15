@@ -21,11 +21,11 @@ test("Correctly decrypts", async () => {
 
 test("Correctly encrypts", async () => {
   expect(codParser.encrypt(decryptedString)).toEqual(
-    new Buffer(encryptedBytes)
+    Buffer.from(encryptedBytes)
   );
 });
 
 test("handles 0 correctly", async () => {
   expect(codParser.decrypt(new Stream(new Uint8Array([0x00])))).toBe("\0");
-  expect(codParser.encrypt("\0")).toEqual(new Buffer([0x00]));
+  expect(codParser.encrypt("\0")).toEqual(Buffer.from([0x00]));
 });

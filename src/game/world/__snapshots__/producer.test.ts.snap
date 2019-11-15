@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`producer entity loads and saves correctly 1`] = `
+Producer {
+  "firstGoodStock": 0,
+  "goodWasProduced": 0,
+  "howMuchIsBeingProduced": 0,
+  "islandId": 0,
+  "position": Point {
+    "x": 8,
+    "y": 14,
+  },
+  "prodCount": 0,
+  "secondGoodStock": 0,
+  "speedCnt": 8,
+  "stock": 0,
+  "timeCount": 0,
+  "timer": 0,
+}
+`;
+
+exports[`producer entity loads and saves correctly 2`] = `
+Producer {
+  "firstGoodStock": 0,
+  "goodWasProduced": 0,
+  "howMuchIsBeingProduced": 0,
+  "islandId": 0,
+  "position": Point {
+    "x": 16,
+    "y": 7,
+  },
+  "prodCount": 0,
+  "secondGoodStock": 0,
+  "speedCnt": 8,
+  "stock": 0,
+  "timeCount": 0,
+  "timer": 0,
+}
+`;

@@ -12,7 +12,12 @@ import {
   Rectangle
 } from "pixi.js";
 import { from, fromEvent, merge } from "rxjs";
-import { auditTime } from "rxjs/operators";
+import {
+  auditTime,
+  startWith,
+  map,
+  distinctUntilChanged
+} from "rxjs/operators";
 import { make2DArray } from "../util/util";
 import AnimationRenderer from "./animation-renderer";
 import ConfigLoader from "./config-loader";
@@ -24,6 +29,8 @@ import { Island } from "./world/island";
 import { SHIP_TYPES } from "./world/ship";
 import { SimulationSpeed } from "./world/world";
 import { isWithinRadius } from "./radius";
+import MenuStructure from "./menu-structure";
+import { HUD } from "./renderer/isometric/hud";
 
 export default class GameRenderer {
   public static fieldPosToWorldPos(fieldPos: Point) {
@@ -62,12 +69,11 @@ export default class GameRenderer {
     return this.worldPosToFieldPos(adjustedWorldPos);
   }
 
-  private money: Text;
-  private simulationSpeedDisplay: Text;
   private readonly WIDTH = 500;
   private readonly HEIGHT = 350;
   private fields: Array<Array<Sprite | null>>;
   private readonly keyboardManager: KeyboardManager;
+  private readonly hud: HUD;
 
   constructor(
     private readonly game: Game,
@@ -76,42 +82,30 @@ export default class GameRenderer {
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
     private readonly animationRenderer: AnimationRenderer,
+    private readonly menuRenderer: MenuStructure,
     private readonly myPlayerId: number
   ) {
     this.keyboardManager = new KeyboardManager();
     this.setupHotKeys();
 
-    this.money = new Text("", {
-      fontFamily: "Arial",
-      fontSize: 24,
-      fill: 0xff1010
-    });
-    this.money.y = 0 * 30;
-    this.simulationSpeedDisplay = new Text("", {
-      fontFamily: "Arial",
-      fontSize: 24,
-      fill: 0xff1010
-    });
-    this.simulationSpeedDisplay.y = 5 * 30;
+    const hudContainer = new Container();
+    this.hud = new HUD(this, this.menuRenderer, hudContainer);
+    app.stage.addChild(hudContainer);
   }
 
   public async begin() {
+    this.viewport.removeChildren();
+
     this.keyboardManager.enable();
     this.app.ticker.add(() => {
       // Necessary to update key down state used for moving around.
       this.keyboardManager.update();
     });
 
-    this.viewport.removeChildren();
-    this.debugControls();
-
-    const dbg = (xx: number, yy: number, w: number = 5, h: number = 5) => {
-      const rect = new Graphics();
-      rect.position.set(xx, yy);
-      rect.beginFill(0x00ff00);
-      rect.drawRect(0, 0, w, h);
-      this.viewport.addChild(rect);
-    };
+    await this.hud.begin(
+      new Point(this.viewport.screenWidth, this.viewport.screenHeight)
+    );
+    this.sendHoveredPositionsToHUD();
 
     // Render islands
     const spritesPerIsland = await Promise.all(
@@ -130,7 +124,6 @@ export default class GameRenderer {
       spritesOfIsland.smokeSprites.forEach(smokeSprite => {
         this.viewport.addChild(smokeSprite);
         smokeSprite.play();
-        dbg(smokeSprite.x, smokeSprite.y, 3, 3);
       });
     });
     console.log("Map sprites drawn.");
@@ -183,34 +176,12 @@ export default class GameRenderer {
     this.fields = fields;
 
     // Render ships
-    // ...
+    await this.renderShips();
 
     // Render soldiers
     // ...
 
     this.moveCameraToStartPosition(this.myPlayerId);
-
-    const renderedShips = this.game.state.ships
-      // TODO: We ignore the land trader for now
-      .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
-      .map(ship => new RenderedShip(ship.id, ship.playerId === 4));
-
-    await Promise.all(
-      this.game.state.ships
-        .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
-        .map(ship =>
-          renderedShips
-            .find(each => each.id === ship.id)!
-            .begin(ship, this.animationRenderer)
-        )
-    );
-    this.game.state.ships
-      .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
-      .forEach(ship => {
-        renderedShips
-          .find(each => each.id === ship.id)!
-          .render(ship, this.viewport);
-      });
 
     merge(
       from(["initial"]),
@@ -222,7 +193,7 @@ export default class GameRenderer {
 
     this.game.addListener("player/money", ({ playerId, money }) => {
       if (playerId === this.myPlayerId) {
-        this.setMoney(money);
+        this.hud.setMoney(money);
       }
     });
     this.game.addListener(
@@ -231,10 +202,14 @@ export default class GameRenderer {
         this.onProduced(island, position, stock);
       }
     );
-    this.game.addListener(
-      "simulation-speed",
-      speed => (this.simulationSpeedDisplay.text = `Simulation speed: ${speed}`)
+    this.game.addListener("simulation-speed", speed =>
+      this.hud.setSimulationSpeed(speed)
     );
+    this.game.addListener("player/upkeep", ({ playerId, upkeep }) => {
+      if (playerId === this.myPlayerId) {
+        this.hud.setOperatingCosts(upkeep);
+      }
+    });
 
     const highlightField = (
       annoX: number,
@@ -302,6 +277,29 @@ export default class GameRenderer {
         }
       }
     });
+  }
+
+  private async renderShips() {
+    const renderedShips = this.game.state.ships
+      // TODO: We ignore the land trader for now
+      .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
+      .map(ship => new RenderedShip(ship.id, ship.playerId === 4));
+    await Promise.all(
+      this.game.state.ships
+        .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
+        .map(ship =>
+          renderedShips
+            .find(each => each.id === ship.id)!
+            .begin(ship, this.animationRenderer)
+        )
+    );
+    this.game.state.ships
+      .filter(ship => SHIP_TYPES[ship.type] !== "TRADER1")
+      .forEach(ship => {
+        renderedShips
+          .find(each => each.id === ship.id)!
+          .render(ship, this.viewport);
+      });
   }
 
   private setupHotKeys() {
@@ -395,11 +393,21 @@ export default class GameRenderer {
     );
   }
 
-  private zoom(zoom: 1 | 2 | 3) {
+  private zoom(zoom: number) {
     const center = this.viewport.center;
     this.viewport.scale.set(1.0 / zoom);
     this.viewport.moveCenter(center.x, center.y);
     this.cull();
+  }
+
+  public zoomIn() {
+    const currentZoom = 1.0 / this.viewport.scale.x;
+    this.zoom(Math.max(1, currentZoom - 1));
+  }
+
+  public zoomOut() {
+    const currentZoom = 1.0 / this.viewport.scale.x;
+    this.zoom(currentZoom + 1);
   }
 
   // public onMove(listener: (viewport: Viewport) => void) {
@@ -410,16 +418,12 @@ export default class GameRenderer {
   //     ).subscribe(listener);
   // }
 
-  private setMoney = (money: number) => {
-    this.money.text = `Money: ${money}`;
-  };
-
   private onProduced(island: Island, position: Point, stock: number) {
     console.log(
       `Producer at island ${island.id} (${position.x}, ${position.y}) has now stock: ${stock}.`
     );
     // TODO: This uses the wrong color, position, font and timings.
-    const text = new Text(`Stock: ${stock}`, {
+    const text = new Text(`Stock: ${stock >> 5}`, {
       fontFamily: "Arial",
       fontSize: 24,
       fill: 0xff1010
@@ -475,86 +479,32 @@ export default class GameRenderer {
     }
   };
 
-  private debugControls() {
-    const debugContainer = new Container();
-
-    debugContainer.addChild(this.money);
-    const coordinates = new Text("", {
-      fontFamily: "Arial",
-      fontSize: 24,
-      fill: 0xff1010
-    });
-    coordinates.y = 1 * 30;
-    debugContainer.addChild(coordinates);
-
-    const islandNumber = new Text("", {
-      fontFamily: "Arial",
-      fontSize: 24,
-      fill: 0xff1010
-    });
-    islandNumber.y = 2 * 30;
-    debugContainer.addChild(islandNumber);
-
-    const producerInfo = new Text("", {
-      fontFamily: "Arial",
-      fontSize: 24,
-      fill: 0xff1010
-    });
-    producerInfo.y = 3 * 30;
-    debugContainer.addChild(producerInfo);
-
-    debugContainer.addChild(this.simulationSpeedDisplay);
-
+  private sendHoveredPositionsToHUD() {
     const interactionManager: interaction.InteractionManager = this.app.renderer
       .plugins.interaction;
 
-    const updatePosition = () => {
-      const pos = GameRenderer.worldPosToFieldPosLand(
-        this.viewport.toWorld(interactionManager.mouse.global)
-      );
-      coordinates.text = `x: ${pos.x}, y: ${pos.y}`;
-
-      const island = Object.values(this.game.state.islands).find(each => {
-        return each.positionRect.contains(pos.x, pos.y);
-      });
-
-      if (island) {
-        const localPosition = new Point(
-          pos.x - island.position.x,
-          pos.y - island.position.y
-        );
-
-        islandNumber.text = `Island id: ${island.id}, x: ${localPosition.x} y: ${localPosition.y}`;
-
-        const producer = this.game.state.producers.find(
-          each =>
-            each.islandId === island.id &&
-            each.position.x === localPosition.x &&
-            each.position.y === localPosition.y
-        );
-        if (producer) {
-          const fieldData = this.game.getFieldAtIsland(
-            island,
-            producer.position
-          )!;
-          const fieldConfig = this.configLoader
-            .getFieldData()
-            .get(fieldData.fieldId)!;
-
-          producerInfo.text = `Producer: Stock: ${producer.stock} (max: ${fieldConfig.production.maxStock}, good: ${fieldConfig.production.good}), Good A: ${producer.firstGoodStock} (required: ${fieldConfig.production.amount1}, good: ${fieldConfig.production.good1}), Good B: ${producer.secondGoodStock} (required: ${fieldConfig.production.amount2}, good: ${fieldConfig.production.good2}),\n Active: ${producer.active}, Timer: ${producer.timer}, Rotation: ${fieldData.rotation}`;
-        } else {
-          producerInfo.text = "No Producer";
-        }
-      } else {
-        islandNumber.text = `Island id: ?`;
-      }
-    };
-    updatePosition();
-    this.viewport.on("moved", updatePosition);
-    this.viewport.on("wheel-scroll", updatePosition);
-    interactionManager.on("pointermove", updatePosition);
-
-    this.viewport.parent.addChild(debugContainer);
+    merge(
+      fromEvent(this.viewport, "moved"),
+      fromEvent(this.viewport, "wheel-scroll"),
+      fromEvent(interactionManager, "pointermove")
+    )
+      .pipe(
+        auditTime(100),
+        startWith(null),
+        map(_ =>
+          GameRenderer.worldPosToFieldPosLand(
+            this.viewport.toWorld(interactionManager.mouse.global)
+          )
+        ),
+        distinctUntilChanged(),
+        map(pos => ({
+          pos,
+          island: Object.values(this.game.state.islands).find(each => {
+            return each.positionRect.contains(pos.x, pos.y);
+          })
+        }))
+      )
+      .subscribe(({ pos, island }) => this.hud.setHoveredPosition(pos, island));
   }
 
   private moveCameraToStartPosition(myPlayerId: number) {

@@ -1,5 +1,5 @@
 import FileSystem from "../filesystem";
-import lookup, { TranslationKeys } from "./translations";
+import { translations as lookup, TranslationKeys } from "./translations";
 
 const translations: Map<TranslationKeys, string> = new Map();
 

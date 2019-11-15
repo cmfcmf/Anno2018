@@ -1,11 +1,95 @@
 enum GAME {
-  // TODO Add more translations
+  "game.stock",
+  "game.empty",
+  "game.tax",
+  "game.pioneers",
+  "game.settlers",
+  "game.citizens",
+  "game.merchants",
+  "game.aristocrats",
+  "game.food",
+  "game.empty2",
+  "game.price",
+  "game.workload",
+  "game.hold",
+  "game.cannon",
+  "game.speed",
+  "game.inhabitants",
+  "game.anonymous",
+  "game.stock_full_message",
+  "game.operating_cost",
+  "game.tax_revenue",
+  "game.workers",
+  "game.supplies_remaining",
+  "game.suitable_for",
+  "game.canons_ready",
+  "game.no_canons_ready",
+  "game.settings",
+  "game.savewd_games",
+  "game.music_and_effects",
+  "game.speech",
+  "game.video_sequences",
+  "game.music",
+  "game.effects",
+  "game.saved_game",
+  "game.fleet_orders",
+  "game.troop_orders",
+  "game.supply",
+  "game.demand",
+  "game.dired_up_field",
+  "game.player_status",
+  "game.who_do_we",
+  "game.want_to_attack",
+  "game.always_profitable",
+  "game.to_invest",
+  "game.peaceful_life",
+  "game.pirate_hideout",
+  "game.cost",
+  "game.select_target",
+  "game.n_knots",
+  "game.?1",
+  "game.?2",
+  "game.?3",
+  "game.load_on_ship",
+  "game.load_on_wagon",
+  "game.unload_into_warehouse",
+  "game.buy",
+  "game.sell",
+  "game.pickup",
+  "game.deliver",
+  "game.at_gold_coins_each",
+  "game.purchase_up_to",
+  "game.sell_down_to",
+  "game.demand_fulfilled_percent",
+  "game.demand_fulfilled_none",
+  "game.citizens_now_demand",
+  "game.sales_revenue",
+  "game.purchase_cost",
+  "game.nothing_available",
+  "game.momentarily_no_demand",
+  "game.no_demand",
+  "game.demand2",
+  "game.demand_at_coins",
+  "game.ship_list" = 71,
+  "game.military_budget" = 72,
+  "game.unit_forming_requirement" = 73,
+  "game.unit_training_progress" = 74,
+  "game.fully_trained_unit" = 75,
+  "game.no_weapons" = 76,
+  "game.cities_list" = 77,
+  "game.pay_tribute" = 78,
+  "game.empty3" = 79,
+  "game.balance_sheet" = 80,
+  "game.enter_your_name" = 81,
+  "game.score" = 82,
+  "misc.insert_cd" = 83,
+  "misc.no_cd" = 84,
   "menu.divider.orginal_missions" = 85,
   "menu.divider.missions" = 86,
   "menu.divider.new_missions" = 87,
   "menu.divider.custom_missions" = 88,
-  "exit_game" = 89,
-  "exit_game_question" = 90
+  "misc.exit_game" = 89,
+  "misc.exit_game_question" = 90
 }
 
 // TODO: [LEISTE]
@@ -305,7 +389,7 @@ enum LANDSCHAFT {
 
 // Ignore [DEMO]
 
-const lookup = {
+export const translations = {
   GAME,
   LEISTE,
   PATH,
@@ -331,14 +415,12 @@ const lookup = {
   LANDSCHAFT
 };
 
-export default lookup;
-
 type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 type UnionToIntersection<U extends object> = {
   [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
 };
 export type TranslationKeys = keyof UnionToIntersection<
-  (typeof lookup)[keyof typeof lookup]
+  (typeof translations)[keyof typeof translations]
 >;
 
-export type TranslationDomain = keyof typeof lookup;
+export type TranslationDomain = keyof typeof translations;

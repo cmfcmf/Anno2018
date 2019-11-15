@@ -5,7 +5,7 @@ export default class CODParser {
   private encoding = "win1252";
 
   public decrypt(data: Stream): string {
-    const decryptedBytes = new Buffer(data.length);
+    const decryptedBytes = Buffer.allocUnsafe(data.length);
     for (let i = 0; i < data.length; i++) {
       decryptedBytes[i] = 256 - data.read8();
     }
@@ -17,7 +17,7 @@ export default class CODParser {
 
   public encrypt(content: string): Uint8Array {
     const file = new Stream(iconv_encode(content, this.encoding));
-    const encryptedBytes = new Buffer(file.length);
+    const encryptedBytes = Buffer.allocUnsafe(file.length);
     for (let i = 0; i < file.length; i++) {
       encryptedBytes[i] = 256 - file.read8();
     }

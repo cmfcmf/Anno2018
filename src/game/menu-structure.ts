@@ -1,4 +1,4 @@
-import { BaseTexture, Container, Sprite, Texture } from "pixi.js";
+import { BaseTexture, Container, Sprite } from "pixi.js";
 import { utils } from "pixi.js";
 import FileSystem from "../filesystem";
 import { textureFromUint8ArrayMP4 } from "../util/pixi";
@@ -10,7 +10,8 @@ type Callback = (stage: Container) => void;
 
 export interface ScreenConfig {
   onLoad: Callback;
-  buttons: Callback[];
+  buttons: Callback[] | Record<number, Callback>;
+  texts: Record<number, string>;
 }
 
 export default class MenuStructure extends utils.EventEmitter {
@@ -18,9 +19,9 @@ export default class MenuStructure extends utils.EventEmitter {
     menu_main: {
       onLoad: () => this._playMainMenuMusic(),
       buttons: [
-        async () => this.renderScreen("menu_missions"),
-        async () => console.log("Multiplayer"),
-        async () => {
+        container => this.renderScreen(container, "menu_missions"),
+        () => console.log("Multiplayer"),
+        async (container: Container) => {
           // Credits
           this.musicPlayer.stop();
           const videoSprite = await this.loadVideoSprite(10);
@@ -28,46 +29,50 @@ export default class MenuStructure extends utils.EventEmitter {
           videoSprite.height = 367 - 14;
           videoSprite.position.set(500 + 7, 359 + 7);
           this.gadRenderer.renderVideo(
+            container,
             videoSprite,
             () => this._playMainMenuMusic
           );
         },
-        async () => {
+        async (container: Container) => {
           // Intro
           const videoSprite = await this.loadVideoSprite(58);
           this.musicPlayer.stop();
-          this.gadRenderer.renderVideoFullscreen(videoSprite, () =>
-            this.renderScreen("menu_main")
+          this.gadRenderer.renderVideoFullscreen(container, videoSprite, () =>
+            this.renderScreen(container, "menu_main")
           );
         },
-        async () => console.log("Exit")
-      ]
+        () => console.log("Exit")
+      ],
+      texts: []
     },
     menu_missions: new Missions(this.fs, this),
     menu_loading: {
       onLoad: () => {
         // Nothing to do
       },
-      buttons: []
+      buttons: [],
+      texts: []
     },
     menu_mission_details: {
       onLoad: () => {
         // Nothing to do
       },
       buttons: [
-        async () => console.log("Start Mission"),
-        async () => this.renderScreen("menu_missions"),
-        async () => console.log("Highscores up"),
-        async () => console.log("Highscores down"),
-        async () => console.log("Sub-Mission 0"),
-        async () => console.log("Sub-Mission 1"),
-        async () => console.log("Sub-Mission 2"),
-        async () => console.log("Sub-Mission 3"),
-        async () => console.log("Sub-Mission 4"),
-        async () => console.log("Mission Description up"),
-        async () => console.log("Mission Description down"),
-        async () => console.log("Mission Description Slider")
-      ]
+        () => console.log("Start Mission"),
+        (container: Container) => this.renderScreen(container, "menu_missions"),
+        () => console.log("Highscores up"),
+        () => console.log("Highscores down"),
+        () => console.log("Sub-Mission 0"),
+        () => console.log("Sub-Mission 1"),
+        () => console.log("Sub-Mission 2"),
+        () => console.log("Sub-Mission 3"),
+        () => console.log("Sub-Mission 4"),
+        () => console.log("Mission Description up"),
+        () => console.log("Mission Description down"),
+        () => console.log("Mission Description Slider")
+      ],
+      texts: []
     }
   };
 
@@ -79,18 +84,25 @@ export default class MenuStructure extends utils.EventEmitter {
     super();
   }
 
-  public async renderScreen(screen: string) {
+  public async renderScreen(
+    container: Container,
+    screen: string,
+    model?: ScreenConfig
+  ) {
     const data = JSON.parse(
       await this.fs.openAndGetContentAsText(`/screens/${screen}.json`)
     );
     console.log(data);
-    const config = this.structure[screen] || {
-      onLoad: () => {
-        /* Nothing to do */
-      },
-      buttons: []
-    };
-    await this.gadRenderer.render(data, config);
+    const config = model ||
+      this.structure[screen] || {
+        onLoad: () => {
+          /* Nothing to do */
+        },
+        buttons: [],
+        texts: {}
+      };
+    this.gadRenderer.clear(container);
+    await this.gadRenderer.render(container, data, config);
   }
 
   public async _playMainMenuMusic() {

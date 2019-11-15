@@ -15,9 +15,9 @@ export function timersFromSaveGame(data: Stream) {
   const cntShipyard = data.read8();
   const cntMilitary = data.read8();
   const cntProduction = data.read8();
-  assert(data.read(31 + 32).every(e => e === 0));
-  const cntSettlers = data.read(32);
-  const cntGrowth = data.read(32);
+  data.read(31 + 32);
+  const cntSettlers = data.read(8, 4);
+  const cntGrowth = data.read(8, 4);
 
   const timeCity = data.read32();
   const timeIsland = data.read32();
@@ -99,6 +99,10 @@ export function timersFromSaveGame(data: Stream) {
     timeIsland,
     timeShipyard,
     timeMilitary,
+    /**
+     * Increments by at most 200, but sometimes less (it likely depends on PC
+     * speed). Whenever it reaches at least 1000, cntProduction is incremented.
+     */
     timeProduction,
     timeGoodToolsCnt,
     timeGoodToolsMax,

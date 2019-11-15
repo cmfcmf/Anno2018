@@ -34,6 +34,6 @@ console.info(`Converting ${inFilePath}`);
   const images = await bshParser.decodeBSH(data);
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
-    fs.writeFileSync(`${outDirPath}/${i}.png`, new Buffer(image.toPNG()));
+    fs.writeFileSync(`${outDirPath}/${i}.png`, Buffer.from(image.toPNG()));
   }
 })();

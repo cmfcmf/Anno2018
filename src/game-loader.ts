@@ -9,6 +9,7 @@ import IslandSpriteLoader from "./game/island-sprite-loader";
 import MusicPlayer from "./game/music-player";
 import { SimulationSpeed } from "./game/world/world";
 import GAMParser from "./parsers/GAM/gam-parser";
+import MenuStructure from "./game/menu-structure";
 
 export default class GameLoader {
   constructor(
@@ -19,7 +20,8 @@ export default class GameLoader {
     private readonly viewport: Viewport,
     private readonly configLoader: ConfigLoader,
     private readonly musicPlayer: MusicPlayer,
-    private readonly animationRenderer: AnimationRenderer
+    private readonly animationRenderer: AnimationRenderer,
+    private readonly menuStructure: MenuStructure
   ) {}
 
   public async loadByName(gameName: string) {
@@ -50,6 +52,7 @@ export default class GameLoader {
       this.viewport,
       this.configLoader,
       this.animationRenderer,
+      this.menuStructure,
       myPlayerId
     );
 

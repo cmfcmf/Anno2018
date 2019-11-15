@@ -123,6 +123,8 @@ import { getQueryParameter } from "./util/util";
     animationRenderer
   );
 
+  const gadRenderer = new GADRenderer(spriteLoader);
+  const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
   const gameLoader = new GameLoader(
     fs,
     gamParser,
@@ -131,7 +133,8 @@ import { getQueryParameter } from "./util/util";
     viewport,
     configLoader,
     musicPlayer,
-    animationRenderer
+    animationRenderer,
+    menuStructure
   );
 
   const queryGameName = getQueryParameter("load");
@@ -144,9 +147,9 @@ import { getQueryParameter } from "./util/util";
     menuViewport.visible = false;
   } else if (gad !== null) {
     console.info(`Rendering "${gad}" screen.`);
-    const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
-    const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
-    await menuStructure.renderScreen(gad);
+    for (const gadName of gad.split(",")) {
+      await menuStructure.renderScreen(menuViewport, gadName);
+    }
   } else if (animationName !== null) {
     console.log(`Rendering animation "${animationName}".`);
     await animationRenderer.renderAnimation(animationName, viewport);
@@ -176,12 +179,10 @@ import { getQueryParameter } from "./util/util";
     await islandRenderer.render([island]);
   } else {
     // menuViewport.fit(); // TODO: Makes usage of sliders harder
-    const gadRenderer = new GADRenderer(menuViewport, spriteLoader);
-    const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
     menuStructure.on("load-game", async (mission: string) => {
       await gameLoader.load(mission);
       menuViewport.visible = false;
     });
-    await menuStructure.renderScreen("menu_main");
+    await menuStructure.renderScreen(menuViewport, "menu_main");
   }
 })();

@@ -9,7 +9,7 @@ import { cityFromSaveGame } from "../../game/world/city";
 import { Island, islandFromSaveGame } from "../../game/world/island";
 import { kontorFromSaveGame } from "../../game/world/kontor";
 import { Player, playerFromSaveGame } from "../../game/world/player";
-import { producerFromSaveGame } from "../../game/world/producer";
+import { Producer } from "../../game/world/producer";
 import { shipFromSaveGame } from "../../game/world/ship";
 import { soldierFromSaveGame } from "../../game/world/soldier";
 import { taskFromSaveGame } from "../../game/world/task";
@@ -94,11 +94,7 @@ export default class GAMParser {
     const kontors = this.handleBlock(blocks, "KONTOR2", kontorFromSaveGame);
     const castles = this.handleBlock(blocks, "MILITAR", castleFromSaveGame);
     const cities = this.handleBlock(blocks, "STADT4", cityFromSaveGame);
-    const producers = this.handleBlock(
-      blocks,
-      "PRODLIST2",
-      producerFromSaveGame
-    );
+    const producers = this.handleBlock(blocks, "PRODLIST2", Producer.load);
 
     // TODO: HIRSCH2, WERFT, SIEDLER, ROHWACHS2, MARKT2, TURM, WIFF
     let trader = null;

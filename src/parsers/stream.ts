@@ -1,4 +1,5 @@
 import { JSZipObject } from "jszip";
+import assert from "../util/assert";
 
 export default class Stream {
   public static async fromZipObject(zip: JSZipObject) {
@@ -83,9 +84,10 @@ export default class Stream {
     return this.readNBytes(4) >> 0;
   }
 
-  public read64() {
-    return this.readNBytes(8);
-  }
+  // Potentially unsafe due to JavaScript's Number.MAX_SAFE_INTEGER
+  // public read64() {
+  //   return this.readNBytes(8);
+  // }
 
   public read8() {
     return this.data[this.pos++];
@@ -105,5 +107,20 @@ export default class Stream {
       result += this.read8() * 2 ** (i * 8);
     }
     return result;
+  }
+
+  private writeNBytes(n: number, value: number) {
+    for (let i = 0; i < n; i++) {
+      this.write8((value * 2 ** (-i * 8)) & 0xff);
+    }
+  }
+
+  public write8(value: number) {
+    assert(value >= 0 && value <= 0xff);
+    this.data[this.pos++] = value;
+  }
+
+  public write16(value: number) {
+    this.writeNBytes(2, value);
   }
 }

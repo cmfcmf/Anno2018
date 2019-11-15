@@ -44,9 +44,12 @@ console.info(`Converting ${inFilePath}`);
 
   fs.writeFileSync(`${outDirPath}/font.xml`, font);
   sheets.forEach((sheet, i) => {
-    fs.writeFileSync(`${outDirPath}/sheet-${i}.png`, new Buffer(sheet.png));
+    fs.writeFileSync(`${outDirPath}/sheet-${i}.png`, Buffer.from(sheet.png));
   });
   images.forEach((image, i) => {
-    fs.writeFileSync(`${outDirPath}/glyph-${i}.png`, new Buffer(image.toPNG()));
+    fs.writeFileSync(
+      `${outDirPath}/glyph-${i}.png`,
+      Buffer.from(image.toPNG())
+    );
   });
 })();

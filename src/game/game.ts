@@ -135,6 +135,10 @@ export default class Game extends EventEmitter {
       // https://www.annozone.de/Charlie/Cod/numerik.html
       const upkeep = Math.floor(upkeeps[playerId] / 6);
       this.addMoney(parseInt(playerId, 10), -upkeep);
+      this.emit("player/upkeep", {
+        playerId: parseInt(playerId, 10),
+        upkeep: upkeeps[playerId]
+      });
     }
   }
 
@@ -154,74 +158,175 @@ export default class Game extends EventEmitter {
 
     console.log("update producers");
     const fieldData = this.configLoader.getFieldData();
-    this.state.producers.forEach((producer, id) => {
-      if (!producer.active) {
-        return [];
+    this.state.producers.forEach((producer, producerId) => {
+      if (!producer.isActive()) {
+        return;
       }
+      if (producer.timer > 0) {
+        producer.timer--;
+        if (producer.timer > 0) {
+          return;
+        }
+      }
+
       const island = this.state.islands[producer.islandId];
       const buildingId = this.getFieldAtIsland(island, producer.position)!
         .fieldId;
       const fieldConfig = fieldData.get(buildingId)!;
       assert(fieldConfig);
 
-      if (producer.producedGood === 128 && producer.timer === 1) {
-        // We have finished producing!
-        const newStock = producer.stock + 1;
-        const newFirstGoodStock =
-          producer.firstGoodStock - fieldConfig.production.amount1;
-        const newSecondGoodStock =
-          producer.secondGoodStock - fieldConfig.production.amount2;
-        const canProduceEvenMore =
-          newFirstGoodStock >= fieldConfig.production.amount1 &&
-          newSecondGoodStock >= fieldConfig.production.amount2 &&
-          newStock < fieldConfig.production.maxStock;
+      if (producer.howMuchIsBeingProduced > 0) {
+        // Good produced (this might mean that just 0.5 of a good was produced)
+        producer.firstGoodStock -=
+          ((fieldConfig.production.amount1 << 5) *
+            producer.howMuchIsBeingProduced) >>
+          7;
+        producer.secondGoodStock -=
+          ((fieldConfig.production.amount2 << 5) *
+            producer.howMuchIsBeingProduced) >>
+          7;
 
-        this.updateProcuder((id as unknown) as number, {
-          stock: newStock,
-          timer: canProduceEvenMore ? fieldConfig.production.interval : 11,
-          firstGoodStock: newFirstGoodStock,
-          secondGoodStock: newSecondGoodStock,
-          producedGood: canProduceEvenMore ? 128 : 0
-        });
-      } else if (
-        producer.producedGood === 0 &&
-        (producer.timer === 1 || this.state.timers.cntProduction === 0)
-      ) {
-        // We are not currently producing something but should now check
-        // whether we can start producing something new.
-        const canProduce =
-          producer.firstGoodStock >= fieldConfig.production.amount1 &&
-          producer.secondGoodStock >= fieldConfig.production.amount2 &&
-          producer.stock < fieldConfig.production.maxStock;
-        this.updateProcuder((id as unknown) as number, {
-          timer: canProduce
-            ? fieldConfig.production.interval
-            : producer.timer <= 1
-            ? 11
-            : producer.timer - 1,
-          producedGood: canProduce ? 128 : 0
-        });
-      } else {
-        this.updateProcuder((id as unknown) as number, {
-          // The timer never reaches 0.
-          timer: producer.timer <= 1 ? 11 : producer.timer - 1
-        });
+        const oldStock = producer.stock;
+        producer.stock +=
+          fieldConfig.production.amount * producer.howMuchIsBeingProduced;
+        if (producer.stock - oldStock >= 32) {
+          this.emit("producer/good-produced", {
+            island: this.state.islands[producer.islandId],
+            position: producer.position,
+            stock: producer.stock
+          });
+        }
       }
+
+      let howMuchCanWeProduce = 0;
+      let var11c = 11;
+      let notmp5 = false;
+
+      // Check if we can produce more
+      if (producer.stock >= fieldConfig.production.maxStock << 5) {
+        // Show stock full message (but do not print good produced message!)
+      } else {
+        // check_has_first_good, check_is_producing, check_can_produce_valid_good
+        if (
+          producer.firstGoodStock !== 0 &&
+          !producer.isProducing() &&
+          fieldConfig.production.good !== "NOWARE"
+        ) {
+          // check_needs_good_1
+          if (fieldConfig.production.amount1 === 0) {
+            howMuchCanWeProduce = 128;
+          } else {
+            const howMuchCanWeProduceWithGood1 =
+              (producer.firstGoodStock /
+                (fieldConfig.production.amount1 << 5)) *
+              128;
+            howMuchCanWeProduce = Math.min(128, howMuchCanWeProduceWithGood1);
+          }
+
+          // check_needs_good_2
+          if (fieldConfig.production.amount2 === 0) {
+            // Nothing to do
+          } else {
+            const howMuchCanWeProduceWithGood2 =
+              (producer.secondGoodStock /
+                (fieldConfig.production.amount2 << 5)) *
+              128;
+            howMuchCanWeProduce = Math.min(
+              howMuchCanWeProduceWithGood2,
+              howMuchCanWeProduce
+            );
+          }
+
+          // tmp_2
+          if (howMuchCanWeProduce < 64) {
+            // tmp_3
+            // less than 0.5 goods can be produced
+            howMuchCanWeProduce = 0;
+          } else {
+            // tmp_4
+            // between 0.5 and 1 goods can be produced
+            var11c =
+              ((fieldConfig.production.interval << 8) * howMuchCanWeProduce) >>
+              7;
+            if (howMuchCanWeProduce !== 0) {
+              // tmp_6
+              producer.prodCount +=
+                (howMuchCanWeProduce >> 7) *
+                (fieldConfig.production.amount << 5);
+              producer.setGoodWasProducedTimer(0);
+              notmp5 = true;
+            }
+          }
+        }
+
+        if (!notmp5) {
+          // tmp_5
+          if (producer.getGoodWasProducedTimer() < 0b1111) {
+            // tmp_7
+            producer.setGoodWasProducedTimer(
+              producer.getGoodWasProducedTimer() + 1
+            );
+          }
+        }
+      }
+
+      // tmp_1
+      if (howMuchCanWeProduce > 0 !== producer.howMuchIsBeingProduced > 0) {
+        // tmp_8
+        // TODO producer.setSpeedCntANimationSomething(animation_something())
+      }
+
+      // tmp_9
+      producer.timeCount += var11c >> 8;
+      producer.howMuchIsBeingProduced = howMuchCanWeProduce;
+      producer.timer = var11c >> 8;
+      if (producer.timeCount <= 240) {
+        // tmp_10
+        producer.timeCount >>= 1;
+        producer.prodCount >>= 1;
+      }
+
+      // TODO: Skipped a few blocks that seem to be related to animations.
+
+      // tmp_11, tmp_12
+      if (
+        producer.howMuchIsBeingProduced > 0 ||
+        producer.stock < fieldConfig.production.maxStock
+      ) {
+        let edi;
+        // tmp_13
+        if (fieldConfig.production.amount2 !== 0) {
+          // TODO: tmp_14
+          edi = 0x180;
+        } else {
+          // TODO: tmp_15
+          edi = Math.floor(
+            ((producer.secondGoodStock << 8) << 7) /
+              fieldConfig.production.amount2
+          );
+        }
+
+        // tmp_16
+        if (fieldConfig.production.amount1 === 0) {
+          // TODO: tmp_17
+        } else {
+          // tmp_18, tmp_19
+          const eax = Math.floor(
+            ((producer.firstGoodStock << 8) << 7) /
+              fieldConfig.production.amount2
+          );
+          if (eax > 0x100 || eax > edi) {
+            // TODO: tmp_17
+          } else {
+            // TODO: tmp_20
+          }
+        }
+      }
+
+      // TODO: block at the very bottom
+
+      this.emit("producer/updated", { producerId: producerId });
     });
-  }
-
-  private updateProcuder(producerId: number, patch: Partial<Producer>) {
-    const producer = this.state.producers[producerId];
-    Object.assign(producer, patch);
-
-    this.emit("producer/updated", { producerId });
-    if (patch.stock !== undefined) {
-      this.emit("producer/good-produced", {
-        island: this.state.islands[producer.islandId],
-        position: producer.position,
-        stock: producer.stock
-      });
-    }
   }
 
   private calculateUpkeeps() {
@@ -243,7 +348,9 @@ export default class Game extends EventEmitter {
       assert(fieldConfig);
 
       upkeeps[playerId] +=
-        fieldConfig.production.upkeep[producer.active ? "active" : "inactive"];
+        fieldConfig.production.upkeep[
+          producer.isActive() ? "active" : "inactive"
+        ];
     }, this);
 
     return upkeeps;

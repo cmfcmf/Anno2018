@@ -1,6 +1,100 @@
 import * as log from "loglevel";
 import assert from "../../util/assert";
 
+/**
+ * TODO: Some constant values are set inside the .exe binary. These are:
+ *
+ * # figuren.cod
+ *
+ * ```ts
+ * const constants = {
+ *  FIGUR: 1,
+ *  ANIM: 2,
+ *  FORMATION: 3,
+ *  MAXFIGUR: 0x77,
+ *  NOANIM: 0x0F,
+ *  NOOBJEKT: 0xFFFF,
+ *  TIMENEVER: 0,
+ *  ENDLESS: 1,
+ *  JUMPTO: 3,
+ *  RANDOM: 2,
+ *  FIGTYP_SCHWERT: 1,
+ *  FIGTYP_KAVALERIE: 2,
+ *  FIGTYP_MUSKETIER: 3,
+ *  FIGTYP_KANONIER: 4
+ * }
+ * ```
+ *
+ * # Ware ids
+ *
+ * ```ts
+ * const wareIds = [
+ *   // Icons exist for these (gfx: TOOLS/TOOLS)
+ *   "NOWARE",
+ *   "ALLWARE",
+ *   "EISENERZ",
+ *   "GOLD",
+ *   "WOLLE",
+ *   "ZUCKER",
+ *   "TABAK",
+ *   "FLEISCH",
+ *   "KORN",
+ *   "MEHL",
+ *   "EISEN",
+ *   "SCHWERTER",
+ *   "MUSKETEN",
+ *   "KANONEN",
+ *   "NAHRUNG",
+ *   "TABAKWAREN",
+ *   "GEWUERZE",
+ *   "KAKAO",
+ *   "ALKOHOL",
+ *   "STOFFE",
+ *   "KLEIDUNG",
+ *   "SCHMUCK",
+ *   "WERKZEUG",
+ *   "HOLZ",
+ *   "ZIEGEL",
+ *   "wSOLDAT1",
+ *   "wSOLDAT2",
+ *   "wSOLDAT3",
+ *   "wSOLDAT4",
+ *   "wKAVALERIE1",
+ *   "wKAVALERIE2",
+ *   "wKAVALERIE3",
+ *   "wKAVALERIE4",
+ *   "wMUSKETIER1",
+ *   "wMUSKETIER2",
+ *   "wMUSKETIER3",
+ *   "wMUSKETIER4",
+ *   "wKANONIER1",
+ *   "wKANONIER2",
+ *   "wKANONIER3",
+ *   "wKANONIER4",
+ *
+ *   // No icons for these
+ *
+ *   "wPIONIER1",
+ *   "wPIONIER2",
+ *   "wPIONIER3",
+ *   "wPIONIER4",
+ *   "GETREIDE",
+ *   "TABAKBAUM",
+ *   "GEWUERZBAUM",
+ *   "ZUCKERROHR",
+ *   "BAUMWOLLE",
+ *   "WEINTRAUBEN",
+ *   "KAKAOBAUM",
+ *   "GRAS",
+ *   "BAUM",
+ *   "STEINE",
+ *   "ERZE",
+ *   "WILD",
+ *   "FISCHE",
+ *   "SCHATZ"
+ * ];
+ * ```
+ */
 export default class DATParser {
   private log: log.Logger;
 
@@ -19,11 +113,9 @@ export default class DATParser {
     this.log = log.getLogger("dat-parser");
   }
 
-  public parse(
-    content: string,
-    initialVariables: Map<string, any> = new Map()
-  ) {
-    this.variables = initialVariables;
+  public parse(content: string, initialVariables?: Map<string, any>) {
+    // Make a copy of the variables to avoid changing the passed map.
+    this.variables = new Map(initialVariables || []);
     this.objects = {};
     this.template = null;
     this.gfxMap = new Map();
@@ -49,7 +141,7 @@ export default class DATParser {
       }
 
       if (line === 'Include: "TOOLS.INC"') {
-        assert(initialVariables.size > 0);
+        assert(initialVariables && initialVariables.size > 0);
         continue;
       }
 
