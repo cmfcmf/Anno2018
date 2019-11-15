@@ -60,7 +60,12 @@ export default class BSHParser {
     return this.decode(data, "ZEI");
   }
 
-  public createSpriteSheets(images: BSHImage[]): SpriteSheetConfig[] {
+  public createSpriteSheets(
+    prefix: string,
+    images: BSHImage[]
+  ): SpriteSheetConfig[] {
+    assert(!prefix.includes("|"));
+
     const sheets: SpriteSheetConfig[] = [];
 
     let binPacker = new BinPacker(this.SPRITESHEET_SIZE, this.SPRITESHEET_SIZE);
@@ -113,7 +118,12 @@ export default class BSHParser {
         }
       }
 
-      atlasData.frames[i.toString(10)] = {
+      // We need to add the prefix here, because Pixi.js caches textures when
+      // loading them based on this key. If we were to use just i, Pixi.js
+      // would cache all textures from different spritehseets with the same key
+      // leading to this warning:
+      // "Texture added to the cache with an id [614] that already had an entry"
+      atlasData.frames[`${prefix}|${i}`] = {
         frame: {
           x: startX,
           y: startY,

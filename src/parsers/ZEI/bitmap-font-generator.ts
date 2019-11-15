@@ -26,8 +26,8 @@ export default class BitmapFontGenerator {
         ]
       });
 
-      for (const idx of Object.keys(sheet.config.frames)) {
-        const config = sheet.config.frames[idx];
+      for (const [key, config] of Object.entries(sheet.config.frames)) {
+        const idx = key.split("|")[1];
 
         const char = parseInt(idx, 10) + 32;
         chars.push({
@@ -52,7 +52,7 @@ export default class BitmapFontGenerator {
       }
     }
 
-    const fontSize = sheets[0].config.frames[0].sourceSize.h;
+    const fontSize = Object.values(sheets[0].config.frames)[0].sourceSize.h;
 
     // http://www.angelcode.com/products/bmfont/doc/file_format.html
     // https://raw.githubusercontent.com/pixijs/examples/gh-pages/required/assets/desyrel.xml

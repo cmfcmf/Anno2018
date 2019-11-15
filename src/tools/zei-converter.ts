@@ -38,7 +38,7 @@ console.info(`Converting ${inFilePath}`);
   const bitmapFontGenerator = new BitmapFontGenerator();
 
   const images = await bshParser.decodeZEI(data);
-  const sheets = bshParser.createSpriteSheets(images);
+  const sheets = bshParser.createSpriteSheets(fontName, images);
 
   const font = await bitmapFontGenerator.createBitmapFont(sheets, fontName);
 

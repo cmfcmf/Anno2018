@@ -275,7 +275,7 @@ export default class UploadHandler {
       const images = await parser.decodeBSH(
         await Stream.fromZipObject(bshFile)
       );
-      const sheets = parser.createSpriteSheets(images);
+      const sheets = parser.createSpriteSheets(outName, images);
       await parser.saveSpriteSheets(this.fs, sheets, `/gfx/${outName}`);
       this.logger.info(`Finished parsing "${inName}".`);
     }
@@ -322,7 +322,7 @@ export default class UploadHandler {
       const images = await parser.decodeZEI(
         await Stream.fromZipObject(zeiFile)
       );
-      const sheets = parser.createSpriteSheets(images);
+      const sheets = parser.createSpriteSheets(fontName, images);
       await parser.saveSpriteSheets(this.fs, sheets, `/fonts/${fontName}`);
       const font = await bitmapFontGenerator.createBitmapFont(sheets, fontName);
 

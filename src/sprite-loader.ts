@@ -40,17 +40,14 @@ export default class SpriteLoader {
         const tex = textureFromUint8ArrayPNG(spriteSheetImageData);
         const spritesheet = new Spritesheet(tex.baseTexture, spriteSheetData);
 
-        const textures = await new Promise<{ [key: string]: Texture }>(
-          (resolve, reject) => {
-            spritesheet.parse((sheet: any, hmm: any) => {
-              // This appears to be a bug.
-              resolve(sheet as { [key: string]: Texture });
-            });
-          }
-        );
+        const textures = await new Promise<Record<string, Texture>>(resolve => {
+          spritesheet.parse((textures: Record<string, Texture>) =>
+            resolve(textures)
+          );
+        });
 
-        for (const gfxId of Object.keys(textures)) {
-          const texture = textures[gfxId];
+        for (const [id, texture] of Object.entries(textures)) {
+          const gfxId = id.split("|")[1];
           textureMap.set(parseInt(gfxId, 10), texture);
         }
       }
