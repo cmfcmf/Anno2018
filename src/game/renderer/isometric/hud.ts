@@ -12,6 +12,7 @@ import Field from "../../world/field";
 import FieldType from "../../field-type";
 import { Translator } from "../../../translation/translator";
 import SpriteLoader from "../../../sprite-loader";
+import { getIconId } from "../../../translation/translations";
 
 const SIDEBAR_WIDTH = 271;
 const BOTTOMBAR_HEIGHT = 35;
@@ -180,6 +181,185 @@ export class HUD {
   public async showProducer(
     producer: Producer,
     island: Island,
+    city: City,
+    field: Field,
+    fieldType: FieldType
+  ) {
+    if (
+      fieldType.production.kind === "FISCHEREI" ||
+      fieldType.production.kind === "JAGDHAUS" ||
+      fieldType.production.kind === "PLANTAGE" ||
+      fieldType.production.kind === "WEIDETIER"
+    ) {
+      await this.showProducerFarm(producer, city, field, fieldType);
+    } else if (fieldType.production.kind === "HANDWERK") {
+      await this.showProducerHandwerk(producer, city, field, fieldType);
+    } else if (fieldType.production.kind === "BERGWERK") {
+      await this.showProducerMine(producer, city, field, fieldType);
+    } else if (
+      fieldType.production.kind === "KIRCHE" ||
+      fieldType.production.kind === "KAPELLE" ||
+      fieldType.production.kind === "WIRT" ||
+      fieldType.production.kind === "THEATER" ||
+      fieldType.production.kind === "BADEHAUS" ||
+      fieldType.production.kind === "KLINIK" ||
+      fieldType.production.kind === "HOCHSCHULE" ||
+      fieldType.production.kind === "SCHULE" ||
+      fieldType.production.kind === "BRUNNEN" ||
+      fieldType.production.kind === "SCHLOSS" ||
+      fieldType.production.kind === "GALGEN"
+    ) {
+      await this.showProducerPublicBuilding(producer, city, field, fieldType);
+    }
+  }
+
+  private async showProducerFarm(
+    producer: Producer,
+    city: City,
+    field: Field,
+    fieldType: FieldType
+  ) {
+    const texts: Record<number, string> = {
+      41002: city.name,
+      41003: this.translator.translate("game.workload"),
+      41004: this.translator
+        .translate("game.n_percent")
+        .replace("%d", "???")
+        .replace("%%", "%"),
+      41005: this.translator.translate("game.operating_cost"),
+      41006: producer.isActive()
+        ? fieldType.production.upkeep.active.toString()
+        : fieldType.production.upkeep.inactive.toString(),
+      41008: this.translator.getFieldName(field.fieldId),
+      41022: this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.stock >> 5).toString())
+    };
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "PLANTAGE.GAD", {
+      buttons: {
+        41009: (_, pauseProduction) => producer.setActive(!pauseProduction),
+        41010: (_, dontTakeGoods) =>
+          producer.setGoodsAllowedForPickup(!dontTakeGoods)
+      },
+      texts,
+      ignore: [],
+      onLoad: async container => {
+        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
+        const goodSprite = container.getChildByName("menu-41021") as Sprite;
+        goodSprite.texture = textures.get(
+          this.WARE_ICON_OFFSET + fieldType.production.good
+        )!;
+      }
+    });
+  }
+
+  private async showProducerPublicBuilding(
+    producer: Producer,
+    city: City,
+    field: Field,
+    fieldType: FieldType
+  ) {
+    const texts: Record<number, string> = {
+      62002: city.name,
+      62003: this.translator.translate("game.operating_cost"),
+      62004: producer.isActive()
+        ? fieldType.production.upkeep.active.toString()
+        : fieldType.production.upkeep.inactive.toString(),
+      62006: this.translator.getFieldName(field.fieldId)
+    };
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "INFRA.GAD", {
+      buttons: {},
+      texts,
+      ignore: [],
+      onLoad: async container => {
+        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
+        const sprite = container.getChildByName("menu-62021") as Sprite;
+        sprite.texture = textures.get(getIconId(field.fieldId))!;
+      }
+    });
+  }
+
+  private async showProducerMine(
+    producer: Producer,
+    city: City,
+    field: Field,
+    fieldType: FieldType
+  ) {
+    const texts: Record<number, string> = {
+      46002: city.name,
+      46003: this.translator.translate("game.operating_cost"),
+      46004: producer.isActive()
+        ? fieldType.production.upkeep.active.toString()
+        : fieldType.production.upkeep.inactive.toString(),
+      46006: this.translator.getFieldName(field.fieldId),
+      46022: this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.stock >> 5).toString())
+    };
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "BERGWERK.GAD", {
+      buttons: {
+        46009: (_, pauseProduction) => producer.setActive(!pauseProduction),
+        46010: (_, dontTakeGoods) =>
+          producer.setGoodsAllowedForPickup(!dontTakeGoods)
+      },
+      texts,
+      ignore: [],
+      onLoad: async container => {
+        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
+        const goodSprite = container.getChildByName("menu-46021") as Sprite;
+        goodSprite.texture = textures.get(
+          this.WARE_ICON_OFFSET + fieldType.production.good
+        )!;
+      }
+    });
+  }
+
+  private async showProducerShipyard(
+    producer: Producer,
+    city: City,
+    field: Field,
+    fieldType: FieldType
+  ) {
+    const texts: Record<number, string> = {
+      41002: city.name,
+      41003: this.translator.translate("game.workload"),
+      41004: this.translator
+        .translate("game.n_percent")
+        .replace("%d", "???")
+        .replace("%%", "%"),
+      41005: this.translator.translate("game.operating_cost"),
+      41006: producer.isActive()
+        ? fieldType.production.upkeep.active.toString()
+        : fieldType.production.upkeep.inactive.toString(),
+      41008: this.translator.getFieldName(field.fieldId),
+      41022: this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.stock >> 5).toString())
+    };
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "WERFT.GAD", {
+      buttons: {
+        41009: (_, pauseProduction) => producer.setActive(!pauseProduction),
+        41010: (_, dontTakeGoods) =>
+          producer.setGoodsAllowedForPickup(!dontTakeGoods)
+      },
+      texts,
+      ignore: [],
+      onLoad: async container => {
+        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
+        const goodSprite = container.getChildByName("menu-41021") as Sprite;
+        goodSprite.texture = textures.get(
+          this.WARE_ICON_OFFSET + fieldType.production.good
+        )!;
+      }
+    });
+  }
+
+  private async showProducerHandwerk(
+    producer: Producer,
     city: City,
     field: Field,
     fieldType: FieldType

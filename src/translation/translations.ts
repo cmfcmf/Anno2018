@@ -439,7 +439,8 @@ export const fieldIdToTranslationMap = [
       0x4f57,
       0x4f59,
       0x4f5b
-    ]
+    ],
+    iconOffset: 86
   },
   {
     type: "HANDWERK",
@@ -460,7 +461,8 @@ export const fieldIdToTranslationMap = [
       0x5025,
       0x5031,
       0x502f
-    ]
+    ],
+    iconOffset: 108
   },
   {
     type: "FARM",
@@ -484,19 +486,23 @@ export const fieldIdToTranslationMap = [
       0x5353,
       0x5405,
       0x5359
-    ]
+    ],
+    iconOffset: 125
   },
   {
     type: "BERGWERK",
-    ids: [0x5787, 0x5781, 0x5783, 0x5785]
+    ids: [0x5787, 0x5781, 0x5783, 0x5785],
+    iconOffset: 104
   },
   {
     type: "HAFEN",
-    ids: [0x5655, 0x5657, 0x5659, 0x565b, 0x5253, 0x5251, 0x5663, 0x565f]
+    ids: [0x5655, 0x5657, 0x5659, 0x565b, 0x5253, 0x5251, 0x5663, 0x565f],
+    iconOffset: 144
   },
   {
     type: "STRASSE",
-    ids: [0x4fbb, 0x4fb1, 0x5461, 0x5463, 0x4fc5, 0x4fc6, 0x4fc7, 0x4fc8]
+    ids: [0x4fbb, 0x4fb1, 0x5461, 0x5463, 0x4fc5, 0x4fc6, 0x4fc7, 0x4fc8],
+    iconOffset: 96
   },
   {
     type: "DIVERS",
@@ -517,6 +523,19 @@ export const fieldIdToTranslationMap = [
       0x5169,
       0x5173,
       0x5175
-    ]
+    ],
+    iconOffset: 152
   }
 ];
+
+export function getIconId(fieldId: number) {
+  for (const each of fieldIdToTranslationMap) {
+    for (let i = 0; i < each.ids.length; i++) {
+      const id = each.ids[i];
+      if (id === fieldId) {
+        return each.iconOffset + i;
+      }
+    }
+  }
+  throw new Error(`Could not find icon offset for ${fieldId}.`);
+}

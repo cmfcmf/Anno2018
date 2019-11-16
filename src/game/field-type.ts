@@ -111,9 +111,44 @@ export enum GoodIds {
   SCHATZ
 }
 
+export type ProductionKind =
+  | "UNUSED"
+  | "ROHSTWACHS"
+  | "ROHSTOFF"
+  | "FISCHEREI"
+  | "KONTOR"
+  | "WERFT"
+  | "ROHSTERZ"
+  | "pMAUER"
+  | "WACHTURM"
+  | "MILITAR"
+  | "HANDWERK"
+  | "STEINBRUCH"
+  | "BERGWERK"
+  | "PLANTAGE"
+  | "JAGDHAUS"
+  | "WEIDETIER"
+  | "WOHNUNG"
+  | "PIRATWOHN"
+  | "KIRCHE"
+  | "KAPELLE"
+  | "WIRT"
+  | "THEATER"
+  | "BADEHAUS"
+  | "MARKT"
+  | "KLINIK"
+  | "HOCHSCHULE"
+  | "SCHULE"
+  | "BRUNNEN"
+  | "SCHLOSS"
+  | "GALGEN"
+  | "DENKMAL"
+  | "TRIUMPH";
+
 export default class FieldType {
   public readonly id: number;
   public readonly gfxId: number;
+  public readonly iconGfxId: number;
   public readonly kind: FieldKind;
   public readonly size: Point;
   public readonly rotate: number;
@@ -122,6 +157,7 @@ export default class FieldType {
   public readonly animTime: number;
   public readonly animAnz: number;
   public readonly production: {
+    kind: ProductionKind;
     good: number;
     upkeep: {
       active: number;
@@ -141,6 +177,7 @@ export default class FieldType {
   constructor(config: any) {
     this.id = config.Id;
     this.gfxId = config.Gfx;
+    this.iconGfxId = config.Baugfx;
     this.kind = config.Kind;
     this.size = new Point(config.Size.x, config.Size.y);
     this.rotate = config.Rotate;
@@ -162,6 +199,7 @@ export default class FieldType {
         productionConfig.Kosten !== undefined ? productionConfig.Kosten : 0;
     }
     this.production = {
+      kind: productionConfig.Kind,
       good: this.goodNameToId(productionConfig.Ware),
       upkeep,
       good1: this.goodNameToId(productionConfig.Rohstoff),
