@@ -31,6 +31,8 @@ import { SimulationSpeed } from "./world/world";
 import { isWithinRadius } from "./radius";
 import MenuStructure from "./menu-structure";
 import { HUD } from "./renderer/isometric/hud";
+import { Translator } from "../translation/translator";
+import SpriteLoader from "../sprite-loader";
 
 export default class GameRenderer {
   public static fieldPosToWorldPos(fieldPos: Point) {
@@ -74,6 +76,7 @@ export default class GameRenderer {
   private fields: Array<Array<Sprite | null>>;
   private readonly keyboardManager: KeyboardManager;
   private readonly hud: HUD;
+  private readonly interactionManager: interaction.InteractionManager;
 
   constructor(
     private readonly game: Game,
@@ -83,14 +86,23 @@ export default class GameRenderer {
     private readonly configLoader: ConfigLoader,
     private readonly animationRenderer: AnimationRenderer,
     private readonly menuRenderer: MenuStructure,
+    translator: Translator,
+    spriteLoader: SpriteLoader,
     private readonly myPlayerId: number
   ) {
     this.keyboardManager = new KeyboardManager();
     this.setupHotKeys();
 
     const hudContainer = new Container();
-    this.hud = new HUD(this, this.menuRenderer, hudContainer);
+    this.hud = new HUD(
+      this,
+      this.menuRenderer,
+      translator,
+      spriteLoader,
+      hudContainer
+    );
     app.stage.addChild(hudContainer);
+    this.interactionManager = this.app.renderer.plugins.interaction;
   }
 
   public async begin() {
@@ -191,6 +203,70 @@ export default class GameRenderer {
       .pipe(auditTime(200))
       .subscribe(this.cull);
 
+    this.interactionManager.on("mouseup", async () => {
+      const pos = GameRenderer.worldPosToFieldPosLand(
+        this.viewport.toWorld(this.interactionManager.mouse.global)
+      );
+      const island = Object.values(this.game.state.islands).find(each =>
+        each.positionRect.contains(pos.x, pos.y)
+      );
+      if (!island) {
+        return;
+      }
+      const localPosition = new Point(
+        pos.x - island.position.x,
+        pos.y - island.position.y
+      );
+      const producersWithConfig = this.game.state.producers
+        .filter(producer => producer.islandId === island.id)
+        .map(producer => {
+          const fieldData = this.game.getFieldAtIsland(
+            island,
+            producer.position
+          )!;
+          const fieldConfig = this.configLoader
+            .getFieldData()
+            .get(fieldData.fieldId)!;
+          return {
+            producer,
+            config: fieldConfig,
+            field: fieldData,
+            localPositionRect: new Rectangle(
+              producer.position.x,
+              producer.position.y,
+              fieldData.rotation % 2 === 0
+                ? fieldConfig.size.x
+                : fieldConfig.size.y,
+              fieldData.rotation % 2 === 0
+                ? fieldConfig.size.y
+                : fieldConfig.size.x
+            )
+          };
+        });
+      const producerWithConfig = producersWithConfig.find(each =>
+        each.localPositionRect.contains(localPosition.x, localPosition.y)
+      );
+      if (!producerWithConfig) {
+        return;
+      }
+      const city = this.game.state.cities.find(
+        city =>
+          city.islandId === island.id &&
+          city.cityIslandNum === producerWithConfig.field.islandCityNum
+      );
+      if (!city) {
+        return;
+      }
+
+      await this.hud.showProducer(
+        producerWithConfig.producer,
+        island,
+        city,
+        producerWithConfig.field,
+        producerWithConfig.config
+      );
+    });
+
     this.game.addListener("player/money", ({ playerId, money }) => {
       if (playerId === this.myPlayerId) {
         this.hud.setMoney(money);
@@ -277,6 +353,45 @@ export default class GameRenderer {
         }
       }
     });
+
+    // Karren Test
+    /*
+    const startFieldPos = new Point(239, 177);
+    const path = [
+      startFieldPos,
+      new Point(startFieldPos.x + 1, startFieldPos.y),
+      new Point(startFieldPos.x + 2, startFieldPos.y),
+      new Point(startFieldPos.x + 3, startFieldPos.y),
+      new Point(startFieldPos.x + 4, startFieldPos.y),
+      new Point(startFieldPos.x + 5, startFieldPos.y),
+      new Point(startFieldPos.x + 6, startFieldPos.y),
+      new Point(startFieldPos.x + 7, startFieldPos.y)
+    ];
+
+    const karrenAnimation = await this.animationRenderer.getAnimation("KARREN");
+    const start = GameRenderer.landFieldPosToWorldPos(startFieldPos);
+    const karrenSprite = karrenAnimation.animations[1].rotations[2].main;
+    karrenSprite.x = start.x;
+    karrenSprite.y = start.y - karrenAnimation.config.Posoffs[1];
+    this.viewport.addChild(karrenSprite);
+    karrenSprite.play();
+
+    const currentPathIdx = 0;
+    this.app.ticker.add(() => {
+      const dx = path[currentPathIdx + 1].x - path[currentPathIdx].x;
+      const dy = path[currentPathIdx + 1].y - path[currentPathIdx].y;
+
+      const px = ((dx + dy) * TILE_WIDTH) / 2;
+      const py = ((dx + dy) * TILE_HEIGHT) / 2;
+
+      karrenSprite.x +=
+        (((1 / this.app.ticker.FPS) * 1000) / karrenAnimation.config.Speed) *
+        px;
+      karrenSprite.y +=
+        (((1 / this.app.ticker.FPS) * 1000) / karrenAnimation.config.Speed) *
+        py;
+    });
+    */
   }
 
   private async renderShips() {
@@ -480,20 +595,17 @@ export default class GameRenderer {
   };
 
   private sendHoveredPositionsToHUD() {
-    const interactionManager: interaction.InteractionManager = this.app.renderer
-      .plugins.interaction;
-
     merge(
       fromEvent(this.viewport, "moved"),
       fromEvent(this.viewport, "wheel-scroll"),
-      fromEvent(interactionManager, "pointermove")
+      fromEvent(this.interactionManager, "pointermove")
     )
       .pipe(
         auditTime(100),
         startWith(null),
         map(_ =>
           GameRenderer.worldPosToFieldPosLand(
-            this.viewport.toWorld(interactionManager.mouse.global)
+            this.viewport.toWorld(this.interactionManager.mouse.global)
           )
         ),
         distinctUntilChanged(),

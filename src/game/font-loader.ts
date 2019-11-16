@@ -3,14 +3,30 @@ import FileSystem from "../filesystem";
 import { uInt8ToBase64 } from "../util/util";
 
 export default class FontLoader {
+  private static fonts = {
+    0: {
+      name: "ZEI20V",
+      size: 24
+    },
+    1: {
+      name: "ZEI14A",
+      size: 18
+    },
+    2: {
+      name: "ZEI28V",
+      size: 32
+    }
+  };
+
   constructor(private readonly fs: FileSystem) {}
 
+  public static getFontByGadId(id: number) {
+    // @ts-ignore
+    return this.fonts[id];
+  }
+
   public async load() {
-    const fonts: { [name: string]: { size: number } } = {
-      ZEI20V: { size: 24 }
-    };
-    for (const fontName of Object.keys(fonts)) {
-      // const size = fonts[fontName].size;
+    for (const { name: fontName } of Object.values(FontLoader.fonts)) {
       console.log(`Loading font ${fontName}.`);
       const font = await this.fs.openAndGetContentAsUint8Array(
         `/fonts/${fontName}/font.xml`

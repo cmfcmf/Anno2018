@@ -47,8 +47,8 @@ enum GAME {
   "game.cost",
   "game.select_target",
   "game.n_knots",
-  "game.?1",
-  "game.?2",
+  "game.n_percent",
+  "game.n_tons",
   "game.?3",
   "game.load_on_ship",
   "game.load_on_wagon",
@@ -424,3 +424,99 @@ export type TranslationKeys = keyof UnionToIntersection<
 >;
 
 export type TranslationDomain = keyof typeof translations;
+
+export const fieldIdToTranslationMap = [
+  {
+    type: "MILITAR",
+    ids: [
+      0x57f9,
+      0x539c,
+      0x539d,
+      0x57e5,
+      0x4f50,
+      0x4f51,
+      0x4f4f,
+      0x4f57,
+      0x4f59,
+      0x4f5b
+    ]
+  },
+  {
+    type: "HANDWERK",
+    ids: [
+      0x501b,
+      0x501f,
+      0x5015,
+      0x5017,
+      0x502d,
+      0x5027,
+      0x5019,
+      0x5033,
+      0x5021,
+      0x501d,
+      0x5029,
+      0x5023,
+      0x5035,
+      0x5025,
+      0x5031,
+      0x502f
+    ]
+  },
+  {
+    type: "FARM",
+    ids: [
+      0x55f3,
+      0x55f1,
+      0x5337,
+      0x53ff,
+      0x5335,
+      0x540b,
+      0x5409,
+      0x5403,
+      0x5357,
+      0x53fd,
+      0x535d,
+      0x540d,
+      0x535f,
+      0x5407,
+      0x535b,
+      0x5401,
+      0x5353,
+      0x5405,
+      0x5359
+    ]
+  },
+  {
+    type: "BERGWERK",
+    ids: [0x5787, 0x5781, 0x5783, 0x5785]
+  },
+  {
+    type: "HAFEN",
+    ids: [0x5655, 0x5657, 0x5659, 0x565b, 0x5253, 0x5251, 0x5663, 0x565f]
+  },
+  {
+    type: "STRASSE",
+    ids: [0x4fbb, 0x4fb1, 0x5461, 0x5463, 0x4fc5, 0x4fc6, 0x4fc7, 0x4fc8]
+  },
+  {
+    type: "DIVERS",
+    ids: [
+      0x507d,
+      0x5149,
+      0x5143,
+      0x5145,
+      0x5141,
+      0x5147,
+      0x5151,
+      0x5155,
+      0x5153,
+      0x514d,
+      0x514f,
+      0x514b,
+      0x515f,
+      0x5169,
+      0x5173,
+      0x5175
+    ]
+  }
+];

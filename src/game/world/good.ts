@@ -18,36 +18,39 @@ export default class Good {
     const sellingPrice = (tmp & 0b00000000000000000000001111111111) >> 0;
     const buyingPrice = (tmp & 0b00000000000011111111110000000000) >> 10;
     const action: GoodAction = (tmp & 0b11111111111100000000000000000000) >> 20;
+
     const _1 = data.read32();
+
     const wantedSellingAmount = data.read16() >> 5;
     const wantedBuyingAmount = data.read16() >> 5;
+
     const currentAmount = data.read16() >> 5;
     const _2 = data.read16();
 
     /*
-        100101100001 // iron ore
-        100101100101 // gold ore
-        010111100001 // wool
-        010111100111 // sugarcane
-        010111100011 // tobacco
-        010111101001 // cows
-        010111011111 // grain
-        000111110101 // flour
-        001000001001 // iron
-        001000000101 // swords
-        001000010001 // muskets
-        001000001111 // canons
-        010000110011 // food
-        001000001101 // tobacco
-        010111011101 // spice
-        010111100101 // cacao
-        001000000111 // wine
-        000111111011 // fabric
-        000111111001 // clothing
-        001000010101 // jewellery
-        001000000011 // tools
-        011111010001 // wood
-        001000000001 // stone
+      0b100101100001 // iron ore
+      0b100101100101 // gold ore
+      0b010111100001 // wool
+      0b010111100111 // sugarcane
+      0b010111100011 // tobacco
+      0b010111101001 // cows
+      0b010111011111 // grain
+      0b000111110101 // flour
+      0b001000001001 // iron
+      0b001000000101 // swords
+      0b001000010001 // muskets
+      0b001000001111 // canons
+      0b010000110011 // food
+      0b001000001101 // tobacco
+      0b010111011101 // spice
+      0b010111100101 // cacao
+      0b001000000111 // wine
+      0b000111111011 // fabric
+      0b000111111001 // clothing
+      0b001000010101 // jewellery
+      0b001000000011 // tools
+      0b011111010001 // wood
+      0b001000000001 // stone
          */
     const goodId = data.read16();
     const _3 = data.read16();

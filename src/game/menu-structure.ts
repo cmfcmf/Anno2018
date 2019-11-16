@@ -1,17 +1,20 @@
-import { BaseTexture, Container, Sprite } from "pixi.js";
+import { Container, Sprite } from "pixi.js";
 import { utils } from "pixi.js";
 import FileSystem from "../filesystem";
 import { textureFromUint8ArrayMP4 } from "../util/pixi";
 import GADRenderer from "./gad-renderer";
 import Missions from "./menu/missions";
 import MusicPlayer from "./music-player";
+import { Translator } from "../translation/translator";
 
-type Callback = (stage: Container) => void;
+type Callback = (container: Container) => void;
+type BtnCallback = (container: Container, active: boolean) => void;
 
 export interface ScreenConfig {
   onLoad: Callback;
-  buttons: Callback[] | Record<number, Callback>;
+  buttons: BtnCallback[] | Record<number, BtnCallback>;
   texts: Record<number, string>;
+  ignore: number[];
 }
 
 export default class MenuStructure extends utils.EventEmitter {
@@ -44,15 +47,17 @@ export default class MenuStructure extends utils.EventEmitter {
         },
         () => console.log("Exit")
       ],
-      texts: []
+      texts: [],
+      ignore: []
     },
-    menu_missions: new Missions(this.fs, this),
+    menu_missions: new Missions(this.fs, this, this.translator),
     menu_loading: {
       onLoad: () => {
         // Nothing to do
       },
       buttons: [],
-      texts: []
+      texts: [],
+      ignore: []
     },
     menu_mission_details: {
       onLoad: () => {
@@ -72,14 +77,16 @@ export default class MenuStructure extends utils.EventEmitter {
         () => console.log("Mission Description down"),
         () => console.log("Mission Description Slider")
       ],
-      texts: []
+      texts: [],
+      ignore: []
     }
   };
 
   constructor(
     private readonly fs: FileSystem,
     private readonly gadRenderer: GADRenderer,
-    private readonly musicPlayer: MusicPlayer
+    private readonly musicPlayer: MusicPlayer,
+    private readonly translator: Translator
   ) {
     super();
   }
@@ -99,7 +106,8 @@ export default class MenuStructure extends utils.EventEmitter {
           /* Nothing to do */
         },
         buttons: [],
-        texts: {}
+        texts: {},
+        ignore: []
       };
     this.gadRenderer.clear(container);
     await this.gadRenderer.render(container, data, config);

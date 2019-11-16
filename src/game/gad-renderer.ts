@@ -11,6 +11,7 @@ import SpriteLoader from "../sprite-loader";
 import assert from "../util/assert";
 import { ScreenConfig } from "./menu-structure";
 import SliderSprite from "./ui/slider-sprite";
+import FontLoader from "./font-loader";
 
 interface RadioButtonData {
   sprite: Sprite;
@@ -49,10 +50,14 @@ export default class GADRenderer {
     for (const num of Object.keys(gadgets)) {
       const gadget = gadgets[num];
       const id = gadget.Id;
-      const blockNr = gadget.Blocknr;
+      const blockNr: string = gadget.Blocknr;
       const gfx = gadget.Gfxnr;
       const kind: string = gadget.Kind;
-      if (kind === "GAD_UNUSED" || kind === "GAD_NIX") {
+      if (
+        kind === "GAD_UNUSED" ||
+        kind === "GAD_NIX" ||
+        config.ignore.includes(id)
+      ) {
         continue;
       }
       const position = new Point(gadget.Pos[0], gadget.Pos[1]);
@@ -67,6 +72,7 @@ export default class GADRenderer {
           ? new Point(gadget.Size.x, gadget.Size.y)
           : null;
       const selectable = gadget.Noselflg === undefined || gadget.Noselflg === 0;
+      const isToggleButton = gadget.Flipflg === 1;
       const pressOff = gadget.Pressoff;
       const isRadioButton = gadget.Reiheflg === 1;
       if (isRadioButton) {
@@ -117,7 +123,14 @@ export default class GADRenderer {
             }
 
             sprite.on("mousedown", () => {
-              sprite.texture = activeTexture;
+              if (isToggleButton) {
+                sprite.texture =
+                  sprite.texture === defaultTexture
+                    ? activeTexture
+                    : defaultTexture;
+              } else {
+                sprite.texture = activeTexture;
+              }
               if (isRadioButton) {
                 // If this IS a radio button, make all other radio buttons inactive.
                 for (const button of radioButtons) {
@@ -126,11 +139,14 @@ export default class GADRenderer {
                   }
                 }
               }
-              callback(container);
+              callback(
+                container,
+                isToggleButton ? sprite.texture === activeTexture : true
+              );
             });
 
-            if (!isRadioButton) {
-              // If this is NOT a radio button, go back to normal state on mouse up.
+            if (!isRadioButton && !isToggleButton) {
+              // If this is NOT a radio button or toggle button, go back to normal state on mouse up.
               sprite.on("mouseup", () => (sprite.texture = defaultTexture));
             }
 
@@ -143,14 +159,19 @@ export default class GADRenderer {
         case "GAD_TEXTZ":
         case "GAD_TEXTR": {
           // case "GAD_TEXTFL":
-          const fontSize = 24;
+          const font = FontLoader.getFontByGadId(
+            blockNr === undefined ? 0 : parseInt(blockNr, 10)
+          );
+
           const text = new BitmapText(config.texts[id] || "???", {
-            font: { name: "ZEI20V", size: fontSize }
+            font: { name: font.name, size: font.size }
           });
           text.position.set(position.x, position.y);
-          text.pivot.set(0, fontSize);
+          text.pivot.set(0, font.size);
           text.name = `menu-${id}`;
-          text.hitArea = new Rectangle(0, 0, size!.x, size!.y);
+          if (size) {
+            text.hitArea = new Rectangle(0, 0, size.x, size.y);
+          }
           if (kind.endsWith("Z")) {
             // Center text
             text.anchor = new Point(0.5, 0);

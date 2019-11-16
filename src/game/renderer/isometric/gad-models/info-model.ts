@@ -1,5 +1,5 @@
 import { ScreenConfig } from "../../../menu-structure";
-import t from "../../../../translation/translator";
+import { Translator } from "../../../../translation/translator";
 import { Container, BitmapText } from "pixi.js";
 import { HUD } from "../hud";
 
@@ -11,7 +11,10 @@ const DIPLOMACY_BTN_ID = 57031;
 export class InfoModel implements ScreenConfig {
   private container: Container;
 
-  constructor(private readonly hud: HUD) {}
+  constructor(
+    private readonly hud: HUD,
+    private readonly translator: Translator
+  ) {}
 
   public onLoad = (container: PIXI.Container) => {
     this.container = container;
@@ -27,19 +30,25 @@ export class InfoModel implements ScreenConfig {
   };
 
   public texts = {
-    57002: t("game.player_status"),
-    57005: t("game.inhabitants"),
-    57008: t("game.tax_revenue"),
-    57011: t("game.operating_cost"),
-    57014: t("game.military_budget"),
-    57017: t("game.sales_revenue"),
-    57020: t("game.purchase_cost"),
-    57023: t("game.balance_sheet"),
-    57026: t("game.score")
+    57002: this.translator.translate("game.player_status"),
+    57005: this.translator.translate("game.inhabitants"),
+    57008: this.translator.translate("game.tax_revenue"),
+    57011: this.translator.translate("game.operating_cost"),
+    57014: this.translator.translate("game.military_budget"),
+    57017: this.translator.translate("game.sales_revenue"),
+    57020: this.translator.translate("game.purchase_cost"),
+    57023: this.translator.translate("game.balance_sheet"),
+    57026: this.translator.translate("game.score")
   };
+
+  public ignore = [];
 
   public setOperatingCosts(costs: number) {
     const text = this.container.getChildByName("menu-57012") as BitmapText;
+    if (!text) {
+      // Do nothing if this gui is currently invisible.
+      return;
+    }
     text.text = costs.toString();
   }
 }

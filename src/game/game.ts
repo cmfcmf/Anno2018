@@ -11,6 +11,7 @@ import { Ship } from "./world/ship";
 import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
+import { GoodIds } from "./field-type";
 
 interface MapById<T> {
   [k: string]: T;
@@ -210,7 +211,7 @@ export default class Game extends EventEmitter {
         if (
           producer.firstGoodStock !== 0 &&
           !producer.isProducing() &&
-          fieldConfig.production.good !== "NOWARE"
+          fieldConfig.production.good !== GoodIds.NOWARE
         ) {
           // check_needs_good_1
           if (fieldConfig.production.amount1 === 0) {

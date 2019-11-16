@@ -1,9 +1,9 @@
 import { BitmapText, Container, Sprite } from "pixi.js";
 import FileSystem from "../../filesystem";
 import GAMParser from "../../parsers/GAM/gam-parser";
-import t from "../../translation/translator";
 import assert from "../../util/assert";
 import MenuStructure, { ScreenConfig } from "../menu-structure";
+import { Translator } from "../../translation/translator";
 
 export default class Missions implements ScreenConfig {
   public buttons = [
@@ -29,6 +29,7 @@ export default class Missions implements ScreenConfig {
   ];
 
   public texts = [];
+  public ignore = [];
 
   private readonly ROWS = 14;
 
@@ -46,7 +47,8 @@ export default class Missions implements ScreenConfig {
 
   constructor(
     private readonly fs: FileSystem,
-    private readonly menuStructure: MenuStructure
+    private readonly menuStructure: MenuStructure,
+    private readonly translator: Translator
   ) {
     this.gamParser = new GAMParser(null);
   }
@@ -141,7 +143,9 @@ export default class Missions implements ScreenConfig {
   private async getNewGameLines() {
     const missions = await this.loadMissions();
 
-    this.newGameLines.push({ name: t("menu.divider.orginal_missions") });
+    this.newGameLines.push({
+      name: this.translator.translate("menu.divider.orginal_missions")
+    });
 
     missions
       .filter(mission => mission.missionNum !== -1)
@@ -152,9 +156,13 @@ export default class Missions implements ScreenConfig {
         });
       });
 
-    this.newGameLines.push({ name: t("menu.divider.missions") });
+    this.newGameLines.push({
+      name: this.translator.translate("menu.divider.missions")
+    });
 
-    this.newGameLines.push({ name: t("menu.divider.new_missions") });
+    this.newGameLines.push({
+      name: this.translator.translate("menu.divider.new_missions")
+    });
 
     missions
       .filter(mission => mission.missionNum === -1)
@@ -165,7 +173,9 @@ export default class Missions implements ScreenConfig {
         });
       });
 
-    this.newGameLines.push({ name: t("menu.divider.custom_missions") });
+    this.newGameLines.push({
+      name: this.translator.translate("menu.divider.custom_missions")
+    });
     const customMissions = await this.fs.ls("/missions-custom", ".szs");
     customMissions.forEach(mission => {
       this.newGameLines.push({

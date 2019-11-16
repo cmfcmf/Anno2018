@@ -1,4 +1,4 @@
-import { Container, Point, Text } from "pixi.js";
+import { Container, Point, Text, Sprite } from "pixi.js";
 import MenuStructure from "../../menu-structure";
 import { SimulationSpeed } from "../../world/world";
 import { Island } from "../../world/island";
@@ -6,7 +6,12 @@ import { InfoModel } from "./gad-models/info-model";
 import { CtrlModel } from "./gad-models/ctrl-model";
 import GameRenderer from "../../game-renderer";
 import { assertNever } from "../../../util/util";
-import t from "../../../translation/translator";
+import { Producer } from "../../world/producer";
+import { City } from "../../world/city";
+import Field from "../../world/field";
+import FieldType from "../../field-type";
+import { Translator } from "../../../translation/translator";
+import SpriteLoader from "../../../sprite-loader";
 
 const SIDEBAR_WIDTH = 271;
 const BOTTOMBAR_HEIGHT = 35;
@@ -42,12 +47,16 @@ export class HUD {
   private infoModel: InfoModel;
   private ctrlModel: CtrlModel;
 
+  private readonly WARE_ICON_OFFSET = 192;
+
   constructor(
     gameRenderer: GameRenderer,
     private readonly menuRenderer: MenuStructure,
+    private readonly translator: Translator,
+    private readonly spriteLoader: SpriteLoader,
     container: Container
   ) {
-    this.infoModel = new InfoModel(this);
+    this.infoModel = new InfoModel(this, translator);
     this.ctrlModel = new CtrlModel(gameRenderer, this);
 
     // Debug area
@@ -154,11 +163,12 @@ export class HUD {
             onLoad: () => {},
             buttons: {},
             texts: {
-              47002: t("game.settings"),
+              47002: this.translator.translate("game.settings"),
               47031: "640x480",
               47032: "800x600",
               47033: "1024x768"
-            }
+            },
+            ignore: []
           }
         );
         break;
@@ -166,6 +176,104 @@ export class HUD {
         assertNever(tab);
     }
   };
+
+  public async showProducer(
+    producer: Producer,
+    island: Island,
+    city: City,
+    field: Field,
+    fieldType: FieldType
+  ) {
+    const usesTwoInputGoods = fieldType.production.good2;
+
+    const texts: Record<number, string> = {
+      37002: city.name,
+      37003: this.translator.translate("game.workload"),
+      37004: this.translator
+        .translate("game.n_percent")
+        .replace("%d", "???")
+        .replace("%%", "%"),
+      37005: this.translator.translate("game.operating_cost"),
+      37006: producer.isActive()
+        ? fieldType.production.upkeep.active.toString()
+        : fieldType.production.upkeep.inactive.toString(),
+      37008: this.translator.getFieldName(field.fieldId)
+    };
+    const ignore: number[] = [];
+    if (usesTwoInputGoods) {
+      texts[37032] = this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.secondGoodStock >> 5).toString());
+      texts[37036] = this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.firstGoodStock >> 5).toString());
+      texts[37040] = this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.stock >> 5).toString());
+      ignore.push(...[37021, 37022, 37023, 37024, 37025, 37026, 37027]);
+    } else {
+      texts[37022] = this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.firstGoodStock >> 5).toString());
+      texts[37026] = this.translator
+        .translate("game.n_tons")
+        .replace("%d", (producer.stock >> 5).toString());
+      ignore.push(
+        ...[
+          37031,
+          37032,
+          37033,
+          37034,
+          37035,
+          37036,
+          37037,
+          37038,
+          37039,
+          37040,
+          37041
+        ]
+      );
+    }
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "PROD.GAD", {
+      buttons: {
+        37009: (_, pauseProduction) => producer.setActive(!pauseProduction),
+        37010: (_, dontTakeGoods) =>
+          producer.setGoodsAllowedForPickup(!dontTakeGoods)
+      },
+      texts,
+      ignore,
+      onLoad: async container => {
+        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
+        if (usesTwoInputGoods) {
+          const good1Sprite = container.getChildByName("menu-37035") as Sprite;
+          good1Sprite.texture = textures.get(
+            this.WARE_ICON_OFFSET + fieldType.production.good2
+          )!;
+
+          const good2Sprite = container.getChildByName("menu-37031") as Sprite;
+          good2Sprite.texture = textures.get(
+            this.WARE_ICON_OFFSET + fieldType.production.good1
+          )!;
+
+          const goodSprite = container.getChildByName("menu-37039") as Sprite;
+          goodSprite.texture = textures.get(
+            this.WARE_ICON_OFFSET + fieldType.production.good
+          )!;
+        } else {
+          const good1Sprite = container.getChildByName("menu-37021") as Sprite;
+          good1Sprite.texture = textures.get(
+            this.WARE_ICON_OFFSET + fieldType.production.good1
+          )!;
+
+          const goodSprite = container.getChildByName("menu-37025") as Sprite;
+          goodSprite.texture = textures.get(
+            this.WARE_ICON_OFFSET + fieldType.production.good
+          )!;
+        }
+      }
+    });
+  }
 
   public setHoveredPosition(pos: Point, island?: Island) {
     this.coordinates.text = `x: ${pos.x}, y: ${pos.y}`;

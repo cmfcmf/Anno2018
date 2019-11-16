@@ -1,6 +1,5 @@
 import AsyncLock from "async-lock";
 import { AnimatedSprite, Point, Sprite, Texture } from "pixi.js";
-import FileSystem from "../filesystem";
 import SpriteLoader from "../sprite-loader";
 import { make2DArray } from "../util/util";
 import AnimationRenderer from "./animation-renderer";

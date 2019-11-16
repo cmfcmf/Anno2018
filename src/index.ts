@@ -23,9 +23,9 @@ import { Block } from "./parsers/GAM/block";
 import GAMParser from "./parsers/GAM/gam-parser";
 import IslandLoader from "./parsers/GAM/island-loader";
 import SpriteLoader from "./sprite-loader";
-import { loadTranslations } from "./translation/translator";
 import UploadHandler from "./upload";
 import { getQueryParameter } from "./util/util";
+import { Translator } from "./translation/translator";
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
@@ -95,7 +95,8 @@ import { getQueryParameter } from "./util/util";
   });
   app.stage.addChild(menuViewport);
 
-  await loadTranslations(fs);
+  const translator = new Translator(fs);
+  await translator.loadTranslations();
 
   const fontLoader = new FontLoader(fs);
   await fontLoader.load();
@@ -124,7 +125,12 @@ import { getQueryParameter } from "./util/util";
   );
 
   const gadRenderer = new GADRenderer(spriteLoader);
-  const menuStructure = new MenuStructure(fs, gadRenderer, musicPlayer);
+  const menuStructure = new MenuStructure(
+    fs,
+    gadRenderer,
+    musicPlayer,
+    translator
+  );
   const gameLoader = new GameLoader(
     fs,
     gamParser,
@@ -134,7 +140,9 @@ import { getQueryParameter } from "./util/util";
     configLoader,
     musicPlayer,
     animationRenderer,
-    menuStructure
+    menuStructure,
+    translator,
+    spriteLoader
   );
 
   const queryGameName = getQueryParameter("load");

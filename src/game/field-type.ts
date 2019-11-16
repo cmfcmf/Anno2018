@@ -48,6 +48,69 @@ export type BuildingFieldType =
 
 export type FieldKind = LandFieldType | BuildingFieldType;
 
+export enum GoodIds {
+  NOWARE,
+  ALLWARE,
+  EISENERZ,
+  GOLD,
+  WOLLE,
+  ZUCKER,
+  TABAK,
+  FLEISCH,
+  KORN,
+  MEHL,
+  EISEN,
+  SCHWERTER,
+  MUSKETEN,
+  KANONEN,
+  NAHRUNG,
+  TABAKWAREN,
+  GEWUERZE,
+  KAKAO,
+  ALKOHOL,
+  STOFFE,
+  KLEIDUNG,
+  SCHMUCK,
+  WERKZEUG,
+  HOLZ,
+  ZIEGEL,
+  wSOLDAT1,
+  wSOLDAT2,
+  wSOLDAT3,
+  wSOLDAT4,
+  wKAVALERIE1,
+  wKAVALERIE2,
+  wKAVALERIE3,
+  wKAVALERIE4,
+  wMUSKETIER1,
+  wMUSKETIER2,
+  wMUSKETIER3,
+  wMUSKETIER4,
+  wKANONIER1,
+  wKANONIER2,
+  wKANONIER3,
+  wKANONIER4,
+  // No icons for these
+  wPIONIER1,
+  wPIONIER2,
+  wPIONIER3,
+  wPIONIER4,
+  GETREIDE,
+  TABAKBAUM,
+  GEWUERZBAUM,
+  ZUCKERROHR,
+  BAUMWOLLE,
+  WEINTRAUBEN,
+  KAKAOBAUM,
+  GRAS,
+  BAUM,
+  STEINE,
+  ERZE,
+  WILD,
+  FISCHE,
+  SCHATZ
+}
+
 export default class FieldType {
   public readonly id: number;
   public readonly gfxId: number;
@@ -59,13 +122,13 @@ export default class FieldType {
   public readonly animTime: number;
   public readonly animAnz: number;
   public readonly production: {
-    good: string;
+    good: number;
     upkeep: {
       active: number;
       inactive: number;
     };
-    good1: string;
-    good2: string;
+    good1: number;
+    good2: number;
     amount: number;
     amount1: number;
     amount2: number;
@@ -99,10 +162,10 @@ export default class FieldType {
         productionConfig.Kosten !== undefined ? productionConfig.Kosten : 0;
     }
     this.production = {
-      good: productionConfig.Ware,
+      good: this.goodNameToId(productionConfig.Ware),
       upkeep,
-      good1: productionConfig.Rohstoff,
-      good2: productionConfig.Workstoff,
+      good1: this.goodNameToId(productionConfig.Rohstoff),
+      good2: this.goodNameToId(productionConfig.Workstoff),
       amount: productionConfig.Prodmenge,
       amount1: productionConfig.Rohmenge,
       amount2:
@@ -122,6 +185,18 @@ export default class FieldType {
         ? [productionConfig.Rauchfignr]
         : []
     };
+  }
+
+  private goodNameToId(name: string | undefined): GoodIds {
+    if (name === undefined) {
+      return GoodIds.NOWARE;
+    }
+    // @ts-ignore
+    const id = GoodIds[name];
+    if (id === undefined) {
+      throw new Error(`Invalid good name ${name}.`);
+    }
+    return id;
   }
 
   public async getSprites(

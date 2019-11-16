@@ -31,4 +31,6 @@ export class CtrlModel implements ScreenConfig {
   };
 
   public texts = {};
+
+  public ignore = [];
 }

@@ -10,6 +10,8 @@ import MusicPlayer from "./game/music-player";
 import { SimulationSpeed } from "./game/world/world";
 import GAMParser from "./parsers/GAM/gam-parser";
 import MenuStructure from "./game/menu-structure";
+import { Translator } from "./translation/translator";
+import SpriteLoader from "./sprite-loader";
 
 export default class GameLoader {
   constructor(
@@ -21,7 +23,9 @@ export default class GameLoader {
     private readonly configLoader: ConfigLoader,
     private readonly musicPlayer: MusicPlayer,
     private readonly animationRenderer: AnimationRenderer,
-    private readonly menuStructure: MenuStructure
+    private readonly menuStructure: MenuStructure,
+    private readonly translator: Translator,
+    private readonly spriteLoader: SpriteLoader
   ) {}
 
   public async loadByName(gameName: string) {
@@ -53,6 +57,8 @@ export default class GameLoader {
       this.configLoader,
       this.animationRenderer,
       this.menuStructure,
+      this.translator,
+      this.spriteLoader,
       myPlayerId
     );
 
