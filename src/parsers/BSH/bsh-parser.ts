@@ -1,11 +1,12 @@
 import * as log from "loglevel";
-import { SmartBuffer, SmartBufferOptions } from "smart-buffer";
+import { SmartBuffer } from "smart-buffer";
 import FileSystem from "../../filesystem";
 import assert from "../../util/assert";
 import Stream from "../stream";
 import BinPacker from "./bin-packer";
 import colorPalette, { colorsToIdx } from "./bsh-color-palette";
 import BSHImage from "./bsh-image";
+import { assertNever } from "../../util/util";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const UPNG = require("upng-js/UPNG.js");
@@ -191,7 +192,7 @@ export default class BSHParser {
    * project by Benedikt Freisen released under GPLv2+.
    * https://github.com/roybaer/mdcii-engine
    */
-  private async decode(data: Stream, extension: string) {
+  private async decode(data: Stream, extension: "ZEI" | "BSH") {
     const fileType = data.readString(16);
     assert(fileType === extension);
 
@@ -209,7 +210,7 @@ export default class BSHParser {
 
     for (let i = 0; i < numImages; i++) {
       data.seek(imageOffsets[i] + this.HEADER_SIZE);
-      const bshImage = this.decodeImage(data);
+      const bshImage = this.decodeImage(data, extension);
       if (bshImage !== null) {
         images.push(bshImage);
       }
@@ -218,7 +219,7 @@ export default class BSHParser {
     return images;
   }
 
-  private decodeImage(data: Stream): BSHImage | null {
+  private decodeImage(data: Stream, extension: "ZEI" | "BSH"): BSHImage | null {
     const width = data.read32();
     const height = data.read32();
     const type = data.read32();
@@ -252,11 +253,21 @@ export default class BSHParser {
         // How many pixels are colored
         const coloredPixels = data.read8();
         for (let i = 0; i < coloredPixels; i++) {
-          const idx = data.read8() * 3;
+          const idx = data.read8();
 
-          pixels[targetIdx++] = colorPalette[idx];
-          pixels[targetIdx++] = colorPalette[idx + 1];
-          pixels[targetIdx++] = colorPalette[idx + 2];
+          if (extension === "BSH") {
+            pixels[targetIdx++] = colorPalette[idx * 3];
+            pixels[targetIdx++] = colorPalette[idx * 3 + 1];
+            pixels[targetIdx++] = colorPalette[idx * 3 + 2];
+          } else if (extension === "ZEI") {
+            assert(idx === 1 || idx === 7);
+            const color = idx === 1 ? 0xff : 0x00;
+            pixels[targetIdx++] = color;
+            pixels[targetIdx++] = color;
+            pixels[targetIdx++] = color;
+          } else {
+            assertNever(extension);
+          }
           pixels[targetIdx++] = 0xff;
         }
       }
