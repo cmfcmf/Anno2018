@@ -50,4 +50,21 @@ export class Translator {
 
     throw new Error(`Could not find translation for field id ${fieldId}.`);
   }
+
+  public populationLevelName(level: number) {
+    switch (level) {
+      case 0:
+        return this.translate("game.pioneers");
+      case 1:
+        return this.translate("game.settlers");
+      case 2:
+        return this.translate("game.citizens");
+      case 3:
+        return this.translate("game.merchants");
+      case 4:
+        return this.translate("game.aristocrats");
+      default:
+        throw new Error(`Unknown inhabitant level ${level}.`);
+    }
+  }
 }

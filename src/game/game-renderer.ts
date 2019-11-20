@@ -33,6 +33,9 @@ import MenuStructure from "./menu-structure";
 import { HUD } from "./renderer/isometric/hud";
 import { Translator } from "../translation/translator";
 import SpriteLoader from "../sprite-loader";
+import FieldType from "./field-type";
+import Field from "./world/field";
+import { City } from "./world/city";
 
 export default class GameRenderer {
   public static fieldPosToWorldPos(fieldPos: Point) {
@@ -217,54 +220,36 @@ export default class GameRenderer {
         pos.x - island.position.x,
         pos.y - island.position.y
       );
-      const producersWithConfig = this.game.state.producers
-        .filter(producer => producer.islandId === island.id)
-        .map(producer => {
-          const fieldData = this.game.getFieldAtIsland(
-            island,
-            producer.position
-          )!;
-          const fieldConfig = this.configLoader
-            .getFieldData()
-            .get(fieldData.fieldId)!;
-          return {
-            producer,
-            config: fieldConfig,
-            field: fieldData,
-            localPositionRect: new Rectangle(
-              producer.position.x,
-              producer.position.y,
-              fieldData.rotation % 2 === 0
-                ? fieldConfig.size.x
-                : fieldConfig.size.y,
-              fieldData.rotation % 2 === 0
-                ? fieldConfig.size.y
-                : fieldConfig.size.x
-            )
-          };
-        });
-      const producerWithConfig = producersWithConfig.find(each =>
-        each.localPositionRect.contains(localPosition.x, localPosition.y)
+
+      const producerResult = this.findBuilding(
+        this.game.state.producers,
+        island,
+        localPosition
       );
-      if (!producerWithConfig) {
-        return;
-      }
-      const city = this.game.state.cities.find(
-        city =>
-          city.islandId === island.id &&
-          city.cityIslandNum === producerWithConfig.field.islandCityNum
-      );
-      if (!city) {
-        return;
+      if (producerResult) {
+        return await this.hud.showProducer(
+          producerResult.building,
+          island,
+          producerResult.city,
+          producerResult.field,
+          producerResult.config
+        );
       }
 
-      await this.hud.showProducer(
-        producerWithConfig.producer,
+      const houseResult = this.findBuilding(
+        this.game.state.houses,
         island,
-        city,
-        producerWithConfig.field,
-        producerWithConfig.config
+        localPosition
       );
+      if (houseResult) {
+        return await this.hud.showHouse(
+          houseResult.building,
+          island,
+          houseResult.city,
+          houseResult.field,
+          houseResult.config
+        );
+      }
     });
 
     this.game.addListener("player/money", ({ playerId, money }) => {
@@ -392,6 +377,37 @@ export default class GameRenderer {
         py;
     });
     */
+  }
+
+  private findBuilding<T extends { islandId: number; position: Point }>(
+    buildings: T[],
+    island: Island,
+    localPosition: Point
+  ): { building: T; field: Field; config: FieldType; city: City } | undefined {
+    for (const building of buildings) {
+      if (building.islandId !== island.id) {
+        continue;
+      }
+      const field = this.game.getFieldAtIsland(island, building.position)!;
+      const config = this.configLoader.getFieldData().get(field.fieldId)!;
+      const localPositionRect = new Rectangle(
+        building.position.x,
+        building.position.y,
+        field.rotation % 2 === 0 ? config.size.x : config.size.y,
+        field.rotation % 2 === 0 ? config.size.y : config.size.x
+      );
+      if (localPositionRect.contains(localPosition.x, localPosition.y)) {
+        const city = this.game.state.cities.find(
+          city =>
+            city.islandId === island.id &&
+            city.cityIslandNum === field.islandCityNum
+        );
+        if (!city) {
+          throw new Error("City must exist");
+        }
+        return { building, field, config, city };
+      }
+    }
   }
 
   private async renderShips() {

@@ -12,6 +12,7 @@ import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
 import { GoodIds } from "./field-type";
+import { House } from "./world/house";
 
 interface MapById<T> {
   [k: string]: T;
@@ -63,6 +64,7 @@ export interface GameState {
   kontors: Kontor[];
   producers: Producer[];
   ships: Ship[];
+  houses: House[];
   timers: Timers & { simulationSpeed: SimulationSpeed };
 }
 
@@ -80,6 +82,7 @@ export default class Game extends EventEmitter {
       kontors: world.kontors,
       producers: world.producers,
       ships: world.ships,
+      houses: world.houses,
       timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused }
     };
   }

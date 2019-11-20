@@ -87,7 +87,7 @@ export default class GADRenderer {
       switch (kind) {
         case "GAD_GFX": {
           const textures = await this.spriteLoader.getTextures(
-            `TOOLS/${blockNumMapping.get(blockNr)}`
+            `TOOLS/${blockNumMapping.get(parseInt(blockNr, 10))}`
           );
 
           const defaultTexture = textures.get(gfx)!;
@@ -102,8 +102,8 @@ export default class GADRenderer {
           if (isSlider) {
             (sprite as SliderSprite).setSliderData(
               size!.y,
-              sliderOffset[1],
-              sliderSize[1]
+              sliderOffset ? sliderOffset[1] : 0,
+              sliderSize ? sliderSize[1] : 0
             );
           }
 

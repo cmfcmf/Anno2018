@@ -13,6 +13,8 @@ import FieldType from "../../field-type";
 import { Translator } from "../../../translation/translator";
 import SpriteLoader from "../../../sprite-loader";
 import { getIconId } from "../../../translation/translations";
+import { House } from "../../world/house";
+import assert from "../../../util/assert";
 
 const SIDEBAR_WIDTH = 271;
 const BOTTOMBAR_HEIGHT = 35;
@@ -213,36 +215,62 @@ export class HUD {
     }
   }
 
+  public async showHouse(
+    house: House,
+    island: Island,
+    city: City,
+    field: Field,
+    config: FieldType
+  ) {
+    assert(config.production.kind === "WOHNUNG");
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "SIEDLER.GAD", {
+      texts: {
+        36002: city.name,
+        36012: "???",
+        36011: this.translator
+          .translate("game.tax")
+          .replace("%d", (city.taxes[house.inhabitantLevel] >> 2).toString())
+          .replace("%%", "%"),
+        36014: this.translator.populationLevelName(house.inhabitantLevel),
+        36013: city.inhabitants[house.inhabitantLevel].toString(),
+
+        36019: this.translator.translate("game.food")
+      },
+      buttons: {},
+      ignore: [],
+      onLoad: () => {}
+    });
+  }
+
   private async showProducerFarm(
     producer: Producer,
     city: City,
     field: Field,
     fieldType: FieldType
   ) {
-    const texts: Record<number, string> = {
-      41002: city.name,
-      41003: this.translator.translate("game.workload"),
-      41004: this.translator
-        .translate("game.n_percent")
-        .replace("%d", "???")
-        .replace("%%", "%"),
-      41005: this.translator.translate("game.operating_cost"),
-      41006: producer.isActive()
-        ? fieldType.production.upkeep.active.toString()
-        : fieldType.production.upkeep.inactive.toString(),
-      41008: this.translator.getFieldName(field.fieldId),
-      41022: this.translator
-        .translate("game.n_tons")
-        .replace("%d", (producer.stock >> 5).toString())
-    };
-
     await this.menuRenderer.renderScreen(this.sidebarDetails, "PLANTAGE.GAD", {
       buttons: {
         41009: (_, pauseProduction) => producer.setActive(!pauseProduction),
         41010: (_, dontTakeGoods) =>
           producer.setGoodsAllowedForPickup(!dontTakeGoods)
       },
-      texts,
+      texts: {
+        41002: city.name,
+        41003: this.translator.translate("game.workload"),
+        41004: this.translator
+          .translate("game.n_percent")
+          .replace("%d", "???")
+          .replace("%%", "%"),
+        41005: this.translator.translate("game.operating_cost"),
+        41006: producer.isActive()
+          ? fieldType.production.upkeep.active.toString()
+          : fieldType.production.upkeep.inactive.toString(),
+        41008: this.translator.getFieldName(field.fieldId),
+        41022: this.translator
+          .translate("game.n_tons")
+          .replace("%d", (producer.stock >> 5).toString())
+      },
       ignore: [],
       onLoad: async container => {
         const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
@@ -428,12 +456,12 @@ export class HUD {
         if (usesTwoInputGoods) {
           const good1Sprite = container.getChildByName("menu-37035") as Sprite;
           good1Sprite.texture = textures.get(
-            this.WARE_ICON_OFFSET + fieldType.production.good2
+            this.WARE_ICON_OFFSET + fieldType.production.good1
           )!;
 
           const good2Sprite = container.getChildByName("menu-37031") as Sprite;
           good2Sprite.texture = textures.get(
-            this.WARE_ICON_OFFSET + fieldType.production.good1
+            this.WARE_ICON_OFFSET + fieldType.production.good2
           )!;
 
           const goodSprite = container.getChildByName("menu-37039") as Sprite;

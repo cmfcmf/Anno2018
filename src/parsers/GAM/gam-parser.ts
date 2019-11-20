@@ -22,6 +22,7 @@ import Stream from "../stream";
 import { Block, IslandBlock } from "./block";
 import IslandLoader from "./island-loader";
 import WorldGenerator from "./world-generator";
+import { House } from "../../game/world/house";
 
 export default class GAMParser {
   private worldGenerator: WorldGenerator | null;
@@ -95,8 +96,9 @@ export default class GAMParser {
     const castles = this.handleBlock(blocks, "MILITAR", castleFromSaveGame);
     const cities = this.handleBlock(blocks, "STADT4", cityFromSaveGame);
     const producers = this.handleBlock(blocks, "PRODLIST2", Producer.load);
+    const houses = this.handleBlock(blocks, "SIEDLER", House.load);
 
-    // TODO: HIRSCH2, WERFT, SIEDLER, ROHWACHS2, MARKT2, TURM, WIFF
+    // TODO: HIRSCH2, WERFT, ROHWACHS2, MARKT2, TURM, WIFF
     let trader = null;
     if (blocks.has("HANDLER") && blocks.get("HANDLER")![0].length > 0) {
       trader = traderFromSaveGame(blocks.get("HANDLER")![0].data);
@@ -124,7 +126,8 @@ export default class GAMParser {
       cities,
       trader,
       timers,
-      producers
+      producers,
+      houses
     );
 
     return { world, worldGenerationSettings };

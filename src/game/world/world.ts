@@ -9,6 +9,7 @@ import { Soldier } from "./soldier";
 import { Task } from "./task";
 import { Timers } from "./timers";
 import { Trader } from "./trader";
+import { House } from "./house";
 
 export type Rotation4 = 0 | 1 | 2 | 3;
 
@@ -36,7 +37,8 @@ export default class World {
     public readonly cities: City[],
     public readonly trader: Trader | null,
     public readonly timers: Timers,
-    public readonly producers: Producer[]
+    public readonly producers: Producer[],
+    public readonly houses: House[]
   ) {
     console.log("Tasks");
     console.table(tasks);
@@ -59,5 +61,7 @@ export default class World {
     console.log("Timers", timers);
     console.log("Producers");
     console.table(producers);
+    console.log("Houses");
+    console.table(houses);
   }
 }
