@@ -5,6 +5,8 @@
  */
 
 import Stream from "../../parsers/stream";
+import { GoodIds } from "../field-type";
+import assert from "../../util/assert";
 
 export enum GoodAction {
   None = 0,
@@ -13,11 +15,12 @@ export enum GoodAction {
 }
 
 export default class Good {
-  public static fromSaveGame(data: Stream) {
+  public static fromSaveGame(data: Stream, overwriteGoodId?: GoodIds) {
     const tmp = data.read32();
     const sellingPrice = (tmp & 0b00000000000000000000001111111111) >> 0;
     const buyingPrice = (tmp & 0b00000000000011111111110000000000) >> 10;
     const action: GoodAction = (tmp & 0b11111111111100000000000000000000) >> 20;
+    assert(action >= 0 && action <= 2);
 
     const _1 = data.read32();
 
@@ -28,6 +31,12 @@ export default class Good {
     const _2 = data.read16();
 
     /*
+      These good ids are super odd.
+      When adding 20000, they are ids of the haeuser.cod file that match
+      buildings producing these goods. (i.e., gold ore -> gold mine). In some
+      places, Anno first adds 20000, fetches the haeuser.cod entry, then takes
+      the produced good and uses that as the id. I am not sure why they did not
+      just use the good id in the first place instead of this indirection.
       0b100101100001 // iron ore
       0b100101100101 // gold ore
       0b010111100001 // wool
@@ -56,7 +65,7 @@ export default class Good {
     const _3 = data.read16();
 
     return new Good(
-      goodId,
+      overwriteGoodId !== undefined ? overwriteGoodId : goodId,
       sellingPrice,
       buyingPrice,
       wantedSellingAmount,

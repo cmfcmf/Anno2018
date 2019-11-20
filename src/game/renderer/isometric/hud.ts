@@ -15,6 +15,8 @@ import SpriteLoader from "../../../sprite-loader";
 import { getIconId } from "../../../translation/translations";
 import { House } from "../../world/house";
 import assert from "../../../util/assert";
+import { Kontor } from "../../world/kontor";
+import { GoodAction } from "../../world/good";
 
 const SIDEBAR_WIDTH = 271;
 const BOTTOMBAR_HEIGHT = 35;
@@ -239,6 +241,101 @@ export class HUD {
       },
       buttons: {},
       ignore: [],
+      onLoad: () => {}
+    });
+  }
+
+  public async showKontor(
+    kontor: Kontor,
+    island: Island,
+    city: City,
+    field: Field,
+    config: FieldType
+  ) {
+    assert(config.production.kind === "KONTOR");
+
+    await this.menuRenderer.renderScreen(this.sidebarDetails, "STADT.GAD", {
+      buttons: {
+        43003: container =>
+          this.menuRenderer.renderScreen(container, "KONTOR.GAD", {
+            buttons: {},
+            texts: {},
+            ignore: [],
+            onLoad: () => {}
+          }),
+        43004: container =>
+          this.menuRenderer.renderScreen(container, "KONTOR.GAD", {
+            buttons: {},
+            texts: {},
+            ignore: [],
+            onLoad: () => {}
+          }),
+        43006: async container => {
+          const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
+          const ID_GOOD_SPRITES = 44021;
+          const ID_GOOD_AMOUNT1 = 44051;
+          const ID_GOOD_SHADOWS = 44081;
+          const ID_TRADE_AMOUNT = 44111;
+          const ID_GOOD_ACTIONS = 44141;
+          const NUM_GOODS = 23;
+          await this.menuRenderer.renderScreen(container, "LAGER.GAD", {
+            buttons: {},
+            texts: {
+              44002: city.name
+            },
+            ignore: [
+              44171, // Good amount slider
+              // Hide 24th good
+              ID_GOOD_SPRITES + NUM_GOODS,
+              ID_GOOD_AMOUNT1 + NUM_GOODS,
+              ID_TRADE_AMOUNT + NUM_GOODS,
+              ID_GOOD_ACTIONS + NUM_GOODS,
+              ID_GOOD_SHADOWS + NUM_GOODS
+            ],
+            onLoad: async container => {
+              await Promise.all(
+                kontor.goods.map(async (good, idx) => {
+                  const goodSprite = container.getChildByName(
+                    `menu-${ID_GOOD_SPRITES + idx}`
+                  ) as Sprite;
+
+                  goodSprite.texture = textures.get(
+                    this.WARE_ICON_OFFSET + good.goodId
+                  )!;
+
+                  const actionSprite = container.getChildByName(
+                    `menu-${ID_GOOD_ACTIONS + idx}`
+                  );
+                  const tradeAmountSprite = container.getChildByName(
+                    `menu-${ID_TRADE_AMOUNT + idx}`
+                  );
+                  if (good.action === GoodAction.None) {
+                    actionSprite.visible = false;
+                    tradeAmountSprite.visible = false;
+                  } else {
+                    // TODO: Set color depending on price
+                    // TODO: Set orientation depending on good action
+                    // actionSprite
+                    // TODO: Set position depending on trade amount
+                    // tradeAmountSprite
+                  }
+                })
+              );
+            }
+          });
+        }
+      },
+      ignore: [],
+      texts: {
+        43002: city.name,
+        43007: this.translator.translate("game.inhabitants"),
+        43008: city.inhabitants.reduce((acc, x) => acc + x).toString(),
+        43010: this.translator.translate("game.tax_revenue"),
+        43013: this.translator.translate("game.operating_cost"),
+        43016: this.translator.translate("game.sales_revenue"),
+        43019: this.translator.translate("game.purchase_cost"),
+        43022: this.translator.translate("game.balance_sheet")
+      },
       onLoad: () => {}
     });
   }

@@ -7,6 +7,7 @@
 import { Point } from "pixi.js";
 import Stream from "../../parsers/stream";
 import Good from "./good";
+import { GoodIds } from "../field-type";
 
 export type Kontor = ReturnType<typeof kontorFromSaveGame>;
 
@@ -27,12 +28,14 @@ export function kontorFromSaveGame(data: Stream) {
 function parseGoods(data: Stream) {
   const goods = [];
   for (let i = 0; i < 2; i++) {
+    // NOWARE, ALLWARE
     Good.fromSaveGame(data);
   }
   for (let i = 2; i < 2 + 23; i++) {
-    goods.push(Good.fromSaveGame(data));
+    goods.push(Good.fromSaveGame(data, GoodIds.NOWARE + i));
   }
   for (let i = 2 + 23; i < 50; i++) {
+    // wSOLDAT1, wSOLDAT2, ..., SCHATZ
     Good.fromSaveGame(data);
   }
   return goods;

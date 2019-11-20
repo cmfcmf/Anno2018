@@ -221,6 +221,21 @@ export default class GameRenderer {
         pos.y - island.position.y
       );
 
+      const kontorResult = this.findBuilding(
+        this.game.state.kontors,
+        island,
+        localPosition
+      );
+      if (kontorResult) {
+        return await this.hud.showKontor(
+          kontorResult.building,
+          island,
+          kontorResult.city,
+          kontorResult.field,
+          kontorResult.config
+        );
+      }
+
       const producerResult = this.findBuilding(
         this.game.state.producers,
         island,
