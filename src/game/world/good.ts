@@ -24,10 +24,10 @@ export default class Good {
 
     const _1 = data.read32();
 
-    const wantedSellingAmount = data.read16() >> 5;
-    const wantedBuyingAmount = data.read16() >> 5;
+    const wantedSellingAmount = data.read16();
+    const wantedBuyingAmount = data.read16();
 
-    const currentAmount = data.read16() >> 5;
+    const currentAmount = data.read16();
     const _2 = data.read16();
 
     /*

@@ -12,6 +12,8 @@ import assert from "../util/assert";
 import { ScreenConfig } from "./menu-structure";
 import SliderSprite from "./ui/slider-sprite";
 import FontLoader from "./font-loader";
+import { Bar } from "./ui/bar";
+import idxToColors from "../parsers/BSH/bsh-color-palette";
 
 interface RadioButtonData {
   sprite: Sprite;
@@ -179,6 +181,21 @@ export default class GADRenderer {
             text.anchor = new Point(1, 0);
           }
           container.addChild(text);
+          break;
+        }
+        case "GAD_BALKEN": {
+          if (size === null) {
+            throw new Error("Size must be set for bar");
+          }
+          const colorIdx = gadget.Color[0];
+          assert(colorIdx >= 0 && colorIdx <= 255);
+          const color =
+            (idxToColors[colorIdx * 3 + 0] << 16) +
+            (idxToColors[colorIdx * 3 + 1] << 8) +
+            (idxToColors[colorIdx * 3 + 2] << 0);
+          const bar = new Bar(position, size, gadget.Slidverflg === 1, color);
+          bar.name = `menu-${id}`;
+          container.addChild(bar);
           break;
         }
         // TODO: Shadows

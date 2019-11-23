@@ -49,7 +49,7 @@ export default class UploadInfo extends React.Component<Props, State>
           is still missing though. For copyright reasons, we can't include the
           original Anno 1602 files and graphics.{" "}
           <strong>
-            You need own your own copy of Anno 1602 for Anno 2018 work.
+            You need your own copy of Anno 1602 for Anno 2018 work.
           </strong>
         </p>
         <p>

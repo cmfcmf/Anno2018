@@ -17,6 +17,7 @@ import { House } from "../../world/house";
 import assert from "../../../util/assert";
 import { Kontor } from "../../world/kontor";
 import { GoodAction } from "../../world/good";
+import { Bar } from "../../ui/bar";
 
 const SIDEBAR_WIDTH = 271;
 const BOTTOMBAR_HEIGHT = 35;
@@ -254,6 +255,9 @@ export class HUD {
   ) {
     assert(config.production.kind === "KONTOR");
 
+    // FIXME: Add maxLager of all markets in that city.
+    const maxStockInCity = config.production.maxStock + 0;
+
     await this.menuRenderer.renderScreen(this.sidebarDetails, "STADT.GAD", {
       buttons: {
         43003: container =>
@@ -273,7 +277,7 @@ export class HUD {
         43006: async container => {
           const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
           const ID_GOOD_SPRITES = 44021;
-          const ID_GOOD_AMOUNT1 = 44051;
+          const ID_GOOD_AMOUNT = 44051;
           const ID_GOOD_SHADOWS = 44081;
           const ID_TRADE_AMOUNT = 44111;
           const ID_GOOD_ACTIONS = 44141;
@@ -287,7 +291,7 @@ export class HUD {
               44171, // Good amount slider
               // Hide 24th good
               ID_GOOD_SPRITES + NUM_GOODS,
-              ID_GOOD_AMOUNT1 + NUM_GOODS,
+              ID_GOOD_AMOUNT + NUM_GOODS,
               ID_TRADE_AMOUNT + NUM_GOODS,
               ID_GOOD_ACTIONS + NUM_GOODS,
               ID_GOOD_SHADOWS + NUM_GOODS
@@ -319,16 +323,26 @@ export class HUD {
                     // TODO: Set position depending on trade amount
                     // tradeAmountSprite
                   }
+
+                  const bar = container.getChildByName(
+                    `menu-${ID_GOOD_AMOUNT + idx}`
+                  ) as Bar;
+                  bar.setValue(
+                    Math.min(1.0, (good.currentAmount >> 5) / maxStockInCity)
+                  );
                 })
               );
             }
           });
         }
       },
-      ignore: [],
+      ignore: [
+        43005 // unused market symbol
+      ],
       texts: {
         43002: city.name,
         43007: this.translator.translate("game.inhabitants"),
+        // FIXME: We need to add the people living in production buildings here
         43008: city.inhabitants.reduce((acc, x) => acc + x).toString(),
         43010: this.translator.translate("game.tax_revenue"),
         43013: this.translator.translate("game.operating_cost"),
