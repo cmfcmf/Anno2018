@@ -147,7 +147,7 @@ export default class IslandLoader {
     }
 
     for (let i = 0; i < dataLength / Field.saveGameDataLength; i++) {
-      const field = Field.fromSaveGame(data);
+      const field = Field.load(data);
       assert(field.x < island.size.x);
       assert(field.y < island.size.y);
       fields[field.x][field.y] = field;

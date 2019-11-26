@@ -111,39 +111,41 @@ export enum GoodIds {
   SCHATZ
 }
 
-export type ProductionKind =
-  | "UNUSED"
-  | "ROHSTWACHS"
-  | "ROHSTOFF"
-  | "FISCHEREI"
-  | "KONTOR"
-  | "WERFT"
-  | "ROHSTERZ"
-  | "pMAUER"
-  | "WACHTURM"
-  | "MILITAR"
-  | "HANDWERK"
-  | "STEINBRUCH"
-  | "BERGWERK"
-  | "PLANTAGE"
-  | "JAGDHAUS"
-  | "WEIDETIER"
-  | "WOHNUNG"
-  | "PIRATWOHN"
-  | "KIRCHE"
-  | "KAPELLE"
-  | "WIRT"
-  | "THEATER"
-  | "BADEHAUS"
-  | "MARKT"
-  | "KLINIK"
-  | "HOCHSCHULE"
-  | "SCHULE"
-  | "BRUNNEN"
-  | "SCHLOSS"
-  | "GALGEN"
-  | "DENKMAL"
-  | "TRIUMPH";
+export enum ProductionKind {
+  "UNUSED" = 0,
+  "HANDWERK" = 1,
+  "PLANTAGE" = 2,
+  "BERGWERK" = 3,
+  "WEIDETIER" = 4,
+  "JAGDHAUS" = 5,
+  "FISCHEREI" = 6,
+  "MARKT" = 7,
+  "KONTOR" = 8,
+  "ROHSTOFF" = 9,
+  "ROHSTWACHS" = 10,
+  "STEINBRUCH" = 11,
+  "ROHSTERZ" = 12,
+  "WOHNUNG" = 13,
+  "WERFT" = 14,
+  "MILITAR" = 15,
+  "WACHTURM" = 16,
+  "WIRT" = 17,
+  "KAPELLE" = 18,
+  "KIRCHE" = 19,
+  "BADEHAUS" = 20,
+  "THEATER" = 21,
+  "KLINIK" = 22,
+  "SCHULE" = 23,
+  "HOCHSCHULE" = 24,
+  "GALGEN" = 25,
+  "BRUNNEN" = 26,
+  "SCHLOSS" = 27,
+  "DENKMAL" = 28,
+  "TRIUMPH" = 29,
+  "HAUPT" = 30,
+  "PIRATWOHN" = 31,
+  "pMAUER" = 32
+}
 
 export default class FieldType {
   public readonly id: number;
@@ -172,6 +174,7 @@ export default class FieldType {
     interval: number;
     maxStock: number;
     smokeAnimationNames: string[];
+    droughtFlag: boolean;
   };
 
   constructor(config: any) {
@@ -183,7 +186,7 @@ export default class FieldType {
     this.rotate = config.Rotate;
     this.animAdd = config.AnimAdd;
     this.animAnz = config.AnimAnz;
-    this.animTime = config.AnimTime === "TIMENEVER" ? -1 : config.AnimTime;
+    this.animTime = config.AnimTime === "TIMENEVER" ? 0 : config.AnimTime;
     this.yOffset = -config.Posoffs;
 
     const productionConfig = config.nested_objects.HAUS_PRODTYP[0];
@@ -199,7 +202,7 @@ export default class FieldType {
         productionConfig.Kosten !== undefined ? productionConfig.Kosten : 0;
     }
     this.production = {
-      kind: productionConfig.Kind,
+      kind: this.productionKindToId(productionConfig.Kind),
       good: this.goodNameToId(productionConfig.Ware),
       upkeep,
       good1: this.goodNameToId(productionConfig.Rohstoff),
@@ -221,7 +224,8 @@ export default class FieldType {
         ? productionConfig.Rauchfignr
         : productionConfig.Rauchfignr
         ? [productionConfig.Rauchfignr]
-        : []
+        : [],
+      droughtFlag: productionConfig.Doerrflg === 1
     };
   }
 
@@ -231,6 +235,15 @@ export default class FieldType {
     }
     // @ts-ignore
     const id = GoodIds[name];
+    if (id === undefined) {
+      throw new Error(`Invalid good name ${name}.`);
+    }
+    return id;
+  }
+
+  private productionKindToId(name: string): ProductionKind {
+    // @ts-ignore
+    const id = ProductionKind[name];
     if (id === undefined) {
       throw new Error(`Invalid good name ${name}.`);
     }
@@ -259,7 +272,7 @@ export default class FieldType {
         );
 
         let sprite: Sprite | AnimatedSprite;
-        if (this.animAdd === 0 || this.animTime === -1) {
+        if (this.animAdd === 0 || this.animTime === 0) {
           const texture = this.getTexture(
             x,
             y,
@@ -290,7 +303,8 @@ export default class FieldType {
           mapPositionOnIsland: new Point(
             xx - islandPosition.x,
             yy - islandPosition.y
-          )
+          ),
+          fieldOriginPosition: new Point(fieldPos.x, fieldPos.y)
         });
       }
     }

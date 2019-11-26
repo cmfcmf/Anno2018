@@ -16,8 +16,9 @@ export function timersFromSaveGame(data: Stream) {
   const cntMilitary = data.read8();
   const cntProduction = data.read8();
   data.read(31 + 32);
-  const cntSettlers = data.read(8, 4);
-  const cntGrowth = data.read(8, 4);
+  const cntSettlers = data.read(4, 4);
+  data.read(4, 4);
+  const cntGrowth = data.read(32, 1);
 
   const timeCity = data.read32();
   const timeIsland = data.read32();
@@ -59,6 +60,8 @@ export function timersFromSaveGame(data: Stream) {
   // assert(data.read(17 + 32, 4).every((e) => e === 0));
   const timeSettlers = data.read(32, 4);
   const timeGrowth = data.read(32, 4);
+
+  assert(cntGrowth.length === timeGrowth.length);
 
   const timers = {
     /**

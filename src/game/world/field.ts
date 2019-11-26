@@ -11,7 +11,7 @@ import { Rotation4 } from "./world";
 export default class Field {
   public static saveGameDataLength = 8;
 
-  public static fromSaveGame(data: Stream) {
+  public static load(data: Stream) {
     const buildingId = data.read16() + 20000;
     const x = data.read8();
     const y = data.read8();

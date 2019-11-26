@@ -12,6 +12,7 @@ export interface SpriteWithPosition {
   pixelPosition: Point;
   mapPosition: Point;
   mapPositionOnIsland: Point;
+  fieldOriginPosition: Point;
 }
 
 export default class IslandSpriteLoader {

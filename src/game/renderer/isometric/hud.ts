@@ -1,4 +1,4 @@
-import { Container, Point, Text, Sprite } from "pixi.js";
+import { Container, Point, Text, Sprite, Texture } from "pixi.js";
 import MenuStructure from "../../menu-structure";
 import { SimulationSpeed } from "../../world/world";
 import { Island } from "../../world/island";
@@ -9,7 +9,7 @@ import { assertNever } from "../../../util/util";
 import { Producer } from "../../world/producer";
 import { City } from "../../world/city";
 import Field from "../../world/field";
-import FieldType from "../../field-type";
+import FieldType, { ProductionKind } from "../../field-type";
 import { Translator } from "../../../translation/translator";
 import SpriteLoader from "../../../sprite-loader";
 import { getIconId } from "../../../translation/translations";
@@ -53,6 +53,8 @@ export class HUD {
   private infoModel: InfoModel;
   private ctrlModel: CtrlModel;
 
+  private toolsTextures: Map<number, Texture>;
+
   private readonly WARE_ICON_OFFSET = 192;
 
   constructor(
@@ -85,6 +87,7 @@ export class HUD {
   }
 
   public async begin(size: Point) {
+    this.toolsTextures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
     await this.menuRenderer.renderScreen(
       this.sidebar,
       "CTRL.GAD",
@@ -191,28 +194,28 @@ export class HUD {
     fieldType: FieldType
   ) {
     if (
-      fieldType.production.kind === "FISCHEREI" ||
-      fieldType.production.kind === "JAGDHAUS" ||
-      fieldType.production.kind === "PLANTAGE" ||
-      fieldType.production.kind === "WEIDETIER"
+      fieldType.production.kind === ProductionKind.FISCHEREI ||
+      fieldType.production.kind === ProductionKind.JAGDHAUS ||
+      fieldType.production.kind === ProductionKind.PLANTAGE ||
+      fieldType.production.kind === ProductionKind.WEIDETIER
     ) {
       await this.showProducerFarm(producer, city, field, fieldType);
-    } else if (fieldType.production.kind === "HANDWERK") {
+    } else if (fieldType.production.kind === ProductionKind.HANDWERK) {
       await this.showProducerHandwerk(producer, city, field, fieldType);
-    } else if (fieldType.production.kind === "BERGWERK") {
+    } else if (fieldType.production.kind === ProductionKind.BERGWERK) {
       await this.showProducerMine(producer, city, field, fieldType);
     } else if (
-      fieldType.production.kind === "KIRCHE" ||
-      fieldType.production.kind === "KAPELLE" ||
-      fieldType.production.kind === "WIRT" ||
-      fieldType.production.kind === "THEATER" ||
-      fieldType.production.kind === "BADEHAUS" ||
-      fieldType.production.kind === "KLINIK" ||
-      fieldType.production.kind === "HOCHSCHULE" ||
-      fieldType.production.kind === "SCHULE" ||
-      fieldType.production.kind === "BRUNNEN" ||
-      fieldType.production.kind === "SCHLOSS" ||
-      fieldType.production.kind === "GALGEN"
+      fieldType.production.kind === ProductionKind.KIRCHE ||
+      fieldType.production.kind === ProductionKind.KAPELLE ||
+      fieldType.production.kind === ProductionKind.WIRT ||
+      fieldType.production.kind === ProductionKind.THEATER ||
+      fieldType.production.kind === ProductionKind.BADEHAUS ||
+      fieldType.production.kind === ProductionKind.KLINIK ||
+      fieldType.production.kind === ProductionKind.HOCHSCHULE ||
+      fieldType.production.kind === ProductionKind.SCHULE ||
+      fieldType.production.kind === ProductionKind.BRUNNEN ||
+      fieldType.production.kind === ProductionKind.SCHLOSS ||
+      fieldType.production.kind === ProductionKind.GALGEN
     ) {
       await this.showProducerPublicBuilding(producer, city, field, fieldType);
     }
@@ -225,7 +228,7 @@ export class HUD {
     field: Field,
     config: FieldType
   ) {
-    assert(config.production.kind === "WOHNUNG");
+    assert(config.production.kind === ProductionKind.WOHNUNG);
 
     await this.menuRenderer.renderScreen(this.sidebarDetails, "SIEDLER.GAD", {
       texts: {
@@ -253,7 +256,7 @@ export class HUD {
     field: Field,
     config: FieldType
   ) {
-    assert(config.production.kind === "KONTOR");
+    assert(config.production.kind === ProductionKind.KONTOR);
 
     // FIXME: Add maxLager of all markets in that city.
     const maxStockInCity = config.production.maxStock + 0;
@@ -275,7 +278,6 @@ export class HUD {
             onLoad: () => {}
           }),
         43006: async container => {
-          const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
           const ID_GOOD_SPRITES = 44021;
           const ID_GOOD_AMOUNT = 44051;
           const ID_GOOD_SHADOWS = 44081;
@@ -303,7 +305,7 @@ export class HUD {
                     `menu-${ID_GOOD_SPRITES + idx}`
                   ) as Sprite;
 
-                  goodSprite.texture = textures.get(
+                  goodSprite.texture = this.toolsTextures.get(
                     this.WARE_ICON_OFFSET + good.goodId
                   )!;
 
@@ -384,9 +386,8 @@ export class HUD {
       },
       ignore: [],
       onLoad: async container => {
-        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
         const goodSprite = container.getChildByName("menu-41021") as Sprite;
-        goodSprite.texture = textures.get(
+        goodSprite.texture = this.toolsTextures.get(
           this.WARE_ICON_OFFSET + fieldType.production.good
         )!;
       }
@@ -413,9 +414,8 @@ export class HUD {
       texts,
       ignore: [],
       onLoad: async container => {
-        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
         const sprite = container.getChildByName("menu-62021") as Sprite;
-        sprite.texture = textures.get(getIconId(field.fieldId))!;
+        sprite.texture = this.toolsTextures.get(getIconId(field.fieldId))!;
       }
     });
   }
@@ -447,9 +447,8 @@ export class HUD {
       texts,
       ignore: [],
       onLoad: async container => {
-        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
         const goodSprite = container.getChildByName("menu-46021") as Sprite;
-        goodSprite.texture = textures.get(
+        goodSprite.texture = this.toolsTextures.get(
           this.WARE_ICON_OFFSET + fieldType.production.good
         )!;
       }
@@ -488,9 +487,8 @@ export class HUD {
       texts,
       ignore: [],
       onLoad: async container => {
-        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
         const goodSprite = container.getChildByName("menu-41021") as Sprite;
-        goodSprite.texture = textures.get(
+        goodSprite.texture = this.toolsTextures.get(
           this.WARE_ICON_OFFSET + fieldType.production.good
         )!;
       }
@@ -563,30 +561,29 @@ export class HUD {
       texts,
       ignore,
       onLoad: async container => {
-        const textures = await this.spriteLoader.getTextures("TOOLS/TOOLS");
         if (usesTwoInputGoods) {
           const good1Sprite = container.getChildByName("menu-37035") as Sprite;
-          good1Sprite.texture = textures.get(
+          good1Sprite.texture = this.toolsTextures.get(
             this.WARE_ICON_OFFSET + fieldType.production.good1
           )!;
 
           const good2Sprite = container.getChildByName("menu-37031") as Sprite;
-          good2Sprite.texture = textures.get(
+          good2Sprite.texture = this.toolsTextures.get(
             this.WARE_ICON_OFFSET + fieldType.production.good2
           )!;
 
           const goodSprite = container.getChildByName("menu-37039") as Sprite;
-          goodSprite.texture = textures.get(
+          goodSprite.texture = this.toolsTextures.get(
             this.WARE_ICON_OFFSET + fieldType.production.good
           )!;
         } else {
           const good1Sprite = container.getChildByName("menu-37021") as Sprite;
-          good1Sprite.texture = textures.get(
+          good1Sprite.texture = this.toolsTextures.get(
             this.WARE_ICON_OFFSET + fieldType.production.good1
           )!;
 
           const goodSprite = container.getChildByName("menu-37025") as Sprite;
-          goodSprite.texture = textures.get(
+          goodSprite.texture = this.toolsTextures.get(
             this.WARE_ICON_OFFSET + fieldType.production.good
           )!;
         }

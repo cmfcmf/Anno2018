@@ -90,7 +90,7 @@ export default class GameRenderer {
     private readonly animationRenderer: AnimationRenderer,
     private readonly menuRenderer: MenuStructure,
     translator: Translator,
-    spriteLoader: SpriteLoader,
+    private readonly spriteLoader: SpriteLoader,
     private readonly myPlayerId: number
   ) {
     this.keyboardManager = new KeyboardManager();
@@ -285,6 +285,32 @@ export default class GameRenderer {
       if (playerId === this.myPlayerId) {
         this.hud.setOperatingCosts(upkeep);
       }
+    });
+    this.game.addListener("field/changed", async (field: Field) => {
+      // FIXME: This is super hacky!
+      console.log("renderer: field changed", field);
+      const config = this.configLoader.getFieldData().get(field.fieldId)!;
+      const island = this.game.state.islands[field.islandId];
+      const globalPosition = new Point(
+        island.position.x + field.x,
+        island.position.y + field.y
+      );
+      const { sprites: newSprites } = await config.getSprites(
+        field.playerId,
+        island.position,
+        globalPosition,
+        field.rotation,
+        field.ani,
+        await this.spriteLoader.getTextures("STADTFLD"),
+        this.animationRenderer
+      );
+
+      const existingSprite = this.fields[globalPosition.x][globalPosition.y];
+      if (!existingSprite) {
+        throw new Error(`Sprite must exist`);
+      }
+      existingSprite.texture = newSprites[0].sprite.texture;
+      // newSprites.forEach(sprite => this.viewport.addChild(sprite.sprite));
     });
 
     const highlightField = (

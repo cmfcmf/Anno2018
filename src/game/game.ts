@@ -11,8 +11,9 @@ import { Ship } from "./world/ship";
 import { Task } from "./world/task";
 import { Timers } from "./world/timers";
 import World, { SimulationSpeed } from "./world/world";
-import { GoodIds } from "./field-type";
+import { GoodIds, ProductionKind } from "./field-type";
 import { House } from "./world/house";
+import { FarmField } from "./world/farmField";
 
 interface MapById<T> {
   [k: string]: T;
@@ -65,12 +66,14 @@ export interface GameState {
   producers: Producer[];
   ships: Ship[];
   houses: House[];
+  farmFields: FarmField[];
   timers: Timers & { simulationSpeed: SimulationSpeed };
 }
 
 export default class Game extends EventEmitter {
   public state: GameState;
   private timerId: number | null;
+  private farmFieldTick = this.makeFarmFieldTickGenerator();
 
   constructor(private readonly configLoader: ConfigLoader, world: World) {
     super();
@@ -83,6 +86,7 @@ export default class Game extends EventEmitter {
       producers: world.producers,
       ships: world.ships,
       houses: world.houses,
+      farmFields: world.farmFields,
       timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused }
     };
   }
@@ -159,6 +163,8 @@ export default class Game extends EventEmitter {
     if (time % 10 !== 0) {
       return;
     }
+
+    // TODO: Only handle 1037 per tick
 
     console.log("update producers");
     const fieldData = this.configLoader.getFieldData();
@@ -379,11 +385,66 @@ export default class Game extends EventEmitter {
       8,
       10
     );
+    for (let i = 0; i < this.state.timers.cntGrowth.length; i++) {
+      this.state.timers.timeGrowth[i] +=
+        100 * this.state.timers.simulationSpeed;
 
+      if (this.state.timers.timeGrowth[i] > 40000 + i * 7000) {
+        this.state.timers.timeGrowth[i] = 0;
+        this.state.timers.cntGrowth[i] = ++this.state.timers.cntGrowth[i] % 8;
+      }
+    }
+
+    this.farmFieldTick.next();
     this.watchTicksForUpkeep();
     this.watchTicksForProducing();
     this.emit("tick");
   };
+
+  private *makeFarmFieldTickGenerator() {
+    const fieldData = this.configLoader.getFieldData();
+
+    while (true) {
+      for (let i = this.state.farmFields.length - 1; i >= 0; i--) {
+        if (i % 206 === 0) {
+          yield;
+        }
+
+        const farmField = this.state.farmFields[i];
+
+        const growthCnt = this.state.timers.cntGrowth[
+          farmField.cntGrowthTimerIdx
+        ];
+        if (farmField.lastGrowthCntWhenFieldHasGrown !== growthCnt) {
+          farmField.lastGrowthCntWhenFieldHasGrown = growthCnt;
+          const island = this.state.islands[farmField.islandId];
+          const field = this.getFieldAtIsland(island, farmField.position)!;
+          const config = fieldData.get(field.fieldId)!;
+          if (config.production.kind === ProductionKind.ROHSTWACHS) {
+            farmField.animCnt = (farmField.animCnt + 1) & 0xff;
+            if (farmField.animCnt >= config.animAnz) {
+              // The field is fully grown
+              if (!config.production.droughtFlag) {
+                // Change field id to next field id (growing to grown field)
+                // This also implicitly changes the ProductionKind to ROHSTOFF.
+                field.fieldId++;
+                this.emit("field/changed", field);
+              }
+              this.state.farmFields.splice(i, 1); // destroy farm field
+              continue;
+            }
+            // The field is still growing
+          }
+          if (config.animTime === 0) {
+            field.ani = farmField.animCnt;
+            this.emit("field/changed", field);
+          }
+        }
+      }
+
+      yield;
+    }
+  }
 
   private inc = (value: number, max: number, interval: number) => {
     const gameTime = this.state.timers.timeGame;
