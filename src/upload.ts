@@ -476,7 +476,10 @@ export default class UploadHandler {
   }
 
   private findFileCaseInsensitive(zip: JSZip, path: string): JSZip.JSZipObject {
-    const caseInsensitiveFileName = new RegExp(escapeStringRegexp(path), "i");
+    const caseInsensitiveFileName = new RegExp(
+      `^${escapeStringRegexp(path)}$`,
+      "i"
+    );
     const file = zip.file(caseInsensitiveFileName)[0];
     if (file === undefined) {
       throw new Error(`Could not find file ${path}.`);
@@ -486,7 +489,10 @@ export default class UploadHandler {
   }
 
   private hasFolderCaseInsensitive(zip: JSZip, path: string): boolean {
-    const caseInsensitiveFolderName = new RegExp(escapeStringRegexp(path), "i");
+    const caseInsensitiveFolderName = new RegExp(
+      `^${escapeStringRegexp(path)}$`,
+      "i"
+    );
     return zip.folder(caseInsensitiveFolderName)[0] !== undefined;
   }
 }
