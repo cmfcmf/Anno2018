@@ -489,6 +489,9 @@ export default class UploadHandler {
   }
 
   private hasFolderCaseInsensitive(zip: JSZip, path: string): boolean {
+    if (!path.endsWith("/")) {
+      path += "/";
+    }
     const caseInsensitiveFolderName = new RegExp(
       `^${escapeStringRegexp(path)}$`,
       "i"
