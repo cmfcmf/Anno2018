@@ -181,4 +181,8 @@ export class Producer {
     assert(value >= 0 && value <= 0b1111);
     this.speedCnt = (this.speedCnt & 0b1111) | (value << 4);
   }
+
+  public getLastTimerCntProductionWhenThisProducerRan() {
+    return this.speedCnt & 0b111;
+  }
 }

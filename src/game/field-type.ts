@@ -207,11 +207,11 @@ export default class FieldType {
       upkeep,
       good1: this.goodNameToId(productionConfig.Rohstoff),
       good2: this.goodNameToId(productionConfig.Workstoff),
-      amount: productionConfig.Prodmenge,
-      amount1: productionConfig.Rohmenge,
+      amount: productionConfig.Prodmenge * 2 ** 5,
+      amount1: productionConfig.Rohmenge * 2 ** 5, // do not use shift operation, this is a float!
       amount2:
         productionConfig.Workmenge !== undefined
-          ? productionConfig.Workmenge
+          ? productionConfig.Workmenge * 2 ** 5
           : 0,
       radius:
         productionConfig.Radius === "RADIUS_MARKT" ||

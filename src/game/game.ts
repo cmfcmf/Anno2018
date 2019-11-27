@@ -74,6 +74,7 @@ export default class Game extends EventEmitter {
   public state: GameState;
   private timerId: number | null;
   private farmFieldTick = this.makeFarmFieldTickGenerator();
+  private producerTick = this.makeProducerTickGenerator();
 
   constructor(private readonly configLoader: ConfigLoader, world: World) {
     super();
@@ -158,185 +159,226 @@ export default class Game extends EventEmitter {
     });
   }
 
-  private watchTicksForProducing() {
-    const time = this.state.timers.timeGame;
-    if (time % 10 !== 0) {
-      return;
-    }
-
-    // TODO: Only handle 1037 per tick
-
-    console.log("update producers");
+  private *makeProducerTickGenerator() {
     const fieldData = this.configLoader.getFieldData();
-    this.state.producers.forEach((producer, producerId) => {
-      if (!producer.isActive()) {
-        return;
-      }
-      if (producer.timer > 0) {
-        producer.timer--;
-        if (producer.timer > 0) {
-          return;
+    while (true) {
+      for (
+        let producerId = 0;
+        producerId < this.state.producers.length;
+        producerId++
+      ) {
+        if (producerId > 0 && producerId % 1037 === 0) {
+          yield;
         }
-      }
 
-      const island = this.state.islands[producer.islandId];
-      const buildingId = this.getFieldAtIsland(island, producer.position)!
-        .fieldId;
-      const fieldConfig = fieldData.get(buildingId)!;
-      assert(fieldConfig);
+        const producer = this.state.producers[producerId];
 
-      if (producer.howMuchIsBeingProduced > 0) {
-        // Good produced (this might mean that just 0.5 of a good was produced)
-        producer.firstGoodStock -=
-          ((fieldConfig.production.amount1 << 5) *
-            producer.howMuchIsBeingProduced) >>
-          7;
-        producer.secondGoodStock -=
-          ((fieldConfig.production.amount2 << 5) *
-            producer.howMuchIsBeingProduced) >>
-          7;
-
-        const oldStock = producer.stock;
-        producer.stock +=
-          fieldConfig.production.amount * producer.howMuchIsBeingProduced;
-        if (producer.stock - oldStock >= 32) {
-          this.emit("producer/good-produced", {
-            island: this.state.islands[producer.islandId],
-            position: producer.position,
-            stock: producer.stock
-          });
-        }
-      }
-
-      let howMuchCanWeProduce = 0;
-      let var11c = 11;
-      let notmp5 = false;
-
-      // Check if we can produce more
-      if (producer.stock >= fieldConfig.production.maxStock << 5) {
-        // Show stock full message (but do not print good produced message!)
-      } else {
-        // check_has_first_good, check_is_producing, check_can_produce_valid_good
         if (
-          producer.firstGoodStock !== 0 &&
-          !producer.isProducing() &&
-          fieldConfig.production.good !== GoodIds.NOWARE
+          producer.getLastTimerCntProductionWhenThisProducerRan() ===
+          this.state.timers.cntProduction
         ) {
-          // check_needs_good_1
-          if (fieldConfig.production.amount1 === 0) {
-            howMuchCanWeProduce = 128;
-          } else {
-            const howMuchCanWeProduceWithGood1 =
-              (producer.firstGoodStock /
-                (fieldConfig.production.amount1 << 5)) *
-              128;
-            howMuchCanWeProduce = Math.min(128, howMuchCanWeProduceWithGood1);
+          continue;
+        }
+        if (!producer.isActive()) {
+          continue;
+        }
+        if (producer.timer > 0) {
+          producer.timer--;
+          if (producer.timer > 0) {
+            continue;
+          }
+        }
+
+        const island = this.state.islands[producer.islandId];
+        const buildingId = this.getFieldAtIsland(island, producer.position)!
+          .fieldId;
+        const fieldConfig = fieldData.get(buildingId)!;
+        assert(fieldConfig);
+
+        if (producer.howMuchIsBeingProduced > 0) {
+          // Good produced (this might mean that just 0.5 of a good was produced)
+          producer.firstGoodStock -=
+            (fieldConfig.production.amount1 *
+              producer.howMuchIsBeingProduced) >>
+            7;
+          producer.secondGoodStock -=
+            (fieldConfig.production.amount2 *
+              producer.howMuchIsBeingProduced) >>
+            7;
+
+          const oldStock = producer.stock;
+          producer.stock +=
+            (fieldConfig.production.amount * producer.howMuchIsBeingProduced) >>
+            7;
+          if (producer.stock - oldStock >= 32) {
+            this.emit("producer/good-produced", {
+              island: this.state.islands[producer.islandId],
+              position: producer.position,
+              stock: producer.stock
+            });
+          }
+        }
+
+        let howMuchCanWeProduce = 0;
+        let var11c = 11;
+        let notmp5 = false;
+
+        // Check if we can produce more
+        if (producer.stock >= fieldConfig.production.maxStock << 5) {
+          // Show stock full message (but do not print good produced message!)
+        } else {
+          // check_has_first_good, check_is_producing, check_can_produce_valid_good
+          if (
+            producer.firstGoodStock !== 0 &&
+            !producer.isProducing() &&
+            fieldConfig.production.good !== GoodIds.NOWARE
+          ) {
+            // check_needs_good_1
+            if (fieldConfig.production.amount1 === 0) {
+              howMuchCanWeProduce = 128;
+            } else {
+              const howMuchCanWeProduceWithGood1 =
+                (producer.firstGoodStock / fieldConfig.production.amount1) *
+                128;
+              howMuchCanWeProduce = Math.min(128, howMuchCanWeProduceWithGood1);
+            }
+
+            // check_needs_good_2
+            if (fieldConfig.production.amount2 === 0) {
+              // Nothing to do
+            } else {
+              const howMuchCanWeProduceWithGood2 =
+                (producer.secondGoodStock / fieldConfig.production.amount2) *
+                128;
+              howMuchCanWeProduce = Math.min(
+                howMuchCanWeProduceWithGood2,
+                howMuchCanWeProduce
+              );
+            }
+
+            // tmp_2
+            if (howMuchCanWeProduce < 64) {
+              // tmp_3
+              // less than 0.5 goods can be produced
+              howMuchCanWeProduce = 0;
+            } else {
+              // tmp_4
+              // between 0.5 and 1 goods can be produced
+              var11c =
+                ((fieldConfig.production.interval << 8) *
+                  howMuchCanWeProduce) >>
+                7;
+              if (howMuchCanWeProduce !== 0) {
+                // tmp_6
+                producer.prodCount +=
+                  (howMuchCanWeProduce >> 7) * fieldConfig.production.amount;
+                producer.setGoodWasProducedTimer(0);
+                notmp5 = true;
+              }
+            }
           }
 
-          // check_needs_good_2
-          if (fieldConfig.production.amount2 === 0) {
-            // Nothing to do
-          } else {
-            const howMuchCanWeProduceWithGood2 =
-              (producer.secondGoodStock /
-                (fieldConfig.production.amount2 << 5)) *
-              128;
-            howMuchCanWeProduce = Math.min(
-              howMuchCanWeProduceWithGood2,
-              howMuchCanWeProduce
-            );
-          }
-
-          // tmp_2
-          if (howMuchCanWeProduce < 64) {
-            // tmp_3
-            // less than 0.5 goods can be produced
-            howMuchCanWeProduce = 0;
-          } else {
-            // tmp_4
-            // between 0.5 and 1 goods can be produced
-            var11c =
-              ((fieldConfig.production.interval << 8) * howMuchCanWeProduce) >>
-              7;
-            if (howMuchCanWeProduce !== 0) {
-              // tmp_6
-              producer.prodCount +=
-                (howMuchCanWeProduce >> 7) *
-                (fieldConfig.production.amount << 5);
-              producer.setGoodWasProducedTimer(0);
-              notmp5 = true;
+          if (!notmp5) {
+            // tmp_5
+            if (producer.getGoodWasProducedTimer() < 0b1111) {
+              // tmp_7
+              producer.setGoodWasProducedTimer(
+                producer.getGoodWasProducedTimer() + 1
+              );
             }
           }
         }
 
-        if (!notmp5) {
-          // tmp_5
-          if (producer.getGoodWasProducedTimer() < 0b1111) {
-            // tmp_7
-            producer.setGoodWasProducedTimer(
-              producer.getGoodWasProducedTimer() + 1
+        // tmp_1
+        if (howMuchCanWeProduce > 0 !== producer.howMuchIsBeingProduced > 0) {
+          // tmp_8
+          // TODO producer.setSpeedCntANimationSomething(animation_something())
+        }
+
+        // tmp_9
+        producer.timeCount += var11c >> 8;
+        producer.howMuchIsBeingProduced = howMuchCanWeProduce;
+        producer.timer = var11c >> 8;
+        if (producer.timeCount <= 240) {
+          // tmp_10
+          producer.timeCount >>= 1;
+          producer.prodCount >>= 1;
+        }
+
+        // TODO: Skipped a few blocks that seem to be related to animations.
+
+        // tmp_11, tmp_12
+        if (
+          producer.howMuchIsBeingProduced > 0 ||
+          producer.stock < fieldConfig.production.maxStock
+        ) {
+          let goodsThatCanBeProducedWithExistingAmount2;
+          // tmp_13
+          if (fieldConfig.production.amount2 === 0) {
+            // tmp_14
+            goodsThatCanBeProducedWithExistingAmount2 = 0b11 << 7;
+          } else {
+            // tmp_15
+            goodsThatCanBeProducedWithExistingAmount2 = Math.floor(
+              (producer.secondGoodStock << 7) / fieldConfig.production.amount2
             );
           }
-        }
-      }
 
-      // tmp_1
-      if (howMuchCanWeProduce > 0 !== producer.howMuchIsBeingProduced > 0) {
-        // tmp_8
-        // TODO producer.setSpeedCntANimationSomething(animation_something())
-      }
-
-      // tmp_9
-      producer.timeCount += var11c >> 8;
-      producer.howMuchIsBeingProduced = howMuchCanWeProduce;
-      producer.timer = var11c >> 8;
-      if (producer.timeCount <= 240) {
-        // tmp_10
-        producer.timeCount >>= 1;
-        producer.prodCount >>= 1;
-      }
-
-      // TODO: Skipped a few blocks that seem to be related to animations.
-
-      // tmp_11, tmp_12
-      if (
-        producer.howMuchIsBeingProduced > 0 ||
-        producer.stock < fieldConfig.production.maxStock
-      ) {
-        let edi;
-        // tmp_13
-        if (fieldConfig.production.amount2 !== 0) {
-          // TODO: tmp_14
-          edi = 0x180;
-        } else {
-          // TODO: tmp_15
-          edi = Math.floor(
-            ((producer.secondGoodStock << 8) << 7) /
-              fieldConfig.production.amount2
-          );
-        }
-
-        // tmp_16
-        if (fieldConfig.production.amount1 === 0) {
-          // TODO: tmp_17
-        } else {
-          // tmp_18, tmp_19
-          const eax = Math.floor(
-            ((producer.firstGoodStock << 8) << 7) /
-              fieldConfig.production.amount2
-          );
-          if (eax > 0x100 || eax > edi) {
+          // tmp_16
+          if (fieldConfig.production.amount1 === 0) {
             // TODO: tmp_17
           } else {
-            // TODO: tmp_20
+            // tmp_18, tmp_19
+            const goodsThatCanBeProducedWithExistingAmount1 = Math.floor(
+              (producer.firstGoodStock << 7) / fieldConfig.production.amount1
+            );
+            if (
+              goodsThatCanBeProducedWithExistingAmount1 > 0b10 << 7 ||
+              goodsThatCanBeProducedWithExistingAmount1 >
+                goodsThatCanBeProducedWithExistingAmount2
+            ) {
+              // TODO: tmp_17
+            } else {
+              switch (fieldConfig.production.kind) {
+                case ProductionKind.WEIDETIER:
+                  // TODO
+                  break;
+                case ProductionKind.HANDWERK:
+                  // TODO
+                  break;
+                case ProductionKind.MARKT:
+                case ProductionKind.KONTOR:
+                case ProductionKind.HAUPT:
+                  // TODO
+                  break;
+                case ProductionKind.PLANTAGE:
+                  // TODO
+                  break;
+                case ProductionKind.FISCHEREI:
+                  // TODO
+                  break;
+                case ProductionKind.KLINIK:
+                  // TODO
+                  break;
+                case ProductionKind.BERGWERK:
+                  // TODO
+                  break;
+                case ProductionKind.BRUNNEN:
+                  // TODO
+                  break;
+                default:
+                  break;
+              }
+            }
           }
         }
+
+        // TODO: block at the very bottom
+
+        this.emit("producer/updated", { producerId: producerId });
       }
-
-      // TODO: block at the very bottom
-
-      this.emit("producer/updated", { producerId: producerId });
-    });
+      yield;
+    }
   }
 
   private calculateUpkeeps() {
@@ -396,8 +438,8 @@ export default class Game extends EventEmitter {
     }
 
     this.farmFieldTick.next();
+    this.producerTick.next();
     this.watchTicksForUpkeep();
-    this.watchTicksForProducing();
     this.emit("tick");
   };
 
