@@ -41,31 +41,33 @@ export default class World {
     public readonly producers: Producer[],
     public readonly houses: House[],
     public readonly farmFields: FarmField[]
-  ) {
+  ) {}
+
+  public log() {
     console.log("Tasks");
-    console.table(tasks);
-    console.log("Game Name", gameName);
+    console.table(this.tasks);
+    console.log("Game Name", this.gameName);
     console.log("Islands");
-    console.table(islands);
+    console.table(this.islands);
     console.log("Players");
-    console.table(players);
+    console.table(this.players);
     console.log("Soldiers");
-    console.table(soldiers);
+    console.table(this.soldiers);
     console.log("Ships");
-    console.table(ships);
+    console.table(this.ships);
     console.log("Kontors");
-    console.table(kontors);
+    console.table(this.kontors);
     console.log("Castles");
-    console.table(castles);
+    console.table(this.castles);
     console.log("Cities");
-    console.table(cities);
-    console.log("Trader", trader);
-    console.log("Timers", timers);
+    console.table(this.cities);
+    console.log("Trader", this.trader);
+    console.log("Timers", this.timers);
     console.log("Producers");
-    console.table(producers);
+    console.table(this.producers);
     console.log("Houses");
-    console.table(houses);
+    console.table(this.houses);
     console.log("Farm fields");
-    console.table(farmFields);
+    console.table(this.farmFields);
   }
 }

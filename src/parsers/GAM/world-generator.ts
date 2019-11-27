@@ -16,7 +16,8 @@ export default class WorldGenerator {
     world: World,
     worldGenerationSettings: WorldGenerationSettings
   ) {
-    let nextIslandId = Math.max(...world.islands.map(island => island.id)) + 1;
+    let nextIslandId =
+      Math.max(...world.islands.map(island => island.id), -1) + 1;
 
     for (const islandTemplate of worldGenerationSettings.islandTemplates) {
       const { data, isSouth, id: numBaseIsland } =

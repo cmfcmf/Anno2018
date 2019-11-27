@@ -61,6 +61,7 @@ export default class GAMParser {
     const { world, worldGenerationSettings } = await this.doParse(blocks);
 
     await this.worldGenerator!.populateWorld(world, worldGenerationSettings);
+    world.log();
 
     return world;
   }
