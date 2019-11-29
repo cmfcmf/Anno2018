@@ -5,7 +5,7 @@ from shutil import copyfile
 from os import path
 from datetime import datetime
 
-parser = argparse.ArgumentParser(description="Automatically save an Anno 1602 game every N seconds. All savegames are copied to the output_path provided. Warning: The 10th savegame slot will be overridden! To use this, start Anno 1602 in a window (i.e., using D3Windower) and place the mouse at the very center of the options button.")
+parser = argparse.ArgumentParser(description="Automatically save an Anno 1602 game every N seconds. All savegames are copied to the output_path provided. Warning: The 10th savegame slot will be overwritten! To use this, start Anno 1602 in a window (i.e., using D3Windower) and place the mouse at the very center of the options button.")
 
 parser.add_argument("anno_save_folder")
 parser.add_argument("interval", type=int)
