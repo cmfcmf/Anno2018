@@ -9,7 +9,9 @@ import {
   Sprite,
   Text,
   Texture,
-  Rectangle
+  Rectangle,
+  Renderer,
+  DisplayObject
 } from "pixi.js";
 import { from, fromEvent, merge } from "rxjs";
 import {
@@ -36,6 +38,154 @@ import SpriteLoader from "../sprite-loader";
 import FieldType from "./field-type";
 import Field from "./world/field";
 import { City } from "./world/city";
+
+const WIDTH = 500;
+const HEIGHT = 350;
+
+class FieldContainer extends Container {
+  private readonly CELLSIZE = 20;
+  private readonly NUM_CELLS_X = Math.ceil(WIDTH / this.CELLSIZE);
+  private readonly NUM_CELLS_Y = Math.ceil(HEIGHT / this.CELLSIZE);
+
+  private childrenGrid: Array<{
+    objects: DisplayObject[];
+    parentTransformID: number;
+    visible: boolean;
+  }> = Array.from({ length: this.NUM_CELLS_X * this.NUM_CELLS_Y }, () => ({
+    objects: [],
+    parentTransformID: -1,
+    visible: false
+  }));
+  private lastParentWorldID = -1;
+
+  public sortChildren() {
+    throw new Error("Sorting children not supported.");
+  }
+
+  public updateTransform() {
+    // Make sure that the local transform of this container never changes. We
+    // only change the viewport's transform, which ís the parent of this
+    // container, but never change the transform of this container directly.
+    console.assert(this.transform._localID === this.transform._currentLocalID);
+
+    // Always execute default behavior to update transforms of ->children
+    Container.prototype.updateTransform.call(this);
+
+    const parentWorldID = this.parent.transform._worldID;
+    if (parentWorldID !== this.lastParentWorldID) {
+      // The viewport has changed. We need to do two steps:
+      // 1. Determine which cells are now visible.
+      // 2. Update transform of all visible cells.
+
+      // Step 1: Determine which cells are now visible.
+      const viewportBounds = (this.parent as Viewport).getVisibleBounds();
+      const topLeft = GameRenderer.worldPosToFieldPos(
+        new Point(viewportBounds.x - TILE_WIDTH, viewportBounds.y - TILE_HEIGHT)
+      );
+      const bottomRight = GameRenderer.worldPosToFieldPos(
+        new Point(
+          viewportBounds.x + viewportBounds.width + TILE_WIDTH,
+          // We need to add the height of the highest sprite in the game, so
+          // that it is still drawn even if it is below the viewport.
+          // TODO: Verify that 200 fits.
+          viewportBounds.y + viewportBounds.height + TILE_HEIGHT + 200
+        )
+      );
+
+      for (let x = 0; x < this.NUM_CELLS_X; x++) {
+        for (let y = 0; y < this.NUM_CELLS_Y; y++) {
+          const cell = this.childrenGrid[x + y * this.NUM_CELLS_X];
+
+          /*
+            Calculate top left and bottom right field of a cell.
+            The cell has a diamond shape (displayed as *), but we need to know
+            the top left (TL) and bottom right (BR) points to see if any field
+            of the diamond might be on the screen:
+
+             TL     *
+                  *   *
+                *   *   *
+              *   *   *   *
+                *   *   *
+                  *   *
+                    *     BR
+          */
+          const cellTopLeft = new Point(
+            x * this.CELLSIZE - this.CELLSIZE * 1.5,
+            y * this.CELLSIZE - this.CELLSIZE * 0.5
+          );
+          const cellBottomRight = new Point(
+            x * this.CELLSIZE + this.CELLSIZE * 1.5,
+            y * this.CELLSIZE + this.CELLSIZE * 0.5
+          );
+
+          cell.visible =
+            cellBottomRight.x + cellBottomRight.y >= topLeft.x + topLeft.y &&
+            cellBottomRight.x - cellBottomRight.y >= topLeft.x - topLeft.y &&
+            cellTopLeft.x + cellTopLeft.y <= bottomRight.x + bottomRight.y &&
+            cellTopLeft.x - cellTopLeft.y <= bottomRight.x - bottomRight.y;
+        }
+      }
+
+      // Step 2: Update transform of visible cells.
+      for (let i = 0, j = this.childrenGrid.length; i < j; ++i) {
+        if (
+          this.childrenGrid[i].visible &&
+          this.childrenGrid[i].parentTransformID !== parentWorldID
+        ) {
+          // If the id of the parent's world transform is different than the last
+          // id used to calculate transforms for this cell, update all transforms
+          // of this cell.
+          for (let k = 0, l = this.childrenGrid[i].objects.length; k < l; ++k) {
+            // We cannot check for ->visible here, because we mark the whole cell
+            // as updated, thus we cannot skip some children.
+            // if (this.childrenGrid[idx].objects[k].visible) {
+            this.childrenGrid[i].objects[k].updateTransform();
+            // }
+          }
+          this.childrenGrid[i].parentTransformID = parentWorldID;
+        }
+      }
+
+      this.lastParentWorldID = parentWorldID;
+    }
+  }
+
+  public addField(child: DisplayObject, x: number, y: number) {
+    const cellX = Math.floor(x / this.CELLSIZE);
+    const cellY = Math.floor(y / this.CELLSIZE);
+    this.childrenGrid[cellX + cellY * this.NUM_CELLS_X].objects.push(child);
+    this.childrenGrid[cellX + cellY * this.NUM_CELLS_X].parentTransformID = -1;
+
+    if (child.parent) {
+      child.parent.removeChild(child);
+    }
+
+    // @ts-ignore
+    child.parent = this;
+    this.sortDirty = true;
+
+    // ensure child transform will be recalculated
+    child.transform._parentID = -1;
+
+    // ensure bounds will be recalculated
+    // @ts-ignore
+    this._boundsID++;
+  }
+
+  public render(renderer: Renderer) {
+    for (let i = 0, j = this.children.length; i < j; ++i) {
+      this.children[i].render(renderer);
+    }
+    for (let i = 0, j = this.childrenGrid.length; i < j; ++i) {
+      if (this.childrenGrid[i].visible) {
+        for (let k = 0, l = this.childrenGrid[i].objects.length; k < l; ++k) {
+          this.childrenGrid[i].objects[k].render(renderer);
+        }
+      }
+    }
+  }
+}
 
 export default class GameRenderer {
   public static fieldPosToWorldPos(fieldPos: Point) {
@@ -74,12 +224,15 @@ export default class GameRenderer {
     return this.worldPosToFieldPos(adjustedWorldPos);
   }
 
-  private readonly WIDTH = 500;
-  private readonly HEIGHT = 350;
+  private readonly WIDTH = WIDTH;
+  private readonly HEIGHT = HEIGHT;
   private fields: Array<Array<Sprite | null>>;
   private readonly keyboardManager: KeyboardManager;
   private readonly hud: HUD;
   private readonly interactionManager: interaction.InteractionManager;
+  private readonly fieldContainer = new FieldContainer();
+
+  private active = false;
 
   constructor(
     private readonly game: Game,
@@ -109,7 +262,13 @@ export default class GameRenderer {
   }
 
   public async begin() {
+    if (this.active) {
+      throw new Error("Cannot call .begin() twice!");
+    }
+    this.active = true;
+
     this.viewport.removeChildren();
+    this.viewport.addChild(this.fieldContainer);
 
     this.keyboardManager.enable();
     this.app.ticker.add(() => {
@@ -134,10 +293,16 @@ export default class GameRenderer {
       spritesOfIsland.sprites.forEach(row =>
         row
           .filter(sprite => sprite !== null)
-          .forEach(sprite => this.viewport.addChild(sprite!.sprite))
+          .forEach(sprite =>
+            this.fieldContainer.addField(
+              sprite!.sprite,
+              sprite!.mapPosition.x,
+              sprite!.mapPosition.y
+            )
+          )
       );
       spritesOfIsland.smokeSprites.forEach(smokeSprite => {
-        this.viewport.addChild(smokeSprite);
+        this.fieldContainer.addChild(smokeSprite);
         smokeSprite.play();
       });
     });
@@ -184,7 +349,7 @@ export default class GameRenderer {
           sprite.y = worldY;
 
           fields[x][y] = sprite;
-          this.viewport.addChild(sprite);
+          this.fieldContainer.addField(sprite, x, y);
         }
       })
     );
@@ -197,14 +362,6 @@ export default class GameRenderer {
     // ...
 
     this.moveCameraToStartPosition(this.myPlayerId);
-
-    merge(
-      from(["initial"]),
-      fromEvent(this.viewport, "zoomed"),
-      fromEvent(this.viewport, "moved")
-    )
-      .pipe(auditTime(200))
-      .subscribe(this.cull);
 
     this.interactionManager.on("mouseup", async () => {
       const pos = GameRenderer.worldPosToFieldPosLand(
@@ -310,7 +467,7 @@ export default class GameRenderer {
         throw new Error(`Sprite must exist`);
       }
       existingSprite.texture = newSprites[0].sprite.texture;
-      // newSprites.forEach(sprite => this.viewport.addChild(sprite.sprite));
+      // newSprites.forEach(sprite => this.fieldContainer.addChild(sprite.sprite));
     });
 
     const highlightField = (
@@ -334,7 +491,7 @@ export default class GameRenderer {
         new Point(x - TILE_WIDTH / 2, y + TILE_HEIGHT / 2)
       ]);
       this.radiusSprites.push(tmp);
-      this.viewport.addChild(tmp);
+      // this.fieldContainer.addChild(tmp);
     };
 
     this.game.state.producers.forEach(producer => {
@@ -399,7 +556,7 @@ export default class GameRenderer {
     const karrenSprite = karrenAnimation.animations[1].rotations[2].main;
     karrenSprite.x = start.x;
     karrenSprite.y = start.y - karrenAnimation.config.Posoffs[1];
-    this.viewport.addChild(karrenSprite);
+    this.fieldContainer.addChild(karrenSprite);
     karrenSprite.play();
 
     const currentPathIdx = 0;
@@ -522,28 +679,24 @@ export default class GameRenderer {
             this.viewport.corner.x - SCROLL_SPEED,
             this.viewport.corner.y
           );
-          this.cull();
           break;
         case Key.RIGHT:
           this.viewport.moveCorner(
             this.viewport.corner.x + SCROLL_SPEED,
             this.viewport.corner.y
           );
-          this.cull();
           break;
         case Key.UP:
           this.viewport.moveCorner(
             this.viewport.corner.x,
             this.viewport.corner.y - SCROLL_SPEED
           );
-          this.cull();
           break;
         case Key.DOWN:
           this.viewport.moveCorner(
             this.viewport.corner.x,
             this.viewport.corner.y + SCROLL_SPEED
           );
-          this.cull();
           break;
         default:
           break;
@@ -569,7 +722,6 @@ export default class GameRenderer {
     const center = this.viewport.center;
     this.viewport.scale.set(1.0 / zoom);
     this.viewport.moveCenter(center.x, center.y);
-    this.cull();
   }
 
   public zoomIn() {
@@ -619,37 +771,6 @@ export default class GameRenderer {
     };
     this.app.ticker.add(fn);
   }
-
-  private cull = () => {
-    const viewportBounds = this.viewport.getVisibleBounds();
-
-    const topLeft = GameRenderer.worldPosToFieldPos(
-      new Point(viewportBounds.x - TILE_WIDTH, viewportBounds.y - TILE_HEIGHT)
-    );
-    const bottomRight = GameRenderer.worldPosToFieldPos(
-      new Point(
-        viewportBounds.x + viewportBounds.width + TILE_WIDTH,
-        // we need to add the height of the highest sprite in the game, so
-        // that it is still drawn even if it is below the viewport.
-        // TODO: Verify that 200 fits.
-        viewportBounds.y + viewportBounds.height + TILE_HEIGHT + 200
-      )
-    );
-
-    for (let x = 0; x < this.WIDTH; x++) {
-      for (let y = 0; y < this.HEIGHT; y++) {
-        const field = this.fields[x][y];
-        if (!field) {
-          continue;
-        }
-        field.visible =
-          x + y >= topLeft.x + topLeft.y &&
-          x - y >= topLeft.x - topLeft.y &&
-          x + y <= bottomRight.x + bottomRight.y &&
-          x - y <= bottomRight.x - bottomRight.y;
-      }
-    }
-  };
 
   private sendHoveredPositionsToHUD() {
     merge(

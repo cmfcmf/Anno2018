@@ -1,0 +1,39 @@
+diff --git a/node_modules/pixi.js/pixi.js.d.ts b/node_modules/pixi.js/pixi.js.d.ts
+index f9c7247..5d52144 100644
+--- a/node_modules/pixi.js/pixi.js.d.ts
++++ b/node_modules/pixi.js/pixi.js.d.ts
+@@ -12178,7 +12178,7 @@ declare namespace PIXI {
+          * @protected
+          * @member {number} PIXI.Transform#_localID
+          */
+-        protected _localID: number;
++        _localID: number;
+         /**
+          * The locally unique ID of the local transform
+          * used to calculate the current local transformation matrix.
+@@ -12186,14 +12186,14 @@ declare namespace PIXI {
+          * @protected
+          * @member {number} PIXI.Transform#_currentLocalID
+          */
+-        protected _currentLocalID: number;
++        _currentLocalID: number;
+         /**
+          * The locally unique ID of the world transform.
+          *
+          * @protected
+          * @member {number} PIXI.Transform#_worldID
+          */
+-        protected _worldID: number;
++        _worldID: number;
+         /**
+          * The locally unique ID of the parent's world transform
+          * used to calculate the current world transformation matrix.
+@@ -12201,7 +12201,7 @@ declare namespace PIXI {
+          * @protected
+          * @member {number} PIXI.Transform#_parentID
+          */
+-        protected _parentID: number;
++        _parentID: number;
+         /**
+          * Called when a value changes.
+          *

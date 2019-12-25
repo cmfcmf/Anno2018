@@ -23,9 +23,9 @@
     "lamejs": "^1.2.0",
     "loglevel": "^1.6.4",
     "pixi-keyboard": "^0.9.4",
-    "pixi-sound": "^3.0.3",
-    "pixi-viewport": "^4.3.3",
-    "pixi.js": "^5.0.0",
+    "pixi-sound": "^3.0.4",
+    "pixi-viewport": "^4.5.0",
+    "pixi.js": "^5.2.0",
     "postinstall-postinstall": "^2.0.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
@@ -79,14 +79,16 @@
     "cod-converter": "ts-node --project tsconfig.node.json src/tools/cod-converter.ts",
     "bsh-converter": "ts-node --project tsconfig.node.json src/tools/bsh-converter.ts",
     "dat-converter": "ts-node --project tsconfig.node.json src/tools/dat-converter.ts",
-    "gam-analyzer":  "ts-node --project tsconfig.node.json src/tools/gam-analyzer.ts",
+    "gam-analyzer1": "ts-node --project tsconfig.node.json src/tools/gam-analyzer.ts",
     "gam-analyzer2": "ts-node --project tsconfig.node.json src/tools/gam-analyzer2.ts",
     "smk-converter": "ts-node --project tsconfig.node.json src/tools/smk-converter.ts",
     "wav-converter": "ts-node --project tsconfig.node.json src/tools/wav-converter.ts",
     "zei-converter": "ts-node --project tsconfig.node.json src/tools/zei-converter.ts"
   },
   "jest": {
-    "setupFiles": ["jest-canvas-mock"],
+    "setupFiles": [
+      "jest-canvas-mock"
+    ],
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
