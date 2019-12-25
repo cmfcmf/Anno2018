@@ -169,7 +169,9 @@ export class HUD {
           this.sidebarDetails,
           "OPTION.GAD",
           {
-            onLoad: () => {},
+            onLoad: () => {
+              // Nothing to do
+            },
             buttons: {},
             texts: {
               47002: this.translator.translate("game.settings"),
@@ -245,7 +247,9 @@ export class HUD {
       },
       buttons: {},
       ignore: [],
-      onLoad: () => {}
+      onLoad: () => {
+        // Nothing to do
+      }
     });
   }
 
@@ -268,14 +272,18 @@ export class HUD {
             buttons: {},
             texts: {},
             ignore: [],
-            onLoad: () => {}
+            onLoad: () => {
+              // Nothing to do
+            }
           }),
         43004: container =>
           this.menuRenderer.renderScreen(container, "KONTOR.GAD", {
             buttons: {},
             texts: {},
             ignore: [],
-            onLoad: () => {}
+            onLoad: () => {
+              // Nothing to do
+            }
           }),
         43006: async container => {
           const ID_GOOD_SPRITES = 44021;
@@ -352,7 +360,9 @@ export class HUD {
         43019: this.translator.translate("game.purchase_cost"),
         43022: this.translator.translate("game.balance_sheet")
       },
-      onLoad: () => {}
+      onLoad: () => {
+        // Nothing to do
+      }
     });
   }
 

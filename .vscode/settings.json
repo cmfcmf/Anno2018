@@ -3,31 +3,10 @@
     "editor.rulers": [
         80
     ],
-    "[javascript]": {
-        "editor.formatOnSave": true
-      },
-    "[typescript]": {
-        "editor.formatOnSave": true
-    },
 
     "search.exclude": {
         "/dist": true
     },
-
-
-    "eslint.validate": [
-        "javascript",
-        "javascriptreact",
-        {
-          "language": "typescript",
-          "autoFix": true
-        },
-        {
-          "language": "typescriptreact",
-          "autoFix": true
-        }
-      ],
-    "eslint.autoFixOnSave": true,
 
     "jest.autoEnable": true,
     "jest.debugCodeLens.showWhenTestStateIn": [
@@ -54,4 +33,26 @@
         "backgroundColor": "transparent"
       },
     ],
+
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+    "[javascript]": {
+      "editor.formatOnSave": false
+    },
+    "[javascriptreact]": {
+      "editor.formatOnSave": false
+    },
+    "[typescript]": {
+      "editor.formatOnSave": false
+    },
+    "[typescriptreact]": {
+      "editor.formatOnSave": false
+    }
 }
