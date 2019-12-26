@@ -601,13 +601,13 @@ export class HUD {
     });
   }
 
-  public setHoveredPosition(pos: Point, island?: Island) {
-    this.coordinates.text = `x: ${pos.x}, y: ${pos.y}`;
+  public setHoveredPosition(landPos: Point, seaPos: Point, island?: Island) {
+    this.coordinates.text = `Land: ${landPos.x} ; ${landPos.y} | Sea: ${seaPos.x} ; ${seaPos.y}`;
 
     if (island) {
       const localPosition = new Point(
-        pos.x - island.position.x,
-        pos.y - island.position.y
+        landPos.x - island.position.x,
+        landPos.y - island.position.y
       );
 
       this.islandNumber.text = `Island id: ${island.id}, x: ${localPosition.x} y: ${localPosition.y}`;

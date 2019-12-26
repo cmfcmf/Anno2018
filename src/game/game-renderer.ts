@@ -8,11 +8,9 @@ import {
   Sprite,
   Text,
   Texture,
-  Rectangle,
-  Renderer,
-  DisplayObject
+  Rectangle
 } from "pixi.js";
-import { from, fromEvent, merge } from "rxjs";
+import { fromEvent, merge } from "rxjs";
 import {
   auditTime,
   startWith,
@@ -41,153 +39,12 @@ import { FieldContainer } from "./renderer/isometric/field-container";
 import { KeyboardManager } from "./renderer/keyboard/keyboard-manager";
 import { Key } from "./renderer/keyboard/key";
 
-const WIDTH = 500;
-const HEIGHT = 350;
+export const WIDTH = 500;
 
-class FieldContainer extends Container {
-  private readonly CELLSIZE = 20;
-  private readonly NUM_CELLS_X = Math.ceil(WIDTH / this.CELLSIZE);
-  private readonly NUM_CELLS_Y = Math.ceil(HEIGHT / this.CELLSIZE);
+export const HEIGHT = 350;
 
-  private childrenGrid: Array<{
-    objects: DisplayObject[];
-    parentTransformID: number;
-    visible: boolean;
-  }> = Array.from({ length: this.NUM_CELLS_X * this.NUM_CELLS_Y }, () => ({
-    objects: [],
-    parentTransformID: -1,
-    visible: false
-  }));
-  private lastParentWorldID = -1;
-
-  public sortChildren() {
-    throw new Error("Sorting children not supported.");
-  }
-
-  public updateTransform() {
-    // Make sure that the local transform of this container never changes. We
-    // only change the viewport's transform, which ís the parent of this
-    // container, but never change the transform of this container directly.
-    console.assert(this.transform._localID === this.transform._currentLocalID);
-
-    // Always execute default behavior to update transforms of ->children
-    Container.prototype.updateTransform.call(this);
-
-    const parentWorldID = this.parent.transform._worldID;
-    if (parentWorldID !== this.lastParentWorldID) {
-      // The viewport has changed. We need to do two steps:
-      // 1. Determine which cells are now visible.
-      // 2. Update transform of all visible cells.
-
-      // Step 1: Determine which cells are now visible.
-      const viewportBounds = (this.parent as Viewport).getVisibleBounds();
-      const topLeft = GameRenderer.worldPosToFieldPos(
-        new Point(viewportBounds.x - TILE_WIDTH, viewportBounds.y - TILE_HEIGHT)
-      );
-      const bottomRight = GameRenderer.worldPosToFieldPos(
-        new Point(
-          viewportBounds.x + viewportBounds.width + TILE_WIDTH,
-          // We need to add the height of the highest sprite in the game, so
-          // that it is still drawn even if it is below the viewport.
-          // TODO: Verify that 200 fits.
-          viewportBounds.y + viewportBounds.height + TILE_HEIGHT + 200
-        )
-      );
-
-      for (let x = 0; x < this.NUM_CELLS_X; x++) {
-        for (let y = 0; y < this.NUM_CELLS_Y; y++) {
-          const cell = this.childrenGrid[x + y * this.NUM_CELLS_X];
-
-          /*
-            Calculate top left and bottom right field of a cell.
-            The cell has a diamond shape (displayed as *), but we need to know
-            the top left (TL) and bottom right (BR) points to see if any field
-            of the diamond might be on the screen:
-
-             TL     *
-                  *   *
-                *   *   *
-              *   *   *   *
-                *   *   *
-                  *   *
-                    *     BR
-          */
-          const cellTopLeft = new Point(
-            x * this.CELLSIZE - this.CELLSIZE * 1.5,
-            y * this.CELLSIZE - this.CELLSIZE * 0.5
-          );
-          const cellBottomRight = new Point(
-            x * this.CELLSIZE + this.CELLSIZE * 1.5,
-            y * this.CELLSIZE + this.CELLSIZE * 0.5
-          );
-
-          cell.visible =
-            cellBottomRight.x + cellBottomRight.y >= topLeft.x + topLeft.y &&
-            cellBottomRight.x - cellBottomRight.y >= topLeft.x - topLeft.y &&
-            cellTopLeft.x + cellTopLeft.y <= bottomRight.x + bottomRight.y &&
-            cellTopLeft.x - cellTopLeft.y <= bottomRight.x - bottomRight.y;
-        }
-      }
-
-      // Step 2: Update transform of visible cells.
-      for (let i = 0, j = this.childrenGrid.length; i < j; ++i) {
-        if (
-          this.childrenGrid[i].visible &&
-          this.childrenGrid[i].parentTransformID !== parentWorldID
-        ) {
-          // If the id of the parent's world transform is different than the last
-          // id used to calculate transforms for this cell, update all transforms
-          // of this cell.
-          for (let k = 0, l = this.childrenGrid[i].objects.length; k < l; ++k) {
-            // We cannot check for ->visible here, because we mark the whole cell
-            // as updated, thus we cannot skip some children.
-            // if (this.childrenGrid[idx].objects[k].visible) {
-            this.childrenGrid[i].objects[k].updateTransform();
-            // }
-          }
-          this.childrenGrid[i].parentTransformID = parentWorldID;
-        }
-      }
-
-      this.lastParentWorldID = parentWorldID;
-    }
-  }
-
-  public addField(child: DisplayObject, x: number, y: number) {
-    const cellX = Math.floor(x / this.CELLSIZE);
-    const cellY = Math.floor(y / this.CELLSIZE);
-    this.childrenGrid[cellX + cellY * this.NUM_CELLS_X].objects.push(child);
-    this.childrenGrid[cellX + cellY * this.NUM_CELLS_X].parentTransformID = -1;
-
-    if (child.parent) {
-      child.parent.removeChild(child);
-    }
-
-    // @ts-ignore
-    child.parent = this;
-    this.sortDirty = true;
-
-    // ensure child transform will be recalculated
-    child.transform._parentID = -1;
-
-    // ensure bounds will be recalculated
-    // @ts-ignore
-    this._boundsID++;
-  }
-
-  public render(renderer: Renderer) {
-    for (let i = 0, j = this.children.length; i < j; ++i) {
-      this.children[i].render(renderer);
-    }
-    for (let i = 0, j = this.childrenGrid.length; i < j; ++i) {
-      if (this.childrenGrid[i].visible) {
-        for (let k = 0, l = this.childrenGrid[i].objects.length; k < l; ++k) {
-          this.childrenGrid[i].objects[k].render(renderer);
-        }
-      }
-    }
-  }
-}
+console.assert(WIDTH % 2 === 0);
+console.assert(HEIGHT % 2 === 0);
 
 export default class GameRenderer {
   public static fieldPosToWorldPos(fieldPos: Point) {
@@ -210,10 +67,10 @@ export default class GameRenderer {
    * worldPosToFieldPosLand for *land-level* coordinates.
    */
   public static worldPosToFieldPos(worldPos: Point) {
-    const x =
-      (worldPos.x / (TILE_WIDTH / 2) + worldPos.y / (TILE_HEIGHT / 2)) / 2;
-    const y =
-      (worldPos.y / (TILE_HEIGHT / 2) - worldPos.x / (TILE_WIDTH / 2)) / 2;
+    const xx = worldPos.x;
+    const yy = worldPos.y;
+    const x = (xx / (TILE_WIDTH / 2) + yy / (TILE_HEIGHT / 2)) / 2;
+    const y = (yy / (TILE_HEIGHT / 2) - xx / (TILE_WIDTH / 2)) / 2;
 
     return new Point(Math.round(x), Math.round(y) + 1);
   }
@@ -232,7 +89,7 @@ export default class GameRenderer {
   private readonly keyboardManager: KeyboardManager;
   private readonly hud: HUD;
   private readonly interactionManager: interaction.InteractionManager;
-  private readonly fieldContainer = new FieldContainer();
+  private readonly fieldContainer = new FieldContainer("none");
 
   private active = false;
 
@@ -270,7 +127,6 @@ export default class GameRenderer {
     this.active = true;
 
     this.viewport.removeChildren();
-    this.viewport.addChild(this.fieldContainer);
 
     this.keyboardManager.enable();
     this.app.ticker.add(() => {
@@ -356,6 +212,7 @@ export default class GameRenderer {
       })
     );
     this.fields = fields;
+    this.viewport.addChild(this.fieldContainer);
 
     // Render ships
     await this.renderShips();
@@ -783,20 +640,25 @@ export default class GameRenderer {
       .pipe(
         auditTime(100),
         startWith(null),
-        map(_ =>
-          GameRenderer.worldPosToFieldPosLand(
-            this.viewport.toWorld(this.interactionManager.mouse.global)
-          )
+        map(_ => this.viewport.toWorld(this.interactionManager.mouse.global)),
+        map(screen => ({
+          screen: screen,
+          land: GameRenderer.worldPosToFieldPosLand(screen),
+          sea: GameRenderer.worldPosToFieldPos(screen)
+        })),
+        distinctUntilChanged(
+          (a, b) => a.land.equals(b.land) && a.sea.equals(b.sea)
         ),
-        distinctUntilChanged(),
         map(pos => ({
           pos,
           island: Object.values(this.game.state.islands).find(each => {
-            return each.positionRect.contains(pos.x, pos.y);
+            return each.positionRect.contains(pos.sea.x, pos.sea.y);
           })
         }))
       )
-      .subscribe(({ pos, island }) => this.hud.setHoveredPosition(pos, island));
+      .subscribe(({ pos, island }) =>
+        this.hud.setHoveredPosition(pos.land, pos.sea, island)
+      );
   }
 
   private moveCameraToStartPosition(myPlayerId: number) {
