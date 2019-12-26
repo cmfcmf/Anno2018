@@ -10,6 +10,10 @@ This project includes code based on the [FFmpeg](https://github.com/FFmpeg/FFmpe
 (see `src/parsers/WAV/wav-parser.ts`), originally licensed under the LGPLv2.1+ and redistributed
 as part of this project under the AGPLv3.
 
+This project includes code based on the [pixi-keyboard](https://github.com/Nazariglez/pixi-keyboard) project
+(see `src/game/renderer/keyboard`), originally licensed under MIT and redistributed
+as part of this project under the AGPLv3.
+
 This project bundles a build of [LAME](http://lame.sourceforge.net/) as part of the
 [lamejs](https://github.com/zhuker/lamejs) project, licensed under the LGPL and redistributed
 as part of this project under the AGPLv3.

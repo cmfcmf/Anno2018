@@ -22,7 +22,6 @@
     "jszip": "^3.2.2",
     "lamejs": "^1.2.0",
     "loglevel": "^1.6.4",
-    "pixi-keyboard": "^0.9.4",
     "pixi-sound": "^3.0.4",
     "pixi-viewport": "^4.5.0",
     "pixi.js": "^5.2.0",
@@ -86,12 +85,15 @@
     "zei-converter": "ts-node --project tsconfig.node.json src/tools/zei-converter.ts"
   },
   "jest": {
+    "preset": "ts-jest",
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.node.json"
+      }
+    },
     "setupFiles": [
       "jest-canvas-mock"
     ],
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "testPathIgnorePatterns": [
       "/node_modules/",

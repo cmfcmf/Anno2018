@@ -1,4 +1,3 @@
-import { Key, KeyboardManager, Keys } from "pixi-keyboard";
 import { Viewport } from "pixi-viewport";
 import {
   Application,
@@ -38,6 +37,9 @@ import SpriteLoader from "../sprite-loader";
 import FieldType from "./field-type";
 import Field from "./world/field";
 import { City } from "./world/city";
+import { FieldContainer } from "./renderer/isometric/field-container";
+import { KeyboardManager } from "./renderer/keyboard/keyboard-manager";
+import { Key } from "./renderer/keyboard/key";
 
 const WIDTH = 500;
 const HEIGHT = 350;
@@ -671,7 +673,7 @@ export default class GameRenderer {
     [Key.LEFT, Key.RIGHT, Key.UP, Key.DOWN].forEach(key =>
       this.keyboardManager.setPreventDefault(key)
     );
-    this.keyboardManager.on("down", (key: Keys) => {
+    this.keyboardManager.on("down", (key: number) => {
       console.log("key down", key);
       switch (key) {
         case Key.LEFT:
