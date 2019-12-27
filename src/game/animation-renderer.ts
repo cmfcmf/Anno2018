@@ -16,7 +16,7 @@ interface AnimationConfig {
   Rotate?: number;
 }
 
-interface AnimationData {
+export interface AnimationData {
   nested_objects: {
     ANIM: {
       [k: string]: AnimationConfig;

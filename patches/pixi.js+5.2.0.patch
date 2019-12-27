@@ -1,5 +1,5 @@
 diff --git a/node_modules/pixi.js/pixi.js.d.ts b/node_modules/pixi.js/pixi.js.d.ts
-index f9c7247..5d52144 100644
+index f9c7247..16110df 100644
 --- a/node_modules/pixi.js/pixi.js.d.ts
 +++ b/node_modules/pixi.js/pixi.js.d.ts
 @@ -12178,7 +12178,7 @@ declare namespace PIXI {
@@ -36,4 +36,31 @@ index f9c7247..5d52144 100644
 +        _parentID: number;
          /**
           * Called when a value changes.
+          *
+@@ -18597,7 +18597,7 @@ declare namespace PIXI {
+          * @protected
+          * @param {PIXI.Renderer} renderer - The webgl renderer to use.
+          */
+-        protected _render(renderer: PIXI.Renderer): void;
++        _render(renderer: PIXI.Renderer): void;
+         /**
+          * Updates the bounds of the sprite.
+          *
+@@ -19499,7 +19499,7 @@ declare namespace PIXI {
+          * @protected
+          * @param {PIXI.Renderer} renderer - The webgl renderer to use.
+          */
+-        protected _render(renderer: PIXI.Renderer): void;
++        _render(renderer: PIXI.Renderer): void;
+         /**
+          * Updates the bounds of the sprite.
+          *
+@@ -20214,7 +20214,7 @@ declare namespace PIXI {
+          * @protected
+          * @param {PIXI.Renderer} renderer - The renderer
+          */
+-        protected _render(renderer: PIXI.Renderer): void;
++        _render(renderer: PIXI.Renderer): void;
+         /**
+          * Updates the bounds of the tiling sprite.
           *

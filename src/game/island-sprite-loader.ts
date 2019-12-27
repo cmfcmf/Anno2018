@@ -40,7 +40,7 @@ export default class IslandSpriteLoader {
   public getIslandSprites = async (island: Island) => {
     await this.init();
 
-    const smokeSprites: AnimatedSprite[] = [];
+    const smokeSprites: { sprite: AnimatedSprite; y: number }[] = [];
 
     const sprites = make2DArray<SpriteWithPosition>(
       island.size.x,
@@ -61,7 +61,7 @@ export default class IslandSpriteLoader {
     x: number,
     y: number,
     sprites: Array<Array<SpriteWithPosition | null>>,
-    smokeSprites: AnimatedSprite[]
+    smokeSprites: { sprite: AnimatedSprite; y: number }[]
   ) => {
     const field = island.fields[x][y];
     if (field === null) {

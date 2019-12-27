@@ -4,10 +4,11 @@ import {
   Point,
   Graphics,
   Renderer,
-  Text
+  Text,
+  Sprite
 } from "pixi.js";
 import GameRenderer, { WIDTH, HEIGHT } from "../../game-renderer";
-import { TILE_HEIGHT, TILE_WIDTH } from "../../island-renderer";
+import { TILE_HEIGHT, TILE_WIDTH, LAND_OFFSET } from "../../island-renderer";
 import { Viewport } from "pixi-viewport";
 
 export class FieldContainer extends Container {
@@ -15,17 +16,37 @@ export class FieldContainer extends Container {
 
   private readonly GRID_WIDTH = (WIDTH + HEIGHT) / 2;
   private readonly GRID_HEIGHT = WIDTH + HEIGHT - 1;
-  private grid: DisplayObject[] = new Array(this.GRID_WIDTH * this.GRID_HEIGHT);
-  private debugGrid: DisplayObject[] = new Array(
+  private readonly grid: Sprite[] = new Array(
     this.GRID_WIDTH * this.GRID_HEIGHT
   );
-  private topLeft: Point = new Point(0, 0);
-  private bottomRight: Point = new Point(0, 0);
+  private readonly entities: Array<Set<DisplayObject>> = Array.from(
+    { length: (this.GRID_HEIGHT * TILE_HEIGHT) / 2 },
+    e => new Set()
+  );
+  private readonly debugGrid: DisplayObject[] = new Array(
+    this.GRID_WIDTH * this.GRID_HEIGHT
+  );
+  private readonly topLeft: Point = new Point(0, 0);
+  private readonly bottomRight: Point = new Point(0, 0);
 
-  constructor(debug: "grid-border" | "grid-complete" | "none" = "none") {
+  private readonly fieldRangesFrom = new Array(this.GRID_HEIGHT);
+  private readonly fieldRangesTo = new Array(this.GRID_HEIGHT);
+
+  constructor(
+    private readonly debug: "grid-border" | "grid-complete" | "none" = "none"
+  ) {
     super();
     // @ts-ignore
     window["grid"] = this.grid;
+
+    console.debug("grid length", this.grid.length);
+    console.debug("entities length", this.entities.length);
+
+    for (let y = 0; y < this.GRID_HEIGHT; ++y) {
+      const { from, to } = FieldContainer.fieldRangeInGridRow(y);
+      this.fieldRangesFrom[y] = from;
+      this.fieldRangesTo[y] = to;
+    }
 
     const outlineRed = new Graphics();
     outlineRed
@@ -45,7 +66,7 @@ export class FieldContainer extends Container {
       .lineTo(TILE_WIDTH / 2, 0)
       .lineTo(0, -TILE_HEIGHT / 2);
 
-    if (debug !== "none") {
+    if (this.debug !== "none") {
       const BORDER_SIZE = 4;
       for (let y = 0; y < this.GRID_HEIGHT; ++y) {
         const { from, to } = FieldContainer.fieldRangeInGridRow(y);
@@ -82,21 +103,18 @@ export class FieldContainer extends Container {
 
           const gridCoordinates = new Text(`${x} | ${y}\n${isoX} | ${isoY}`, {
             fontFamily: "Arial",
-            fontSize: 10,
+            fontSize: 16,
             fill: 0xffff00,
             align: "center"
           });
+          gridCoordinates.scale.set(0.5, 0.5);
           gridCoordinates.position.set(TILE_WIDTH / 2, -TILE_HEIGHT / 2);
           gridCoordinates.anchor.set(0.5, 0.5);
           cell.addChild(gridCoordinates);
 
-          cell.position.set(screenX, screenY);
-
-          // @ts-ignore
-          cell.parent = this;
-          // @ts-ignore
-          cell.transform._parentID = -1;
+          cell.position.set(screenX, screenY + LAND_OFFSET);
           this.debugGrid[idx] = cell;
+          this.add(cell);
         }
       }
 
@@ -162,13 +180,14 @@ export class FieldContainer extends Container {
         bottomRightIso.y
       );
 
-      this.topLeft.x = topLeftGrid.x;
-      this.topLeft.y = topLeftGrid.y;
-      this.bottomRight.x = bottomRightGrid.x;
-      this.bottomRight.y = bottomRightGrid.y;
+      this.topLeft.x = Math.max(topLeftGrid.x, 0);
+      this.topLeft.y = Math.max(topLeftGrid.y, 0);
+      this.bottomRight.x = Math.min(bottomRightGrid.x, this.GRID_WIDTH - 1);
+      this.bottomRight.y = Math.min(bottomRightGrid.y, this.GRID_HEIGHT - 1);
 
-      // Step 2: Update transform of visible fields.
+      // Step 2: Update transform of visible fields and entities.
       for (let y = this.topLeft.y; y <= this.bottomRight.y; ++y) {
+        this.updateEntitiesTransform(y);
         for (let x = this.topLeft.x; x <= this.bottomRight.x; ++x) {
           const idx = x + y * this.GRID_WIDTH;
           const field = this.grid[idx];
@@ -178,12 +197,14 @@ export class FieldContainer extends Container {
         }
       }
 
-      for (let y = this.topLeft.y; y <= this.bottomRight.y; ++y) {
-        for (let x = this.topLeft.x; x <= this.bottomRight.x; ++x) {
-          const idx = x + y * this.GRID_WIDTH;
-          const debug = this.debugGrid[idx];
-          if (debug) {
-            debug.updateTransform();
+      if (this.debug !== "none") {
+        for (let y = this.topLeft.y; y <= this.bottomRight.y; ++y) {
+          for (let x = this.topLeft.x; x <= this.bottomRight.x; ++x) {
+            const idx = x + y * this.GRID_WIDTH;
+            const debug = this.debugGrid[idx];
+            if (debug) {
+              debug.updateTransform();
+            }
           }
         }
       }
@@ -196,8 +217,6 @@ export class FieldContainer extends Container {
     const y = isoX + isoY;
     const x =
       Math.floor((isoX - isoY) / 2) + HEIGHT / 2 + (y % 2 === 0 ? -1 : 0);
-    console.assert(x >= 0);
-    console.assert(y >= 0);
     return { x, y };
   }
 
@@ -232,20 +251,27 @@ export class FieldContainer extends Container {
     return { from, to };
   }
 
-  public addField(child: DisplayObject, isoX: number, isoY: number) {
+  public addField(child: Sprite, isoX: number, isoY: number) {
     const { x, y } = FieldContainer.isoToGrid(isoX, isoY);
 
     const fieldIdx = x + y * this.GRID_WIDTH;
     console.assert(this.grid[fieldIdx] === undefined);
     this.grid[fieldIdx] = child;
+    this.add(child);
+  }
 
+  public addEntity(child: DisplayObject, y: number) {
+    this.entities[y + TILE_HEIGHT].add(child);
+    this.add(child);
+  }
+
+  private add(child: DisplayObject) {
     if (child.parent) {
       child.parent.removeChild(child);
     }
 
     // @ts-ignore
     child.parent = this;
-    this.sortDirty = true;
 
     // ensure child transform will be recalculated
     child.transform._parentID = -1;
@@ -255,30 +281,61 @@ export class FieldContainer extends Container {
     this._boundsID++;
   }
 
+  private renderEntities(renderer: Renderer, gridY: number) {
+    if (gridY < 2 || gridY >= this.GRID_HEIGHT) {
+      return;
+    }
+    for (let i = 0; i < TILE_HEIGHT / 2; i++) {
+      const entities = this.entities[
+        i + (gridY * TILE_HEIGHT) / 2 + LAND_OFFSET
+      ];
+      for (const entity of entities) {
+        entity.render(renderer);
+      }
+    }
+  }
+
+  private updateEntitiesTransform(gridY: number) {
+    if (gridY < 2 || gridY >= this.GRID_HEIGHT) {
+      return;
+    }
+    for (let i = 0; i < TILE_HEIGHT / 2; i++) {
+      const entities = this.entities[
+        i + (gridY * TILE_HEIGHT) / 2 + LAND_OFFSET
+      ];
+      for (const entity of entities) {
+        entity.updateTransform();
+      }
+    }
+  }
+
   public render(renderer: Renderer) {
     for (let y = this.topLeft.y; y <= this.bottomRight.y; ++y) {
       // Performance improvement: Calculate minX and minY to avoid rendering as
       // much blackness.
-      const { from, to } = FieldContainer.fieldRangeInGridRow(y);
-      const minX = Math.max(this.topLeft.x, from);
-      const maxX = Math.min(this.bottomRight.x, to);
+      const minX = Math.max(this.topLeft.x, this.fieldRangesFrom[y]);
+      const maxX = Math.min(this.bottomRight.x, this.fieldRangesTo[y]);
       for (let x = minX; x <= maxX; ++x) {
         const field = this.grid[x + y * this.GRID_WIDTH];
-        if (field) {
-          // TODO: Lot's of room for improvement here: Do not update transforms
-          // (above), but instead write custom render code that uses the fact
-          // that all transforms only differ by a constant offset.
-          field.render(renderer);
-        }
+        // TODO: Lot's of room for improvement here: Do not update transforms
+        // (above), but instead write custom render code that uses the fact
+        // that all transforms only differ by a constant offset.
+
+        // Use private _render() method to skip some needless checks.
+        field._render(renderer);
       }
+
+      this.renderEntities(renderer, y);
     }
 
-    for (let y = this.topLeft.y; y <= this.bottomRight.y; ++y) {
-      for (let x = this.topLeft.x; x <= this.bottomRight.x; ++x) {
-        const idx = x + y * this.GRID_WIDTH;
-        const debug = this.debugGrid[idx];
-        if (debug) {
-          debug.render(renderer);
+    if (this.debug !== "none") {
+      for (let y = this.topLeft.y; y <= this.bottomRight.y; ++y) {
+        for (let x = this.topLeft.x; x <= this.bottomRight.x; ++x) {
+          const idx = x + y * this.GRID_WIDTH;
+          const debug = this.debugGrid[idx];
+          if (debug) {
+            debug.render(renderer);
+          }
         }
       }
     }

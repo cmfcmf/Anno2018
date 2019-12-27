@@ -160,8 +160,8 @@ export default class GameRenderer {
           )
       );
       spritesOfIsland.smokeSprites.forEach(smokeSprite => {
-        this.fieldContainer.addChild(smokeSprite);
-        smokeSprite.play();
+        this.fieldContainer.addEntity(smokeSprite.sprite, smokeSprite.y);
+        smokeSprite.sprite.play();
       });
     });
     console.log("Map sprites drawn.");

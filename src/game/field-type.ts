@@ -176,6 +176,7 @@ export default class FieldType {
     smokeAnimationNames: string[];
     droughtFlag: boolean;
   };
+  public figureSpeed: [number, number, number, number];
 
   constructor(config: any) {
     this.id = config.Id;
@@ -188,6 +189,12 @@ export default class FieldType {
     this.animAnz = config.AnimAnz;
     this.animTime = config.AnimTime === "TIMENEVER" ? 0 : config.AnimTime;
     this.yOffset = -config.Posoffs;
+    this.figureSpeed = [
+      parseInt(config.Wegspeed[0], 10),
+      parseInt(config.Wegspeed[1], 10),
+      parseInt(config.Wegspeed[2], 10),
+      parseInt(config.Wegspeed[3], 10)
+    ];
 
     const productionConfig = config.nested_objects.HAUS_PRODTYP[0];
     const upkeep = {
@@ -259,7 +266,7 @@ export default class FieldType {
     textures: Map<number, Texture>,
     animationRenderer: AnimationRenderer
   ) {
-    const smokeAnimations: AnimatedSprite[] = [];
+    const smokeAnimations: { sprite: AnimatedSprite; y: number }[] = [];
     const sprites: SpriteWithPosition[] = [];
     const sx = rotation % 2 === 0 ? this.size.x : this.size.y;
     const sy = rotation % 2 === 0 ? this.size.y : this.size.x;
@@ -289,7 +296,7 @@ export default class FieldType {
           const animatedSprite = new AnimatedSprite(animatedTextures);
           animatedSprite.animationSpeed =
             (1.0 / 60.0) * (1000.0 / this.animTime);
-          animatedSprite.play();
+          animatedSprite.gotoAndPlay(animationStep);
           sprite = animatedSprite;
         }
         // Set bottom left corner of sprite as origin.
@@ -327,7 +334,10 @@ export default class FieldType {
             Object.keys(smokeAnimation.animations).length > 1
               ? smokeAnimation.animations[playerId]
               : smokeAnimation.animations[0];
-          const smokeSprite = animation.rotations[0].main;
+          const smokeSprite = (animation.rotations.length > 1
+            ? animation.rotations[((rotation + 3) % 4) * 2] // TODO: Really not sure about this woodoo. We should take a look at the market and the GAUKLER1 animation to figure out what's right.
+            : animation.rotations[0]
+          ).main;
 
           smokeSprite.x =
             worldX -
@@ -343,7 +353,7 @@ export default class FieldType {
                 2
             );
 
-          smokeSprite.y =
+          const y =
             worldY -
             TILE_HEIGHT / 2 +
             (sx + sy - 2) * TILE_HEIGHT * 0.25 + // move bottom of smoke to building center
@@ -354,10 +364,12 @@ export default class FieldType {
                   (rotation === 0 || rotation === 3 ? 1 : -1)) *
                 TILE_HEIGHT) /
                 2
-            ) -
-            Math.floor(TILE_HEIGHT * smokeAnimation.config.Fahnoffs[2]);
+            );
+
+          smokeSprite.y =
+            y - Math.floor(TILE_HEIGHT * smokeAnimation.config.Fahnoffs[2]);
           smokeSprite.anchor = new Point(0, 1);
-          smokeAnimations.push(smokeSprite);
+          smokeAnimations.push({ sprite: smokeSprite, y });
 
           if (smokeAnimationName.startsWith("RAUCH")) {
             // TODO: This doesn't quite look like the original, but works for now.
