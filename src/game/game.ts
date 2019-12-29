@@ -57,6 +57,13 @@ export const defaultTimers = {
   enableVulcano: false
 };
 
+export type FigureAnimation = {
+  waypoints: Point[];
+  nextWaypointIdx: number;
+  nextWaypointProgress: number;
+  animationName: string;
+};
+
 export interface GameState {
   players: MapById<Player>;
   islands: MapById<Island>;
@@ -68,6 +75,7 @@ export interface GameState {
   houses: House[];
   farmFields: FarmField[];
   timers: Timers & { simulationSpeed: SimulationSpeed };
+  figureAnimations: FigureAnimation[];
 }
 
 export default class Game extends EventEmitter {
@@ -88,7 +96,29 @@ export default class Game extends EventEmitter {
       ships: world.ships,
       houses: world.houses,
       farmFields: world.farmFields,
-      timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused }
+      timers: { ...world.timers, simulationSpeed: SimulationSpeed.Paused },
+      figureAnimations: [
+        // {
+        //   animationName: "KARREN",
+        //   waypoints: [
+        //     new Point(284, 32),
+        //     new Point(284, 33),
+        //     new Point(284, 34),
+        //     new Point(284, 35),
+        //     new Point(284, 36),
+        //     new Point(284, 37),
+        //     new Point(284, 38),
+        //     new Point(284, 39),
+        //     new Point(285, 39),
+        //     new Point(285, 40),
+        //     new Point(285, 41),
+        //     new Point(284, 41),
+        //     new Point(283, 41)
+        //   ],
+        //   nextWaypointIdx: 1,
+        //   nextWaypointProgress: 0
+        // }
+      ]
     };
   }
 
@@ -440,8 +470,53 @@ export default class Game extends EventEmitter {
     this.farmFieldTick.next();
     this.producerTick.next();
     this.watchTicksForUpkeep();
+    this.moveAnimations();
     this.emit("tick");
   };
+
+  private moveAnimations() {
+    const fieldData = this.configLoader.getFieldData();
+
+    this.state.figureAnimations.forEach(animation => {
+      const {
+        waypoints,
+        nextWaypointIdx,
+        nextWaypointProgress,
+        animationName
+      } = animation;
+      const animationData = this.configLoader
+        .getFiguresData()
+        .get(animationName)!;
+      const speedType = animationData.Speedtyp;
+
+      const lastWaypoint = waypoints[nextWaypointIdx - 1];
+      const nextWaypoint = waypoints[nextWaypointIdx];
+      const dx = nextWaypoint.x - lastWaypoint.x;
+      const dy = nextWaypoint.y - lastWaypoint.y;
+
+      const currentPosition = new Point(
+        lastWaypoint.x + dx * nextWaypointProgress,
+        lastWaypoint.y + dy * nextWaypointProgress
+      );
+
+      const field = this.getFieldAt(
+        new Point(Math.round(currentPosition.x), Math.round(currentPosition.y))
+      )!;
+      const fieldConfig = fieldData.get(field.fieldId)!;
+      const figureSpeed = fieldConfig.figureSpeed[speedType];
+
+      animation.nextWaypointProgress +=
+        (1 / figureSpeed) * 10 * this.state.timers.simulationSpeed;
+      if (animation.nextWaypointProgress >= 1.0) {
+        animation.nextWaypointProgress -= 1.0;
+        console.assert(animation.nextWaypointProgress < 1);
+        animation.nextWaypointIdx++;
+        if (animation.nextWaypointIdx === animation.waypoints.length) {
+          animation.nextWaypointIdx = 1; // TODO: This always loops the path.
+        }
+      }
+    });
+  }
 
   private *makeFarmFieldTickGenerator() {
     const fieldData = this.configLoader.getFieldData();

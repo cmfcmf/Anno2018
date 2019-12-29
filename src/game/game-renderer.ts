@@ -8,7 +8,8 @@ import {
   Sprite,
   Text,
   Texture,
-  Rectangle
+  Rectangle,
+  AnimatedSprite
 } from "pixi.js";
 import { fromEvent, merge } from "rxjs";
 import {
@@ -18,15 +19,15 @@ import {
   distinctUntilChanged
 } from "rxjs/operators";
 import { make2DArray } from "../util/util";
-import AnimationRenderer from "./animation-renderer";
+import AnimationRenderer, { MyAnimation } from "./animation-renderer";
 import ConfigLoader from "./config-loader";
-import Game from "./game";
+import Game, { FigureAnimation } from "./game";
 import { LAND_OFFSET, TILE_HEIGHT, TILE_WIDTH } from "./island-renderer";
 import IslandSpriteLoader from "./island-sprite-loader";
 import { RenderedShip } from "./renderer/isometric/renderered-ship";
 import { Island } from "./world/island";
 import { SHIP_TYPES } from "./world/ship";
-import { SimulationSpeed } from "./world/world";
+import { SimulationSpeed, Rotation8 } from "./world/world";
 import { isWithinRadius } from "./radius";
 import MenuStructure from "./menu-structure";
 import { HUD } from "./renderer/isometric/hud";
@@ -396,44 +397,105 @@ export default class GameRenderer {
       }
     });
 
-    // Karren Test
-    /*
-    const startFieldPos = new Point(239, 177);
-    const path = [
-      startFieldPos,
-      new Point(startFieldPos.x + 1, startFieldPos.y),
-      new Point(startFieldPos.x + 2, startFieldPos.y),
-      new Point(startFieldPos.x + 3, startFieldPos.y),
-      new Point(startFieldPos.x + 4, startFieldPos.y),
-      new Point(startFieldPos.x + 5, startFieldPos.y),
-      new Point(startFieldPos.x + 6, startFieldPos.y),
-      new Point(startFieldPos.x + 7, startFieldPos.y)
-    ];
+    const animationSpritesMap = new Map<
+      FigureAnimation,
+      {
+        sprite: AnimatedSprite;
+        rotation: Rotation8;
+        animationConfig: MyAnimation;
+      }
+    >();
 
-    const karrenAnimation = await this.animationRenderer.getAnimation("KARREN");
-    const start = GameRenderer.landFieldPosToWorldPos(startFieldPos);
-    const karrenSprite = karrenAnimation.animations[1].rotations[2].main;
-    karrenSprite.x = start.x;
-    karrenSprite.y = start.y - karrenAnimation.config.Posoffs[1];
-    this.fieldContainer.addChild(karrenSprite);
-    karrenSprite.play();
+    await Promise.all(
+      this.game.state.figureAnimations.map(async animation => {
+        const animationConfig = await this.animationRenderer.getAnimation(
+          animation.animationName
+        );
+        const rotation = 0;
+        const sprite = animationConfig.animations[1].rotations[rotation].main;
+        sprite.play();
+        this.fieldContainer.addEntity(sprite, sprite.y);
 
-    const currentPathIdx = 0;
-    this.app.ticker.add(() => {
-      const dx = path[currentPathIdx + 1].x - path[currentPathIdx].x;
-      const dy = path[currentPathIdx + 1].y - path[currentPathIdx].y;
+        animationSpritesMap.set(animation, {
+          sprite,
+          rotation,
+          animationConfig
+        });
+      })
+    );
 
-      const px = ((dx + dy) * TILE_WIDTH) / 2;
-      const py = ((dx + dy) * TILE_HEIGHT) / 2;
+    this.app.renderer.on("prerender", () => {
+      if (!this.app.renderer.renderingToScreen) {
+        return;
+      }
 
-      karrenSprite.x +=
-        (((1 / this.app.ticker.FPS) * 1000) / karrenAnimation.config.Speed) *
-        px;
-      karrenSprite.y +=
-        (((1 / this.app.ticker.FPS) * 1000) / karrenAnimation.config.Speed) *
-        py;
+      this.game.state.figureAnimations.forEach(animation => {
+        const { waypoints, nextWaypointIdx, nextWaypointProgress } = animation;
+        const {
+          sprite,
+          animationConfig,
+          rotation: oldRotation
+        } = animationSpritesMap.get(animation)!;
+        const lastWaypoint = waypoints[nextWaypointIdx - 1];
+        const nextWaypoint = waypoints[nextWaypointIdx];
+
+        const lastPos = GameRenderer.landFieldPosToWorldPos(lastWaypoint);
+
+        const dx = nextWaypoint.x - lastWaypoint.x;
+        const dy = nextWaypoint.y - lastWaypoint.y;
+
+        let newRotation: Rotation8;
+        if (dx === -1 && dy === -1) {
+          newRotation = 7;
+        } else if (dx === 0 && dy === -1) {
+          newRotation = 0;
+        } else if (dx === 1 && dy === -1) {
+          newRotation = 1;
+        } else if (dx === -1 && dy === 0) {
+          newRotation = 6;
+        } else if (dx === 0 && dy === 0) {
+          throw new Error("Invalid waypoints!");
+        } else if (dx === 1 && dy === 0) {
+          newRotation = 2;
+        } else if (dx === -1 && dy === 1) {
+          newRotation = 5;
+        } else if (dx === 0 && dy === 1) {
+          newRotation = 4;
+        } else if (dx === 1 && dy === 1) {
+          newRotation = 3;
+        } else {
+          throw new Error("Invalid waypoints!");
+        }
+
+        const px = ((dx - dy) * TILE_WIDTH) / 2;
+        const py = ((dx + dy) * TILE_HEIGHT) / 2;
+
+        sprite.x = lastPos.x + nextWaypointProgress * px;
+
+        const oldYRounded = Math.round(sprite.y);
+        sprite.y =
+          lastPos.y -
+          animationConfig.config.Posoffs[1] +
+          nextWaypointProgress * py;
+        const newYRounded = Math.round(sprite.y);
+
+        if (oldYRounded !== newYRounded) {
+          this.fieldContainer.changeEntityY(sprite, oldYRounded, newYRounded);
+        }
+        if (newRotation !== oldRotation) {
+          const newSprite =
+            animationConfig.animations[1].rotations[newRotation].main;
+          newSprite.play();
+          sprite.stop();
+          this.fieldContainer.replaceEntity(sprite, newSprite, newYRounded);
+          animationSpritesMap.set(animation, {
+            sprite: newSprite,
+            rotation: newRotation,
+            animationConfig
+          });
+        }
+      });
     });
-    */
   }
 
   private findBuilding<T extends { islandId: number; position: Point }>(

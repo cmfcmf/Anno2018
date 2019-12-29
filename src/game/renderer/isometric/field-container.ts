@@ -83,13 +83,16 @@ export class FieldContainer extends Container {
           this.addChild(markerTo);
         }
 
+        const tmp = { x: 297, y: 326 };
+
         for (let x = 0; x < this.GRID_WIDTH; ++x) {
           if (
             debug === "grid-border" &&
-            y >= BORDER_SIZE &&
+            /*y >= BORDER_SIZE &&
             x >= BORDER_SIZE &&
             y < this.GRID_HEIGHT - BORDER_SIZE &&
-            x < this.GRID_WIDTH - BORDER_SIZE
+            x < this.GRID_WIDTH - BORDER_SIZE*/
+            (Math.abs(tmp.x - x) > 10 || Math.abs(tmp.y - y) > 10)
           ) {
             continue;
           }
@@ -261,8 +264,46 @@ export class FieldContainer extends Container {
   }
 
   public addEntity(child: DisplayObject, y: number) {
+    if (Math.round(y) !== y) {
+      throw new Error(`y must be an integer, got ${y}.`);
+    }
+    // Since the first two rows are below the x axis, we need to offset all
+    // array accesses by TILE_HEIGHT (the height of the first two rows
+    // combined).
     this.entities[y + TILE_HEIGHT].add(child);
     this.add(child);
+  }
+
+  public changeEntityY(child: DisplayObject, oldY: number, newY: number) {
+    if (Math.round(oldY) !== oldY) {
+      throw new Error(`oldY must be an integer, got ${oldY}.`);
+    }
+    if (Math.round(newY) !== newY) {
+      throw new Error(`newY must be an integer, got ${newY}.`);
+    }
+    // Since the first two rows are below the x axis, we need to offset all
+    // array accesses by TILE_HEIGHT (the height of the first two rows
+    // combined).
+    console.assert(this.entities[oldY + TILE_HEIGHT].has(child));
+    this.entities[oldY + TILE_HEIGHT].delete(child);
+    this.entities[newY + TILE_HEIGHT].add(child);
+    child.updateTransform();
+  }
+
+  public replaceEntity(
+    oldEntity: DisplayObject,
+    newEntity: DisplayObject,
+    y: number
+  ) {
+    if (Math.round(y) !== y) {
+      throw new Error(`y must be an integer, got ${y}.`);
+    }
+    console.assert(this.entities[y + TILE_HEIGHT].has(oldEntity));
+    this.entities[y + TILE_HEIGHT].delete(oldEntity);
+    this.remove(oldEntity);
+    this.entities[y + TILE_HEIGHT].add(newEntity);
+    this.add(newEntity);
+    newEntity.updateTransform();
   }
 
   private add(child: DisplayObject) {
@@ -281,14 +322,25 @@ export class FieldContainer extends Container {
     this._boundsID++;
   }
 
+  public remove(child: DisplayObject) {
+    // @ts-ignore
+    child.parent = null;
+    // ensure child transform will be recalculated
+    child.transform._parentID = -1;
+    // ensure bounds will be recalculated
+    // @ts-ignore
+    this._boundsID++;
+  }
+
   private renderEntities(renderer: Renderer, gridY: number) {
     if (gridY < 2 || gridY >= this.GRID_HEIGHT) {
       return;
     }
+    const idxAtTopRowOfCurrentTileRow = (gridY * TILE_HEIGHT) / 2 + LAND_OFFSET;
+    const idxAtMiddleOfCurrentTileRow =
+      idxAtTopRowOfCurrentTileRow + TILE_HEIGHT / 2;
     for (let i = 0; i < TILE_HEIGHT / 2; i++) {
-      const entities = this.entities[
-        i + (gridY * TILE_HEIGHT) / 2 + LAND_OFFSET
-      ];
+      const entities = this.entities[idxAtMiddleOfCurrentTileRow + i];
       for (const entity of entities) {
         entity.render(renderer);
       }
