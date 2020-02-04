@@ -17,6 +17,6 @@ export const isWithinRadius = (
       (Math.abs(point.y + 0.5 - center.y) +
         (building.height % 2 === 0 ? 0 : 0.5)) **
         2 <
-    Math.ceil((radius + 1.05) ** 2)
+    Math.ceil((radius + Math.PI / 3) ** 2)
   );
 };
