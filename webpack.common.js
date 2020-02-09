@@ -6,6 +6,7 @@ const gitRevisionPlugin = new GitRevisionPlugin({
 });
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -37,5 +38,8 @@ module.exports = {
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".js", ".jsx"]
-  }
+  },
+  optimization: {
+    minimizer: [new TerserPlugin()],
+  },
 };
