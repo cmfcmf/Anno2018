@@ -1,0 +1,45 @@
+diff --git a/node_modules/license-checker-webpack-plugin/src/index.js b/node_modules/license-checker-webpack-plugin/src/index.js
+index 4eac03e..214e31e 100644
+--- a/node_modules/license-checker-webpack-plugin/src/index.js
++++ b/node_modules/license-checker-webpack-plugin/src/index.js
+@@ -22,13 +22,15 @@ class LicenseCheckerWebpackPlugin {
+       override,
+       emitError,
+       outputFilename,
+-      outputWriter
++      outputWriter,
++      additionalPackages
+     } = this.options;
+ 
+     compiler.hooks.emit.tapPromise("LicenseCheckerWebpackPlugin", async compilation => {
+       let licenseInformation = getLicenseInformationForCompilation(compilation, filter);
+       licenseInformation = ignoreLicenses(licenseInformation, ignore);
+       licenseInformation = overrideLicenses(licenseInformation, override);
++      licenseInformation = { ...licenseInformation, ...additionalPackages };
+ 
+       const licenseViolations = getLicenseViolations(licenseInformation, allow);
+       if (emitError) {
+diff --git a/node_modules/license-checker-webpack-plugin/src/optionsUtils.js b/node_modules/license-checker-webpack-plugin/src/optionsUtils.js
+index 4476a82..4731ca6 100644
+--- a/node_modules/license-checker-webpack-plugin/src/optionsUtils.js
++++ b/node_modules/license-checker-webpack-plugin/src/optionsUtils.js
+@@ -15,7 +15,8 @@ const optionsSchema = Joi.object().keys({
+   outputWriter: Joi.alternatives()
+     .try(Joi.string(), Joi.func())
+     .required(),
+-  outputFilename: Joi.string().required()
++  outputFilename: Joi.string().required(),
++  additionalPackages: Joi.object().required()
+ });
+ 
+ const defaultOptions = {
+@@ -25,7 +26,8 @@ const defaultOptions = {
+   override: {},
+   emitError: false,
+   outputWriter: defaultOutputWriter,
+-  outputFilename: "ThirdPartyNotice.txt"
++  outputFilename: "ThirdPartyNotice.txt",
++  additionalPackages: []
+ };
+ 
+ const getOptions = options => {

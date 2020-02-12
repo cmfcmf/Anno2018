@@ -41,8 +41,11 @@ import { Translator } from "./translation/translator";
   game.id = "game";
   const version = document.createElement("p");
   version.innerHTML = `Anno 2018, version ${__VERSION__},
-                         made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.
-                         The sourcecode can be found at <a href="https://github.com/cmfcmf/Anno2018">GitHub</a>.`;
+                        made by <a href="https://github.com/cmfcmf">@cmfcmf</a>.
+                        The source is at <a href="https://github.com/cmfcmf/Anno2018">GitHub</a>.
+                        <br />
+                        <a href="thirdparty.txt">Thirdparty Notices</a>
+                        | <a href="https://cmfcmf.github.io/about">Datenschutz</a>`;
 
   document.head.appendChild(style);
   document.body.appendChild(game);
