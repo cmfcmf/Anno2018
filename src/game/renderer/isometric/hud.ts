@@ -98,6 +98,13 @@ export class HUD {
     this.setSize(size);
   }
 
+  public isObscuredByHud(point: Point) {
+    return (
+      this.sidebar.getBounds().contains(point.x, point.y) ||
+      this.bottomBar.getBounds().contains(point.x, point.y)
+    );
+  }
+
   public setSize(size: Point) {
     this.sidebar.position.x = size.x - SIDEBAR_WIDTH;
     this.sidebarDetails.position.copyFrom(this.sidebar.position);

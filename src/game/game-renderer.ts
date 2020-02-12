@@ -224,8 +224,13 @@ export default class GameRenderer {
     this.moveCameraToStartPosition(this.myPlayerId);
 
     this.interactionManager.on("mouseup", async () => {
+      const globalPos = this.interactionManager.mouse.global;
+      if (this.hud.isObscuredByHud(globalPos)) {
+        // Do nothing if we clicked on the hud.
+        return;
+      }
       const pos = GameRenderer.worldPosToFieldPosLand(
-        this.viewport.toWorld(this.interactionManager.mouse.global)
+        this.viewport.toWorld(globalPos)
       );
       const island = Object.values(this.game.state.islands).find(each =>
         each.positionRect.contains(pos.x, pos.y)
