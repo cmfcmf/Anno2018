@@ -3,3 +3,4 @@ tasks:
     command: yarn start
 ports:
   - port: 8080
+    onOpen: open-browser
