@@ -1,0 +1,5 @@
+tasks:
+  - init: yarn install
+    command: yarn start
+ports:
+  - port: 8080

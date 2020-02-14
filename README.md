@@ -1,5 +1,7 @@
 # Anno 2018
 
+[![Gitpod Open-Dev-Environment](https://img.shields.io/badge/GitPod-click%20to%20open%20ready%20to%20use%20dev%20environment-blue)](https://gitpod.io/#https://github.com/cmfcmf/Anno2018) 
+
 This is a rewrite of twenty-year-old Anno 1602 using modern techniques, running
 entirely in the browser.
 My goal is to bring the complete Anno 1602 experience to modern devices.
