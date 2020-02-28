@@ -25,6 +25,11 @@ This would have never been possible without the work of countless Anno enthusias
 3. Grab a coffee
 4. Click on a savegame to start it.
 
+## Contributing / Running Locally
+
+To run this project on your machine, follow the steps outlined in the
+[Contributing Guide](CONTRIBUTING.md).
+
 ## Roadmap
 
 - [x] Load Anno 1602 savegames
