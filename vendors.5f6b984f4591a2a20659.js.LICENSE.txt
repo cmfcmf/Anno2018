@@ -1,0 +1,316 @@
+/*
+object-assign
+(c) Sindre Sorhus
+@license MIT
+*/
+
+/*!
+ * @pixi/accessibility - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/accessibility is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/app - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/app is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/core - v5.1.5
+ * Compiled Tue, 24 Sep 2019 04:07:05 UTC
+ *
+ * @pixi/core is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/display - v5.1.3
+ * Compiled Mon, 09 Sep 2019 04:51:53 UTC
+ *
+ * @pixi/display is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/display - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/display is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/extract - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/extract is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/filter-alpha - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/filter-alpha is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/filter-displacement - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/filter-displacement is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/interaction - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/interaction is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/loaders - v5.1.5
+ * Compiled Tue, 24 Sep 2019 04:07:05 UTC
+ *
+ * @pixi/loaders is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/loaders - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/loaders is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/math - v5.1.0
+ * Compiled Fri, 19 Jul 2019 21:54:36 UTC
+ *
+ * @pixi/math is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/math - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/math is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/mesh - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/mesh is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/mixin-get-child-by-name - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/mixin-get-child-by-name is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/mixin-get-global-position - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/mixin-get-global-position is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/particles - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/particles is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/polyfill - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/polyfill is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/prepare - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/prepare is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/runner - v5.1.1
+ * Compiled Fri, 02 Aug 2019 23:20:23 UTC
+ *
+ * @pixi/runner is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/runner - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/runner is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/settings - v5.1.3
+ * Compiled Mon, 09 Sep 2019 04:51:53 UTC
+ *
+ * @pixi/settings is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/settings - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/settings is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/sprite - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/sprite is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/sprite-tiling - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/sprite-tiling is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/ticker - v5.1.3
+ * Compiled Mon, 09 Sep 2019 04:51:53 UTC
+ *
+ * @pixi/ticker is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/ticker - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/ticker is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/utils - v5.1.3
+ * Compiled Mon, 09 Sep 2019 04:51:53 UTC
+ *
+ * @pixi/utils is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * @pixi/utils - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * @pixi/utils is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+
+/*!
+ * pixi-sound - v3.0.4
+ * https://github.com/pixijs/pixi-sound
+ * Compiled Thu, 07 Nov 2019 23:26:22 UTC
+ *
+ * pixi-sound is licensed under the MIT license.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * pixi.js - v5.2.0
+ * Compiled Wed, 06 Nov 2019 02:32:43 UTC
+ *
+ * pixi.js is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*!
+ * resource-loader - v3.0.1
+ * https://github.com/pixijs/pixi-sound
+ * Compiled Tue, 02 Jul 2019 14:06:18 UTC
+ *
+ * resource-loader is licensed under the MIT license.
+ * http://www.opensource.org/licenses/mit-license
+ */
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
+/*! https://mths.be/punycode v1.4.1 by @mathias */
+
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+
+/** @license React v0.17.0
+ * scheduler.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v16.11.0
+ * react-dom.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v16.11.0
+ * react.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
