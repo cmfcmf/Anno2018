@@ -10,7 +10,7 @@
     "filer.js": "^0.4.5",
     "iconv-lite": "^0.5.0",
     "idb.filesystem.js": "^0.0.8",
-    "jszip": "^3.2.2",
+    "jszip": "^3.7.0",
     "lamejs": "^1.2.0",
     "loglevel": "^1.6.4",
     "pixi-sound": "^3.0.4",
