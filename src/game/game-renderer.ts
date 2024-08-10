@@ -646,17 +646,17 @@ export default class GameRenderer {
 
   private zoom(zoom: number) {
     const center = this.viewport.center;
-    this.viewport.scale.set(1.0 / zoom);
+    this.viewport.scaled = (1.0 / zoom);
     this.viewport.moveCenter(center.x, center.y);
   }
 
   public zoomIn() {
-    const currentZoom = 1.0 / this.viewport.scale.x;
+    const currentZoom = 1.0 / this.viewport.scaled;
     this.zoom(Math.max(1, currentZoom - 1));
   }
 
   public zoomOut() {
-    const currentZoom = 1.0 / this.viewport.scale.x;
+    const currentZoom = 1.0 / this.viewport.scaled;
     this.zoom(currentZoom + 1);
   }
 

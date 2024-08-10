@@ -23,9 +23,9 @@ test("finds root in zip with __MACOS", () => {
 test("finds root in nested zip 1 level", () => {
   const zip = new JSZip();
   const annoFolder = zip.folder("Anno 1602");
-  annoFolder.folder("GFX");
-  annoFolder.folder("MGFX");
-  annoFolder.folder("SAVEGAME");
+  annoFolder?.folder("GFX");
+  annoFolder?.folder("MGFX");
+  annoFolder?.folder("SAVEGAME");
 
   // @ts-ignore
   expect(findRootInZip(zip).root).toEqual("Anno 1602/");
@@ -34,10 +34,10 @@ test("finds root in nested zip 1 level", () => {
 test("finds root in nested zip 2 level", () => {
   const zip = new JSZip();
   const folderA = zip.folder("anno");
-  const folderB = folderA.folder("1602");
-  folderB.folder("GFX");
-  folderB.folder("MGFX");
-  folderB.folder("SAVEGAME");
+  const folderB = folderA?.folder("1602");
+  folderB?.folder("GFX");
+  folderB?.folder("MGFX");
+  folderB?.folder("SAVEGAME");
 
   // @ts-ignore
   expect(findRootInZip(zip).root).toEqual("anno/1602/");

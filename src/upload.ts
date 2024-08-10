@@ -16,9 +16,7 @@ import BitmapFontGenerator from "./parsers/ZEI/bitmap-font-generator";
 import parseTranslations from "./translation/translation-parser";
 import UploadInfo from "./uploadInfo";
 import { findRootInZip } from "./util/util";
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const escapeStringRegexp = require("escape-string-regexp");
+import escapeStringRegexp from "escape-string-regexp";
 
 export interface UploadLogger {
   readonly info: (msg: string) => void;

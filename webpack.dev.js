@@ -1,11 +1,10 @@
 const merge = require("webpack-merge");
 const common = require("./webpack.common.js");
-const webpack = require("webpack");
+const path = require('path');
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 module.exports = merge(common, {
   devServer: {
-    contentBase: false,
     hot: true
   },
   devtool: "inline-source-map",
@@ -28,7 +27,10 @@ module.exports = merge(common, {
     ]
   },
   plugins: [
-    new webpack.HotModuleReplacementPlugin(),
-    new ForkTsCheckerWebpackPlugin({ tsconfig: "tsconfig.browser.json" })
+    new ForkTsCheckerWebpackPlugin({
+      typescript: {
+        configFile: path.join(__dirname, 'tsconfig.browser.json'),
+      },
+    }),
   ]
 });

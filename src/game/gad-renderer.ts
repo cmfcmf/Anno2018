@@ -166,7 +166,7 @@ export default class GADRenderer {
           );
 
           const text = new BitmapText(config.texts[id] || "???", {
-            font: { name: font.name, size: font.size }
+            fontName: font.name, fontSize: font.size
           });
           text.position.set(position.x, position.y);
           text.pivot.set(0, font.size);

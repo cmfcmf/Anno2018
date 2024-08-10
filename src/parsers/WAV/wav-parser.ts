@@ -1,4 +1,4 @@
-import WaveFile from "wavefile";
+import { WaveFile } from "wavefile";
 
 interface ADPCMChannelStatus {
   predictor: number;
